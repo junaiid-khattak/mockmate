@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
 
 export function createServerSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,8 +10,20 @@ export function createServerSupabaseClient() {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
   }
 
-  return createClient(supabaseUrl, supabasePublishableKey, {
-    auth: { persistSession: false },
+  const cookieStore = cookies();
+
+  return createServerClient(supabaseUrl, supabasePublishableKey, {
+    cookies: {
+      get(name) {
+        return cookieStore.get(name)?.value;
+      },
+      set(name, value, options) {
+        cookieStore.set({ name, value, ...options });
+      },
+      remove(name, options) {
+        cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+      },
+    },
   });
 }
 

@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LoginForm } from "@/components/login/LoginForm";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Page() {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const serverError: string | undefined = undefined;
@@ -15,6 +17,12 @@ export default function Page() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (status === "success") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
   const handleSubmit = (_: { email: string; password: string }) => {
     if (status !== "idle") return;
