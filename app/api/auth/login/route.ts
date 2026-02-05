@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { isValidEmail } from "@/lib/utils";
 
 type LoginPayload = {
@@ -12,7 +12,7 @@ function isEmailNotConfirmed(message?: string, code?: string | null) {
   return code === "email_not_confirmed" || lowered.includes("email not confirmed");
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   let payload: LoginPayload | null = null;
 
   try {
@@ -40,22 +40,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
-  const supabase = createServerSupabaseClient();
+  const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    if (isEmailNotConfirmed(error.message, (error as { code?: string }).code ?? null)) {
-      return NextResponse.json(
-        { ok: false, error: "Please confirm your email before signing in." },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { ok: false, error: "Invalid email or password." },
-      { status: 400 }
-    );
+    const message = isEmailNotConfirmed(error.message, (error as { code?: string }).code ?? null)
+      ? "Please confirm your email before signing in."
+      : "Invalid email or password.";
+    const response = NextResponse.json({ ok: false, error: message }, { status: 400 });
+    applyCookies(response);
+    return response;
   }
 
-  return NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true });
+  applyCookies(response);
+  return response;
 }

@@ -61,7 +61,14 @@ export function ForgotPasswordForm({ onSubmit, isSubmitting = false, serverError
         {isSubmitting && <Spinner className="mr-2" size="sm" />}
         Send reset link
       </Button>
-      {serverError ? <p className="text-sm text-rose-600">{serverError}</p> : null}
+      {serverError ? (
+        <div
+          role="alert"
+          className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-100"
+        >
+          {serverError}
+        </div>
+      ) : null}
       <p className="text-xs text-slate-500 dark:text-slate-400">If the email exists, you’ll receive a link shortly.</p>
     </form>
   );
