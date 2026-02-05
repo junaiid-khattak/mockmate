@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function Page() {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [serverError] = useState<string | undefined>(undefined);
+  const serverError: string | undefined = undefined;
 
   useEffect(() => {
     return () => {
