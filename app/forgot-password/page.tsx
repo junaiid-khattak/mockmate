@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { SignupForm } from "@/components/signup/SignupForm";
+import { ForgotPasswordForm } from "@/components/forgot-password/ForgotPasswordForm";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Page() {
@@ -16,12 +16,13 @@ export default function Page() {
     };
   }, []);
 
-  const handleSubmit = (_: { firstName: string; lastName: string; email: string; password: string }) => {
+  const handleSubmit = (_: { email: string }) => {
     if (status !== "idle") return;
     setStatus("submitting");
+    const delay = Math.floor(Math.random() * 400) + 800;
     timerRef.current = setTimeout(() => {
       setStatus("success");
-    }, 1000);
+    }, delay);
   };
 
   return (
@@ -32,36 +33,30 @@ export default function Page() {
           <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/70 dark:text-slate-300 dark:ring-slate-800">
             MockMate
           </div>
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Create your account</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-300">No credit card. Start in under a minute.</p>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Reset your password</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-300">Enter your email and we’ll send a reset link.</p>
         </div>
 
         <Card className="w-full border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/80">
           <CardContent className="space-y-6 p-6 sm:p-8">
-            <SignupForm onSubmit={handleSubmit} isSubmitting={status === "submitting"} serverError={serverError} />
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              By continuing, you agree to the{" "}
-              <Link href="/legal/terms" className="text-indigo-600 hover:underline">
-                Terms
-              </Link>{" "}
-              and{" "}
-              <Link href="/legal/privacy" className="text-indigo-600 hover:underline">
-                Privacy Policy
-              </Link>
-              .
-            </p>
+            <ForgotPasswordForm onSubmit={handleSubmit} isSubmitting={status === "submitting"} serverError={serverError} />
             {status === "success" ? (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-100">
-                Welcome to MockMate! We’ve started calibrating your first mock. Check your email for next steps.
+                Check your inbox. It can take up to a minute for the email to arrive.
               </div>
             ) : null}
+            <div className="text-sm text-slate-600 dark:text-slate-300">
+              <Link href="/login" className="text-indigo-600 hover:underline">
+                Back to sign in
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
         <div className="mt-6 text-sm text-slate-600 dark:text-slate-300">
-          Already have an account?{" "}
-          <Link href="/login" className="text-indigo-600 hover:underline">
-            Sign in
+          Don’t have an account?{" "}
+          <Link href="/signup" className="text-indigo-600 hover:underline">
+            Create one
           </Link>
         </div>
       </div>
