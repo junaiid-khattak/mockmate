@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LoginForm } from "@/components/login/LoginForm";
@@ -8,29 +8,34 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function Page() {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const serverError: string | undefined = undefined;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, []);
+  const handleSubmit = async (payload: { email: string; password: string }) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setServerError(undefined);
 
-  useEffect(() => {
-    if (status === "success") {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data?.ok) {
+        setServerError(data?.error ?? "Unable to sign in.");
+        return;
+      }
+
       router.push("/dashboard");
+    } catch {
+      setServerError("Unable to sign in.");
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [status, router]);
-
-  const handleSubmit = (_: { email: string; password: string }) => {
-    if (status !== "idle") return;
-    setStatus("submitting");
-    const delay = Math.floor(Math.random() * 400) + 800;
-    timerRef.current = setTimeout(() => {
-      setStatus("success");
-    }, delay);
   };
 
   return (
@@ -47,18 +52,13 @@ export default function Page() {
 
         <Card className="w-full border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/80">
           <CardContent className="space-y-6 p-6 sm:p-8">
-            <LoginForm onSubmit={handleSubmit} isSubmitting={status === "submitting"} serverError={serverError} />
+            <LoginForm onSubmit={handleSubmit} isSubmitting={isSubmitting} serverError={serverError} />
             <div className="flex items-center justify-between text-sm">
               <div />
               <Link href="/forgot-password" className="text-indigo-600 hover:underline">
                 Forgot password?
               </Link>
             </div>
-            {status === "success" ? (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-100">
-                You’re in. We’re reopening your last session and prepping your dashboard.
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
