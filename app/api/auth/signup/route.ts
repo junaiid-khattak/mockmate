@@ -42,16 +42,16 @@ export async function POST(request: Request) {
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !publishableKey) {
+  if (!supabaseUrl || !anonKey) {
     return NextResponse.json({ ok: false, error: "Supabase credentials missing" }, { status: 500 });
   }
 
   const appUrl = getAppUrl(request);
   const emailRedirectTo = `${appUrl}/auth/callback?next=/dashboard`;
 
-  const supabase = createClient(supabaseUrl, publishableKey);
+  const supabase = createClient(supabaseUrl, anonKey);
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
