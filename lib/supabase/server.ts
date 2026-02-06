@@ -15,13 +15,13 @@ export function createServerSupabaseClient() {
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name) {
+      get(name: string) {
         return cookieStore.get(name)?.value;
       },
-      set(name, value, options) {
+      set(name: string, value: string, options: any) {
         cookieStore.set({ name, value, ...options });
       },
-      remove(name, options) {
+      remove(name: string, options: any) {
         cookieStore.set({ name, value: "", ...options, maxAge: 0 });
       },
     },
@@ -46,13 +46,13 @@ export function createRouteHandlerSupabaseClient(request: NextRequest) {
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
-      get(name) {
+      get(name: string) {
         return request.cookies.get(name)?.value;
       },
-      set(name, value, options) {
+      set(name: string, value: string, options: any) {
         cookieChanges.push({ name, value, options });
       },
-      remove(name, options) {
+      remove(name: string, options: any) {
         cookieChanges.push({ name, value: "", options: { ...options, maxAge: 0 } });
       },
     },

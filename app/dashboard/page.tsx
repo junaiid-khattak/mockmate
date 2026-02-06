@@ -1,33 +1,55 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { DashboardRoot } from "@/components/dashboard/DashboardRoot";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { EvaluationSetupPanel } from "@/components/dashboard/EvaluationSetupPanel";
-import { ResumeEvidenceCard } from "@/components/dashboard/ResumeEvidenceCard";
-import { BeginEvaluationCTA } from "@/components/dashboard/BeginEvaluationCTA";
-import { FullEvaluationPreview } from "@/components/dashboard/FullEvaluationPreview";
-import { AccessLevels } from "@/components/dashboard/AccessLevels";
+import { HeaderGreeting } from "@/components/dashboard/HeaderGreeting";
+import { StateNoResume } from "@/components/dashboard/redesign/StateNoResume";
+import { StateContextGathering } from "@/components/dashboard/redesign/StateContextGathering";
+import { StateAssessmentReady } from "@/components/dashboard/redesign/StateAssessmentReady";
+
+type DashboardState =
+  | "NO_RESUME"
+  | "CONTEXT_GATHERING"
+  | "GENERATING"
+  | "ASSESSMENT_READY";
 
 export default function Page() {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+
+  // Auth & User Data
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "analyzing" | "ready" | "failed">(
-    "idle"
-  );
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("there");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [introMessage, setIntroMessage] = useState("");
-  const [planMessage, setPlanMessage] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Resume Upload State
+  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState<
+    "idle" | "analyzing" | "ready" | "failed"
+  >("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+
+  // Job Description State
+  const [jobDescription, setJobDescription] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<DashboardState>("NO_RESUME");
+
   const pollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Derived State Logic
+  useEffect(() => {
+    if (!resumeUploaded) {
+      setCurrentView("NO_RESUME");
+    } else if (currentView === "GENERATING") {
+      // Don't override the generating state
+    } else if (currentView !== "ASSESSMENT_READY") {
+      setCurrentView("CONTEXT_GATHERING");
+    }
+  }, [resumeUploaded]);
 
   const stopPolling = () => {
     if (pollTimeoutRef.current) {
@@ -63,6 +85,7 @@ export default function Page() {
       pollTimeoutRef.current = setTimeout(() => pollFileStatus(id), 5000);
     }
   };
+
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getUser();
@@ -72,7 +95,9 @@ export default function Page() {
       }
 
       const fallbackName = data.user.email?.split("@")[0] ?? "there";
-      const metaFirstName = data.user.user_metadata?.first_name as string | undefined;
+      const metaFirstName = data.user.user_metadata?.first_name as
+        | string
+        | undefined;
       setFirstName(metaFirstName ?? fallbackName);
 
       const { data: profile } = await supabase
@@ -82,7 +107,9 @@ export default function Page() {
         .maybeSingle();
 
       if (profile) {
-        const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ");
+        const fullName = [profile.first_name, profile.last_name]
+          .filter(Boolean)
+          .join(" ");
         if (fullName) {
           setFirstName(fullName);
         } else if (profile.first_name) {
@@ -162,26 +189,12 @@ export default function Page() {
     } catch (error) {
       setResumeUploaded(false);
       setAnalysisStatus("failed");
-      setUploadError(error instanceof Error ? error.message : "Upload failed.");
+      setUploadError(
+        error instanceof Error ? error.message : "Upload failed."
+      );
     } finally {
       setUploading(false);
     }
-  };
-
-  const handleUploadAnother = () => {
-    stopPolling();
-    setResumeUploaded(false);
-    setResumeFilename(null);
-    setAnalysisStatus("idle");
-    setUploadError(null);
-  };
-
-  const handleStartIntroInterview = () => {
-    setIntroMessage("Intro evaluation will start here.");
-  };
-
-  const handleSelectPlan = () => {
-    setPlanMessage("Checkout next.");
   };
 
   const handleLogout = async () => {
@@ -194,41 +207,94 @@ export default function Page() {
     }
   };
 
+  // Transition to generating state, then reveal insights
+  const transitionToInsights = useCallback(
+    (jd: string | null) => {
+      setJobDescription(jd);
+      setCurrentView("GENERATING");
+      setTimeout(() => {
+        setCurrentView("ASSESSMENT_READY");
+      }, 2000);
+    },
+    []
+  );
+
+  const handleAnalyzeJob = (jd: string) => {
+    transitionToInsights(jd);
+  };
+
+  const handleSkipJob = () => {
+    transitionToInsights(null);
+  };
+
+  const handleStartEvaluation = () => {
+    console.log("Starting evaluation for:", jobDescription);
+    alert("Starting Mock Interview Sequence...");
+  };
+
+  const handleUpdateResume = () => {
+    setResumeUploaded(false);
+    setJobDescription(null);
+    setResumeFilename(null);
+    setCurrentView("NO_RESUME");
+  };
+
+  const handleUpdateJob = () => {
+    setCurrentView("CONTEXT_GATHERING");
+  };
+
   if (checkingAuth) {
     return null;
   }
 
   return (
     <DashboardRoot>
-      <DashboardHeader
+      <HeaderGreeting
         firstName={firstName}
         avatarUrl={avatarUrl}
         onLogout={handleLogout}
         isLoggingOut={isLoggingOut}
       />
-      <EvaluationSetupPanel />
-      <ResumeEvidenceCard
-        hasResume={resumeUploaded}
-        filename={resumeFilename}
-        isUploading={uploading}
-        analysisStatus={analysisStatus}
-        error={uploadError}
-        onPickFile={handlePickResume}
-        onUploadAnother={handleUploadAnother}
-      />
-      <div className="space-y-2">
-        <BeginEvaluationCTA enabled={resumeUploaded} onStart={handleStartIntroInterview} />
-        {introMessage ? (
-          <p className="text-center text-xs text-slate-300">{introMessage}</p>
-        ) : null}
-      </div>
-      <FullEvaluationPreview />
-      <div className="space-y-2">
-        <AccessLevels onSelect={handleSelectPlan} />
-        {planMessage ? (
-          <p className="text-center text-xs text-slate-400">{planMessage}</p>
-        ) : null}
-      </div>
+
+      <main className="transition-all duration-300 ease-in-out">
+        {currentView === "NO_RESUME" && (
+          <StateNoResume
+            isUploading={uploading}
+            onPickFile={handlePickResume}
+            error={uploadError}
+          />
+        )}
+
+        {currentView === "CONTEXT_GATHERING" && (
+          <StateContextGathering
+            resumeFilename={resumeFilename ?? "resume.pdf"}
+            onAnalyze={handleAnalyzeJob}
+            onSkip={handleSkipJob}
+          />
+        )}
+
+        {currentView === "GENERATING" && (
+          <div className="flex min-h-[calc(100vh-64px)] flex-col items-center justify-center">
+            <div className="mb-6 h-10 w-10 rounded-full border-2 border-mm-violet/30 border-t-mm-violet animate-spin" />
+            <p className="text-lg font-medium text-mm-text">
+              Analyzing your background
+            </p>
+            <p className="mt-2 text-sm text-mm-dim">
+              Generating interview questions from your resume...
+            </p>
+          </div>
+        )}
+
+        {currentView === "ASSESSMENT_READY" && (
+          <StateAssessmentReady
+            onStartEvaluation={handleStartEvaluation}
+            onUpdateResume={handleUpdateResume}
+            onUpdateJob={handleUpdateJob}
+            hasJobDescription={!!jobDescription}
+            greeting={`Welcome back, ${firstName}`}
+          />
+        )}
+      </main>
     </DashboardRoot>
   );
 }

@@ -6,10 +6,24 @@ type DashboardRootProps = {
 
 export function DashboardRoot({ children }: DashboardRootProps) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-10">
-        {children}
-      </div>
+    <div className="relative min-h-screen bg-mm-bg text-mm-text overflow-hidden">
+      {/* Ambient top glow */}
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 h-[600px] opacity-100"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 50% at 50% -10%, rgba(124, 92, 252, 0.07) 0%, transparent 70%)",
+        }}
+      />
+      {/* Secondary ambient glow — bottom right */}
+      <div
+        className="pointer-events-none fixed bottom-0 right-0 h-[500px] w-[500px] opacity-100"
+        style={{
+          background:
+            "radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 60%)",
+        }}
+      />
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
