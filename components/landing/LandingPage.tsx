@@ -105,7 +105,7 @@ const pricingPlans = [
   {
     name: "Free",
     price: "$0",
-    description: "Quick taste of the MockMate flow.",
+    description: "Quick taste of the nayld.ai flow.",
     features: ["1 mock interview", "Basic scorecard", "Email delivery"],
     cta: "Start free",
   },
@@ -177,7 +177,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-sm">
               <Sparkles className="h-5 w-5" />
             </div>
-            <span>MockMate</span>
+            <span>nayld.ai</span>
           </div>
           <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
             {navItems.map((item) => (
@@ -213,7 +213,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 Upload your resume. Get interviewed. Get a scorecard. Improve fast.
               </h1>
               <p className="text-lg text-slate-600 dark:text-slate-300">
-                MockMate runs realistic, role-calibrated mock interviews and delivers a coaching-ready
+                nayld.ai runs realistic, role-calibrated mock interviews and delivers a coaching-ready
                 report in minutes — so your next real loop feels easy.
               </p>
             </div>
@@ -448,7 +448,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 text-sm text-slate-600 dark:text-slate-300 sm:flex-row">
           <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-white">
             <Sparkles className="h-4 w-4" />
-            MockMate
+            nayld.ai
           </div>
           <div className="flex items-center gap-4">
             <a href="#pricing" className="hover:text-slate-900 dark:hover:text-white">
@@ -457,11 +457,11 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             <a href="#faq" className="hover:text-slate-900 dark:hover:text-white">
               FAQ
             </a>
-            <a href="mailto:hello@mockmate.ai" className="hover:text-slate-900 dark:hover:text-white">
+            <a href="mailto:hello@nayld.ai" className="hover:text-slate-900 dark:hover:text-white">
               Contact
             </a>
           </div>
-          <div>© {new Date().getFullYear()} MockMate. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} nayld.ai. All rights reserved.</div>
         </div>
       </footer>
     </div>

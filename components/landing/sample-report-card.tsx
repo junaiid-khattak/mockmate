@@ -40,7 +40,7 @@ export function SampleReportCard({
       <CardHeader className="relative z-10 space-y-2">
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
           <Sparkles className="h-4 w-4 text-amber-500" />
-          AI Report • MockMate
+          AI Report • nayld.ai
         </div>
         <CardTitle className="text-xl text-slate-900 dark:text-white">{headline}</CardTitle>
         <p className="text-sm text-slate-600 dark:text-slate-300">{role}</p>

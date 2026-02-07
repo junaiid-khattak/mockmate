@@ -25,7 +25,7 @@ export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps
               {backLabel ?? "Back"}
             </Link>
           ) : (
-            <span className="text-lg font-semibold tracking-tight text-gray-900">MockMate</span>
+            <span className="text-lg font-semibold tracking-tight text-gray-900">nayld.ai</span>
           )}
         </div>
 
