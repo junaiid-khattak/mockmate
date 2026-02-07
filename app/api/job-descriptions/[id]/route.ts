@@ -3,6 +3,8 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 const MIN_CONTENT_LENGTH = 50;
 
+const JD_COLUMNS = "id, title, company, content, source_url, resume_id, created_at, updated_at";
+
 // ---------------------------------------------------------------------------
 // GET /api/job-descriptions/:id  –  Read a single job description
 // ---------------------------------------------------------------------------
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
 
   const { data: jd, error } = await supabase
     .from("job_descriptions")
-    .select("id, title, company, content, source_url, created_at, updated_at")
+    .select(JD_COLUMNS)
     .eq("id", jdId)
     .eq("user_id", data.user.id)
     .maybeSingle();
@@ -86,6 +88,33 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     updates.source_url = typeof body.source_url === "string" ? body.source_url.trim() || null : null;
   }
 
+  // resume_id: set, change, or clear (null)
+  if ("resume_id" in body) {
+    if (body.resume_id === null) {
+      updates.resume_id = null;
+    } else {
+      if (typeof body.resume_id !== "string" || !body.resume_id.trim()) {
+        return NextResponse.json({ ok: false, error: "Invalid resume_id." }, { status: 400 });
+      }
+      const candidateResumeId = body.resume_id.trim();
+
+      const { data: resume, error: resumeErr } = await supabase
+        .from("resumes")
+        .select("id")
+        .eq("id", candidateResumeId)
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (resumeErr) {
+        return NextResponse.json({ ok: false, error: "Unable to verify resume." }, { status: 500 });
+      }
+      if (!resume) {
+        return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
+      }
+      updates.resume_id = candidateResumeId;
+    }
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ ok: false, error: "No fields to update." }, { status: 400 });
   }
@@ -95,7 +124,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     .update(updates)
     .eq("id", jdId)
     .eq("user_id", data.user.id)
-    .select("id, title, company, content, source_url, created_at, updated_at")
+    .select(JD_COLUMNS)
     .single();
 
   if (error) {

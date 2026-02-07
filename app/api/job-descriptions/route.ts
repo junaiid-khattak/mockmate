@@ -3,6 +3,9 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 const MIN_CONTENT_LENGTH = 50;
 
+const JD_COLUMNS = "id, title, company, content, source_url, resume_id, created_at, updated_at";
+const JD_LIST_COLUMNS = "id, title, company, source_url, resume_id, created_at, updated_at";
+
 // ---------------------------------------------------------------------------
 // POST /api/job-descriptions  –  Create a new job description
 // ---------------------------------------------------------------------------
@@ -31,6 +34,29 @@ export async function POST(request: NextRequest) {
   const company = typeof body.company === "string" ? body.company.trim() || null : null;
   const sourceUrl = typeof body.source_url === "string" ? body.source_url.trim() || null : null;
 
+  // Validate optional resume_id
+  let resumeId: string | null = null;
+  if (body.resume_id != null) {
+    if (typeof body.resume_id !== "string" || !body.resume_id.trim()) {
+      return NextResponse.json({ ok: false, error: "Invalid resume_id." }, { status: 400 });
+    }
+    resumeId = body.resume_id.trim();
+
+    const { data: resume, error: resumeErr } = await supabase
+      .from("resumes")
+      .select("id")
+      .eq("id", resumeId)
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+
+    if (resumeErr) {
+      return NextResponse.json({ ok: false, error: "Unable to verify resume." }, { status: 500 });
+    }
+    if (!resume) {
+      return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
+    }
+  }
+
   const { data: jd, error } = await supabase
     .from("job_descriptions")
     .insert({
@@ -39,8 +65,9 @@ export async function POST(request: NextRequest) {
       company,
       content,
       source_url: sourceUrl,
+      resume_id: resumeId,
     })
-    .select("id, title, company, content, source_url, created_at, updated_at")
+    .select(JD_COLUMNS)
     .single();
 
   if (error) {
@@ -56,8 +83,10 @@ export async function POST(request: NextRequest) {
 // GET /api/job-descriptions  –  List job descriptions for logged-in user
 //
 // Query params:
-//   page   – 1-based page number (default 1)
-//   limit  – items per page, max 100 (default 20)
+//   page      – 1-based page number (default 1)
+//   limit     – items per page, max 100 (default 20)
+//   resume_id – filter to JDs linked to this resume
+//   linked    – "true" = only linked, "false" = only unlinked
 // ---------------------------------------------------------------------------
 export async function GET(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -73,12 +102,28 @@ export async function GET(request: NextRequest) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data: jds, error, count } = await supabase
+  let query = supabase
     .from("job_descriptions")
-    .select("id, title, company, source_url, created_at, updated_at", { count: "exact" })
+    .select(JD_LIST_COLUMNS, { count: "exact" })
     .eq("user_id", data.user.id)
     .order("updated_at", { ascending: false })
     .range(from, to);
+
+  // Filter by specific resume
+  const resumeIdFilter = url.searchParams.get("resume_id");
+  if (resumeIdFilter) {
+    query = query.eq("resume_id", resumeIdFilter);
+  }
+
+  // Filter linked / unlinked
+  const linkedFilter = url.searchParams.get("linked");
+  if (linkedFilter === "true") {
+    query = query.not("resume_id", "is", null);
+  } else if (linkedFilter === "false") {
+    query = query.is("resume_id", null);
+  }
+
+  const { data: jds, error, count } = await query;
 
   if (error) {
     return NextResponse.json({ ok: false, error: "Unable to load job descriptions." }, { status: 500 });
