@@ -41,7 +41,7 @@ export default function JobsLibraryPage() {
       const res = await fetch("/api/job-descriptions?limit=50");
       const body = await res.json().catch(() => ({}));
       if (body?.ok) {
-        setJobs(body.job_descriptions ?? []);
+        setJobs(body.jobs ?? []);
       }
       setLoading(false);
     };

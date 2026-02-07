@@ -157,7 +157,7 @@ export default function NewJobPage() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.ok) throw new Error(body?.error ?? "Unable to create job.");
 
-      router.replace(`/jobs/${body.job_description.id}`);
+      router.replace(`/jobs/${body.job.id}`);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Something went wrong.");
       setStep(2);

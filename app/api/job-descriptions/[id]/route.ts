@@ -3,7 +3,8 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 const MIN_CONTENT_LENGTH = 50;
 
-const JD_COLUMNS = "id, title, company, content, source_url, resume_id, created_at, updated_at";
+const JD_COLUMNS =
+  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // GET /api/job-descriptions/:id  –  Read a single job description
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   }
 
   const { data: jd, error } = await supabase
-    .from("job_descriptions")
+    .from("jobs")
     .select(JD_COLUMNS)
     .eq("id", jdId)
     .eq("user_id", data.user.id)
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
   }
 
-  const response = NextResponse.json({ ok: true, job_description: jd });
+  const response = NextResponse.json({ ok: true, job: jd });
   applyCookies(response);
   return response;
 }
@@ -115,12 +116,23 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     }
   }
 
+  // Reset fit scoring state when content or resume_id changes
+  if ("content" in updates || "resume_id" in updates) {
+    updates.fit_score = null;
+    updates.fit_score_status = "pending";
+    updates.fit_score_error = null;
+    updates.fit_score_version = null;
+    updates.fit_strong_alignment = null;
+    updates.fit_weak_spots = null;
+    updates.fit_areas_to_probe = null;
+  }
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ ok: false, error: "No fields to update." }, { status: 400 });
   }
 
   const { data: jd, error } = await supabase
-    .from("job_descriptions")
+    .from("jobs")
     .update(updates)
     .eq("id", jdId)
     .eq("user_id", data.user.id)
@@ -135,7 +147,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     return NextResponse.json({ ok: false, error: "Unable to update job description." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ ok: true, job_description: jd });
+  const response = NextResponse.json({ ok: true, job: jd });
   applyCookies(response);
   return response;
 }
@@ -157,7 +169,7 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
   }
 
   const { error, count } = await supabase
-    .from("job_descriptions")
+    .from("jobs")
     .delete({ count: "exact" })
     .eq("id", jdId)
     .eq("user_id", data.user.id);

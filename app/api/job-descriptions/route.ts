@@ -3,8 +3,10 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 const MIN_CONTENT_LENGTH = 50;
 
-const JD_COLUMNS = "id, title, company, content, source_url, resume_id, created_at, updated_at";
-const JD_LIST_COLUMNS = "id, title, company, source_url, resume_id, created_at, updated_at";
+const JD_COLUMNS =
+  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, created_at, updated_at";
+const JD_LIST_COLUMNS =
+  "id, title, company, source_url, resume_id, fit_score, fit_score_status, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // POST /api/job-descriptions  –  Create a new job description
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { data: jd, error } = await supabase
-    .from("job_descriptions")
+    .from("jobs")
     .insert({
       user_id: data.user.id,
       title,
@@ -66,6 +68,8 @@ export async function POST(request: NextRequest) {
       content,
       source_url: sourceUrl,
       resume_id: resumeId,
+      // If a resume is attached at creation, mark fit for scoring
+      fit_score_status: resumeId ? "pending" : null,
     })
     .select(JD_COLUMNS)
     .single();
@@ -74,7 +78,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unable to create job description." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ ok: true, job_description: jd }, { status: 201 });
+  const response = NextResponse.json({ ok: true, job: jd }, { status: 201 });
   applyCookies(response);
   return response;
 }
@@ -103,7 +107,7 @@ export async function GET(request: NextRequest) {
   const to = from + limit - 1;
 
   let query = supabase
-    .from("job_descriptions")
+    .from("jobs")
     .select(JD_LIST_COLUMNS, { count: "exact" })
     .eq("user_id", data.user.id)
     .order("updated_at", { ascending: false })
@@ -131,7 +135,7 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.json({
     ok: true,
-    job_descriptions: jds ?? [],
+    jobs: jds ?? [],
     page,
     limit,
     total: count ?? 0,
