@@ -11,7 +11,7 @@ const JD_LIST_COLUMNS =
   "id, title, company, source_url, resume_id, fit_score, fit_score_status, questions_status, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
-// POST /api/job-descriptions  –  Create a new job description
+// POST /api/jobs  –  Create a new job
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error("Supabase insert error:", JSON.stringify(error));
-    return NextResponse.json({ ok: false, error: "Unable to create job description.", details: error.message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to create job.", details: error.message }, { status: 500 });
   }
 
   // Auto-trigger analysis when a resume is attached
@@ -124,12 +124,12 @@ export async function POST(request: NextRequest) {
 }
 
 // ---------------------------------------------------------------------------
-// GET /api/job-descriptions  –  List job descriptions for logged-in user
+// GET /api/jobs  –  List jobs for logged-in user
 //
 // Query params:
 //   page      – 1-based page number (default 1)
 //   limit     – items per page, max 100 (default 20)
-//   resume_id – filter to JDs linked to this resume
+//   resume_id – filter to jobs linked to this resume
 //   linked    – "true" = only linked, "false" = only unlinked
 // ---------------------------------------------------------------------------
 export async function GET(request: NextRequest) {
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
   const { data: jds, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load job descriptions." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to load jobs." }, { status: 500 });
   }
 
   const response = NextResponse.json({

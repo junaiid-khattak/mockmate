@@ -46,7 +46,7 @@ export default function JobBriefPage() {
     let cancelled = false;
 
     const fetchJob = async (): Promise<Job | null> => {
-      const jobRes = await fetch(`/api/job-descriptions/${jobId}`);
+      const jobRes = await fetch(`/api/jobs/${jobId}`);
       const jobBody = await jobRes.json().catch(() => ({}));
       if (!jobRes.ok || !jobBody?.ok) return null;
       return jobBody.job as Job;

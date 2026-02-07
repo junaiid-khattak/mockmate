@@ -7,7 +7,7 @@ const JD_COLUMNS =
   "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
-// GET /api/job-descriptions/:id  –  Read a single job description
+// GET /api/jobs/:id  –  Read a single job
 // ---------------------------------------------------------------------------
 export async function GET(request: NextRequest, context: { params: { id: string } }) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -17,33 +17,33 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const jdId = context.params.id;
-  if (!jdId) {
+  const jobId = context.params.id;
+  if (!jobId) {
     return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
   }
 
-  const { data: jd, error } = await supabase
+  const { data: job, error } = await supabase
     .from("jobs")
     .select(JD_COLUMNS)
-    .eq("id", jdId)
+    .eq("id", jobId)
     .eq("user_id", data.user.id)
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load job description." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to load job." }, { status: 500 });
   }
 
-  if (!jd) {
+  if (!job) {
     return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
   }
 
-  const response = NextResponse.json({ ok: true, job: jd });
+  const response = NextResponse.json({ ok: true, job });
   applyCookies(response);
   return response;
 }
 
 // ---------------------------------------------------------------------------
-// PATCH /api/job-descriptions/:id  –  Update a job description
+// PATCH /api/jobs/:id  –  Update a job
 // ---------------------------------------------------------------------------
 export async function PATCH(request: NextRequest, context: { params: { id: string } }) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -53,8 +53,8 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const jdId = context.params.id;
-  if (!jdId) {
+  const jobId = context.params.id;
+  if (!jobId) {
     return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
   }
 
@@ -135,10 +135,10 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     return NextResponse.json({ ok: false, error: "No fields to update." }, { status: 400 });
   }
 
-  const { data: jd, error } = await supabase
+  const { data: job, error } = await supabase
     .from("jobs")
     .update(updates)
-    .eq("id", jdId)
+    .eq("id", jobId)
     .eq("user_id", data.user.id)
     .select(JD_COLUMNS)
     .single();
@@ -148,16 +148,16 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     if (error.code === "PGRST116") {
       return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
     }
-    return NextResponse.json({ ok: false, error: "Unable to update job description." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to update job." }, { status: 500 });
   }
 
-  const response = NextResponse.json({ ok: true, job: jd });
+  const response = NextResponse.json({ ok: true, job });
   applyCookies(response);
   return response;
 }
 
 // ---------------------------------------------------------------------------
-// DELETE /api/job-descriptions/:id  –  Delete a job description
+// DELETE /api/jobs/:id  –  Delete a job
 // ---------------------------------------------------------------------------
 export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -167,19 +167,19 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const jdId = context.params.id;
-  if (!jdId) {
+  const jobId = context.params.id;
+  if (!jobId) {
     return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
   }
 
   const { error, count } = await supabase
     .from("jobs")
     .delete({ count: "exact" })
-    .eq("id", jdId)
+    .eq("id", jobId)
     .eq("user_id", data.user.id);
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to delete job description." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to delete job." }, { status: 500 });
   }
 
   if (count === 0) {

@@ -140,7 +140,7 @@ export default function NewJobPage() {
 
     try {
       const [res] = await Promise.all([
-        fetch("/api/job-descriptions", {
+        fetch("/api/jobs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

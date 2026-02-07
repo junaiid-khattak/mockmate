@@ -38,7 +38,7 @@ export default function JobsLibraryPage() {
       setFirstName(metaName ?? fallback);
       setCheckingAuth(false);
 
-      const res = await fetch("/api/job-descriptions?limit=50");
+      const res = await fetch("/api/jobs?limit=50");
       const body = await res.json().catch(() => ({}));
       if (body?.ok) {
         setJobs(body.jobs ?? []);
