@@ -18,9 +18,14 @@ type Job = {
   fit_strong_alignment: string[] | null;
   fit_weak_spots: string[] | null;
   fit_areas_to_probe: string[] | null;
+  questions: unknown[] | null;
+  questions_status: "pending" | "ready" | "failed" | null;
+  questions_error: string | null;
   created_at: string;
   updated_at: string;
 };
+
+const POLL_INTERVAL_MS = 3000;
 
 
 export default function JobBriefPage() {
@@ -37,6 +42,28 @@ export default function JobBriefPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const fetchJob = async (): Promise<Job | null> => {
+      const jobRes = await fetch(`/api/job-descriptions/${jobId}`);
+      const jobBody = await jobRes.json().catch(() => ({}));
+      if (!jobRes.ok || !jobBody?.ok) return null;
+      return jobBody.job as Job;
+    };
+
+    const needsPolling = (j: Job) =>
+      j.fit_score_status === "pending" || j.questions_status === "pending";
+
+    const poll = async () => {
+      const updated = await fetchJob();
+      if (cancelled || !updated) return;
+      setJob(updated);
+      if (needsPolling(updated)) {
+        pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
+      }
+    };
+
     const init = async () => {
       const { data } = await supabase.auth.getUser();
       if (!data.user) {
@@ -49,15 +76,13 @@ export default function JobBriefPage() {
       setFirstName(metaName ?? fallback);
       setCheckingAuth(false);
 
-      // Fetch job
-      const jobRes = await fetch(`/api/job-descriptions/${jobId}`);
-      const jobBody = await jobRes.json().catch(() => ({}));
-      if (!jobRes.ok || !jobBody?.ok) {
+      const jd = await fetchJob();
+      if (cancelled) return;
+      if (!jd) {
         setNotFound(true);
         setLoading(false);
         return;
       }
-      const jd = jobBody.job as Job;
       setJob(jd);
 
       // Fetch resume filename if linked
@@ -70,8 +95,18 @@ export default function JobBriefPage() {
       }
 
       setLoading(false);
+
+      // Start polling if analysis is pending
+      if (needsPolling(jd)) {
+        pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
+      }
     };
     init();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
   }, [router, supabase, jobId]);
 
   const handleLogout = async () => {

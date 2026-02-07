@@ -4,7 +4,7 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 const MIN_CONTENT_LENGTH = 50;
 
 const JD_COLUMNS =
-  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, created_at, updated_at";
+  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // GET /api/job-descriptions/:id  –  Read a single job description
@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     }
   }
 
-  // Reset fit scoring state when content or resume_id changes
+  // Reset all analysis state when content or resume_id changes
   if ("content" in updates || "resume_id" in updates) {
     updates.fit_score = null;
     updates.fit_score_status = "pending";
@@ -125,6 +125,10 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
     updates.fit_strong_alignment = null;
     updates.fit_weak_spots = null;
     updates.fit_areas_to_probe = null;
+    updates.questions = null;
+    updates.questions_status = "pending";
+    updates.questions_error = null;
+    updates.questions_version = null;
   }
 
   if (Object.keys(updates).length === 0) {

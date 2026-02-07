@@ -1,12 +1,14 @@
+import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 const MIN_CONTENT_LENGTH = 50;
 
 const JD_COLUMNS =
-  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, created_at, updated_at";
+  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
 const JD_LIST_COLUMNS =
-  "id, title, company, source_url, resume_id, fit_score, fit_score_status, created_at, updated_at";
+  "id, title, company, source_url, resume_id, fit_score, fit_score_status, questions_status, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // POST /api/job-descriptions  –  Create a new job description
@@ -75,7 +77,45 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to create job description." }, { status: 500 });
+    console.error("Supabase insert error:", JSON.stringify(error));
+    return NextResponse.json({ ok: false, error: "Unable to create job description.", details: error.message }, { status: 500 });
+  }
+
+  // Auto-trigger analysis when a resume is attached
+  if (resumeId && jd) {
+    const queueUrl = process.env.SQS_QUEUE_URL;
+    if (queueUrl) {
+      const analysisRunId = randomUUID();
+      const { error: updateErr } = await supabase
+        .from("jobs")
+        .update({
+          analysis_run_id: analysisRunId,
+          analysis_requested_at: new Date().toISOString(),
+          fit_score_status: "pending",
+          questions_status: "pending",
+        })
+        .eq("id", jd.id);
+
+      if (!updateErr) {
+        try {
+          const sqs = new SQSClient({});
+          await sqs.send(
+            new SendMessageCommand({
+              QueueUrl: queueUrl,
+              MessageBody: JSON.stringify({
+                job_id: jd.id,
+                analysis_run_id: analysisRunId,
+                task_type: "BOTH",
+                request_id: randomUUID(),
+                force: false,
+              }),
+            }),
+          );
+        } catch (sqsErr) {
+          console.error("SQS send failed:", sqsErr);
+        }
+      }
+    }
   }
 
   const response = NextResponse.json({ ok: true, job: jd }, { status: 201 });
