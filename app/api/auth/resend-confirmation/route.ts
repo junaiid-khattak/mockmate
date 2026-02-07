@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   const appUrl = getAppUrl(request);
-  const emailRedirectTo = `${appUrl}/auth/callback?next=/dashboard`;
+  const emailRedirectTo = `${appUrl}/auth/callback?next=/jobs`;
 
   const supabase = createClient(supabaseUrl, anonKey);
   const { error } = await supabase.auth.resend({

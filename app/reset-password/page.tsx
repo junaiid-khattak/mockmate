@@ -23,7 +23,7 @@ export default async function Page() {
       return { ok: false, error: "Unable to update password." };
     }
 
-    redirect("/dashboard");
+    redirect("/jobs");
   }
 
   return (
