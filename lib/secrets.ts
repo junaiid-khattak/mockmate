@@ -63,7 +63,7 @@ async function loadSecrets(): Promise<ServerSecrets> {
     secrets[key] = value;
   }
 
-  return secrets as ServerSecrets;
+  return secrets as unknown as ServerSecrets;
 }
 
 function readFromEnv(): ServerSecrets {
@@ -75,5 +75,5 @@ function readFromEnv(): ServerSecrets {
     }
     secrets[key] = value;
   }
-  return secrets as ServerSecrets;
+  return secrets as unknown as ServerSecrets;
 }
