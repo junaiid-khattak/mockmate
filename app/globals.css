@@ -3,15 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #08080C;
-  --foreground: #F0F0F5;
-  --surface-1: rgba(255, 255, 255, 0.03);
-  --surface-2: rgba(255, 255, 255, 0.05);
-  --surface-3: rgba(255, 255, 255, 0.08);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.14);
-  --text-secondary: #8B8B9E;
-  --text-tertiary: #55556A;
+  --background: #ffffff;
+  --foreground: #0f172a;
   --accent-violet: #7C5CFC;
   --accent-blue: #3B82F6;
 }
@@ -126,4 +119,19 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Light-mode glass card */
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(124, 92, 252, 0.08);
+}
+
+/* Light-mode CTA glow */
+.glow-accent-light {
+  box-shadow:
+    0 0 24px rgba(124, 92, 252, 0.15),
+    0 0 64px rgba(124, 92, 252, 0.06);
 }

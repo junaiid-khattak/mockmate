@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Signup failed" }, { status: 400 });
   }
 
-  const service = createServiceRoleSupabaseClient();
+  const service = await createServiceRoleSupabaseClient();
 
   const { error: profileError } = await service.from("profiles").upsert(
     {

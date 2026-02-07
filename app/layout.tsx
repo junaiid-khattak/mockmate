@@ -5,14 +5,14 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "MockMate — Resume-based mock interviews",
+  title: "nayld.ai — Resume-based mock interviews",
   description: "Upload your resume. Get interviewed. Get a scorecard. Improve fast.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.variable + " min-h-screen bg-mm-bg text-mm-text antialiased"}>
+      <body className={inter.variable + " min-h-screen bg-white text-slate-900 antialiased"}>
         {children}
       </body>
     </html>

@@ -9,7 +9,7 @@ export interface ButtonProps
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500 text-white shadow-sm hover:shadow-md",
+    "bg-gradient-to-r from-mm-violet to-mm-blue text-white shadow-sm hover:shadow-md",
   secondary: "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900",
   outline:
     "border border-slate-200 hover:border-slate-300 text-slate-900 dark:text-slate-100 dark:border-slate-700",
@@ -29,7 +29,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center rounded-full font-medium transition-transform duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed",
+          "inline-flex items-center justify-center rounded-full font-medium transition-transform duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mm-violet focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed",
           variantStyles[variant],
           sizeStyles[size],
           className

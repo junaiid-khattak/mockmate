@@ -1,37 +1,22 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { getSecrets } from "@/lib/secrets";
 
 let cachedClient: S3Client | null = null;
 
-function getS3Env() {
-  const region = process.env.AWS_REGION;
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-  const bucket = process.env.S3_BUCKET_RESUMES;
-
-  if (!region || !accessKeyId || !secretAccessKey || !bucket) {
-    throw new Error("Missing AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, or S3_BUCKET_RESUMES");
-  }
-
-  return { region, accessKeyId, secretAccessKey, bucket };
-}
-
-export function getS3Client() {
+export async function getS3Client(): Promise<S3Client> {
   if (cachedClient) return cachedClient;
-  const { region, accessKeyId, secretAccessKey } = getS3Env();
+  const secrets = await getSecrets();
 
   cachedClient = new S3Client({
-    region,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
+    region: secrets.AWS_REGION,
   });
 
   return cachedClient;
 }
 
-export function getResumeBucket() {
-  return getS3Env().bucket;
+export async function getResumeBucket(): Promise<string> {
+  const secrets = await getSecrets();
+  return secrets.S3_BUCKET_RESUMES;
 }
 
 function sanitizeFilename(filename: string) {
