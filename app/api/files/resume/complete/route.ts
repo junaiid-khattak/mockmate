@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid bucket." }, { status: 400 });
   }
 
-  const { data: fileRow, error: insertError } = await supabase
-    .from("files")
+  const { data: resumeRow, error: insertError } = await supabase
+    .from("resumes")
     .insert({
       user_id: data.user.id,
       kind: "resume",
@@ -64,13 +64,13 @@ export async function POST(request: NextRequest) {
     .select("id")
     .single();
 
-  if (insertError || !fileRow) {
-    return NextResponse.json({ ok: false, error: "Unable to store file metadata." }, { status: 500 });
+  if (insertError || !resumeRow) {
+    return NextResponse.json({ ok: false, error: "Unable to store resume metadata." }, { status: 500 });
   }
 
   return NextResponse.json({
     ok: true,
-    fileId: fileRow.id,
+    resumeId: resumeRow.id,
     extractedTextStatus: "pending",
   });
 }

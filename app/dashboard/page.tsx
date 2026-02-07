@@ -58,12 +58,12 @@ export default function Page() {
     }
   };
 
-  const pollFileStatus = async (id: string) => {
+  const pollResumeStatus = async (id: string) => {
     try {
       const response = await fetch(`/api/files/${id}`);
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data?.ok) {
-        pollTimeoutRef.current = setTimeout(() => pollFileStatus(id), 4000);
+        pollTimeoutRef.current = setTimeout(() => pollResumeStatus(id), 4000);
         return;
       }
 
@@ -80,9 +80,9 @@ export default function Page() {
       }
 
       setAnalysisStatus("analyzing");
-      pollTimeoutRef.current = setTimeout(() => pollFileStatus(id), 3000);
+      pollTimeoutRef.current = setTimeout(() => pollResumeStatus(id), 3000);
     } catch {
-      pollTimeoutRef.current = setTimeout(() => pollFileStatus(id), 5000);
+      pollTimeoutRef.current = setTimeout(() => pollResumeStatus(id), 5000);
     }
   };
 
@@ -179,13 +179,13 @@ export default function Page() {
       if (!completeResponse.ok || !completeData.ok) {
         throw new Error(completeData?.error ?? "Unable to complete upload.");
       }
-      if (!completeData.fileId) {
-        throw new Error("Upload completed without a file id.");
+      if (!completeData.resumeId) {
+        throw new Error("Upload completed without a resume id.");
       }
 
       setResumeUploaded(true);
       setAnalysisStatus("analyzing");
-      pollFileStatus(completeData.fileId);
+      pollResumeStatus(completeData.resumeId);
     } catch (error) {
       setResumeUploaded(false);
       setAnalysisStatus("failed");
@@ -260,7 +260,7 @@ export default function Page() {
         {currentView === "NO_RESUME" && (
           <StateNoResume
             isUploading={uploading}
-            onPickFile={handlePickResume}
+            onPickResume={handlePickResume}
             error={uploadError}
           />
         )}

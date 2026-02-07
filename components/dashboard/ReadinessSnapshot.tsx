@@ -33,7 +33,7 @@ type ReadinessSnapshotProps = {
   isUploading: boolean;
   analysisStatus: "idle" | "analyzing" | "ready" | "failed";
   error?: string | null;
-  onPickFile: (file: File) => void;
+  onPickResume: (file: File) => void;
   onUploadAnother: () => void;
 };
 
@@ -43,7 +43,7 @@ export function ReadinessSnapshot({
   isUploading,
   analysisStatus,
   error,
-  onPickFile,
+  onPickResume,
   onUploadAnother,
 }: ReadinessSnapshotProps) {
   let statusLabel = "Not attached";
@@ -80,7 +80,7 @@ export function ReadinessSnapshot({
         filename={filename}
         isUploading={isUploading}
         error={error}
-        onPickFile={onPickFile}
+        onPickResume={onPickResume}
         onUploadAnother={onUploadAnother}
       />
     </section>

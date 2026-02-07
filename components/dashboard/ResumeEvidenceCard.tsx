@@ -10,7 +10,7 @@ type ResumeEvidenceCardProps = {
   filename?: string | null;
   isUploading: boolean;
   error?: string | null;
-  onPickFile: (file: File) => void;
+  onPickResume: (file: File) => void;
   onUploadAnother: () => void;
 };
 
@@ -19,19 +19,19 @@ export function ResumeEvidenceCard({
   filename,
   isUploading,
   error,
-  onPickFile,
+  onPickResume,
   onUploadAnother,
 }: ResumeEvidenceCardProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleChooseFile = () => {
+  const handleChooseResume = () => {
     inputRef.current?.click();
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleResumeChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    onPickFile(file);
+    onPickResume(file);
     event.target.value = "";
   };
 
@@ -60,7 +60,7 @@ export function ResumeEvidenceCard({
             <Button
               variant="outline"
               className="w-full border-slate-700 text-slate-200 sm:w-auto"
-              onClick={handleChooseFile}
+              onClick={handleChooseResume}
               disabled={isUploading}
             >
               {isUploading ? <Spinner className="mr-2" size="sm" /> : null}
@@ -72,7 +72,7 @@ export function ResumeEvidenceCard({
               className="w-full border-slate-700 text-slate-200 sm:w-auto"
               onClick={() => {
                 onUploadAnother();
-                handleChooseFile();
+                handleChooseResume();
               }}
               disabled={isUploading}
             >
@@ -89,7 +89,7 @@ export function ResumeEvidenceCard({
           type="file"
           accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           className="hidden"
-          onChange={handleFileChange}
+          onChange={handleResumeChange}
         />
       </CardContent>
     </Card>

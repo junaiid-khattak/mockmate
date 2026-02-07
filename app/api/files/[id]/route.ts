@@ -9,31 +9,31 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const fileId = context.params.id;
-  if (!fileId) {
-    return NextResponse.json({ ok: false, error: "Missing file id" }, { status: 400 });
+  const resumeId = context.params.id;
+  if (!resumeId) {
+    return NextResponse.json({ ok: false, error: "Missing resume id." }, { status: 400 });
   }
 
-  const { data: file, error } = await supabase
-    .from("files")
+  const { data: resume, error } = await supabase
+    .from("resumes")
     .select("id, original_filename, extracted_text_status, extracted_text_error")
-    .eq("id", fileId)
+    .eq("id", resumeId)
     .eq("user_id", data.user.id)
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load file." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Unable to load resume." }, { status: 500 });
   }
 
-  if (!file) {
+  if (!resume) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
 
   return NextResponse.json({
     ok: true,
-    fileId: file.id,
-    filename: file.original_filename,
-    extractedTextStatus: file.extracted_text_status,
-    extractedTextError: file.extracted_text_error,
+    resumeId: resume.id,
+    filename: resume.original_filename,
+    extractedTextStatus: resume.extracted_text_status,
+    extractedTextError: resume.extracted_text_error,
   });
 }

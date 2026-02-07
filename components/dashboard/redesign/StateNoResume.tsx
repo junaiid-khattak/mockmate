@@ -5,25 +5,25 @@ import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 
 type StateNoResumeProps = {
   isUploading: boolean;
-  onPickFile: (file: File) => void;
+  onPickResume: (file: File) => void;
   error?: string | null;
 };
 
 export function StateNoResume({
   isUploading,
-  onPickFile,
+  onPickResume,
   error,
 }: StateNoResumeProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleClick = () => {
-    fileInputRef.current?.click();
+    resumeInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      onPickFile(e.target.files[0]);
+      onPickResume(e.target.files[0]);
     }
   };
 
@@ -46,10 +46,10 @@ export function StateNoResume({
       setIsDragging(false);
       const file = e.dataTransfer.files?.[0];
       if (file) {
-        onPickFile(file);
+        onPickResume(file);
       }
     },
-    [onPickFile]
+    [onPickResume]
   );
 
   return (
@@ -122,8 +122,8 @@ export function StateNoResume({
 
       <input
         type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
+        ref={resumeInputRef}
+        onChange={handleResumeChange}
         className="hidden"
         accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
       />
