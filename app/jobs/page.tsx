@@ -13,6 +13,8 @@ type JobSummary = {
   title: string | null;
   company: string | null;
   resume_id: string | null;
+  fit_score: number | null;
+  fit_score_status: "pending" | "ready" | "failed" | null;
   updated_at: string;
 };
 
@@ -56,20 +58,20 @@ export default function JobsLibraryPage() {
   if (checkingAuth) return null;
 
   return (
-    <div className="text-gray-900">
+    <div className="text-slate-900">
       <Header firstName={firstName} onLogout={handleLogout} />
 
       <div className="mx-auto max-w-4xl px-6 py-10">
         {loading ? (
           <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
           </div>
         ) : jobs.length === 0 ? (
           <EmptyState />
         ) : (
           <>
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900">
                 Your jobs
               </h1>
               <Link
@@ -89,6 +91,8 @@ export default function JobsLibraryPage() {
                   company={job.company}
                   resumeId={job.resume_id}
                   updatedAt={job.updated_at}
+                  fitScore={job.fit_score}
+                  fitScoreStatus={job.fit_score_status}
                 />
               ))}
             </div>

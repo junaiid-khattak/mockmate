@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Header } from "@/components/jobs/Header";
+import { Mic, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
 type Job = {
   id: string;
@@ -40,6 +41,9 @@ export default function JobBriefPage() {
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reanalyzing, setReanalyzing] = useState(false);
 
   useEffect(() => {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -114,14 +118,59 @@ export default function JobBriefPage() {
     router.replace("/login");
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.replace("/jobs");
+      }
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
+
+  const handleReanalyze = async () => {
+    setReanalyzing(true);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/analyze/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ force: true }),
+      });
+      if (res.ok) {
+        // Reset job to pending state and restart polling
+        setJob((prev) =>
+          prev
+            ? {
+                ...prev,
+                fit_score_status: "pending",
+                fit_score: null,
+                fit_score_error: null,
+                fit_strong_alignment: null,
+                fit_weak_spots: null,
+                fit_areas_to_probe: null,
+                questions_status: "pending",
+                questions: null,
+                questions_error: null,
+              }
+            : prev,
+        );
+      }
+    } finally {
+      setReanalyzing(false);
+    }
+  };
+
   if (checkingAuth) return null;
 
   if (loading) {
     return (
-      <div className="text-gray-900">
+      <div className="text-slate-900">
         <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
         </div>
       </div>
     );
@@ -129,11 +178,11 @@ export default function JobBriefPage() {
 
   if (notFound || !job) {
     return (
-      <div className="text-gray-900">
+      <div className="text-slate-900">
         <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-          <h2 className="text-lg font-semibold text-gray-900">Job not found</h2>
-          <p className="mt-2 text-sm text-gray-500">This job may have been deleted or doesn&apos;t belong to you.</p>
+          <h2 className="text-lg font-semibold text-slate-900">Job not found</h2>
+          <p className="mt-2 text-sm text-slate-500">This job may have been deleted or doesn&apos;t belong to you.</p>
         </div>
       </div>
     );
@@ -142,21 +191,48 @@ export default function JobBriefPage() {
   const displayTitle = job.title || "Untitled position";
 
   return (
-    <div className="text-gray-900">
+    <div className="text-slate-900">
       <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
 
       <div className="mx-auto max-w-3xl px-6 py-10">
         {/* Title block */}
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            {displayTitle}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              {displayTitle}
+            </h1>
+            {confirmDelete ? (
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700 disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Confirm"}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                aria-label="Delete job"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           {job.company && (
-            <p className="mt-1 text-base text-gray-500">{job.company}</p>
+            <p className="mt-1 text-base text-slate-500">{job.company}</p>
           )}
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
             {resumeFilename && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1">
+              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                   <path d="M7 1H3C2.44772 1 2 1.44772 2 2V10C2 10.5523 2.44772 11 3 11H9C9.55228 11 10 10.5523 10 10V4L7 1Z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -177,8 +253,8 @@ export default function JobBriefPage() {
         </div>
 
         {/* Fit Score */}
-        <section className="mt-10 rounded-xl border border-gray-200 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+        <section className="mt-10 rounded-xl border border-slate-200 p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Fit Score
           </h2>
 
@@ -186,26 +262,36 @@ export default function JobBriefPage() {
             <>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-bold text-mm-violet">{job.fit_score}</span>
-                <span className="text-lg text-gray-400">/ 10</span>
+                <span className="text-lg text-slate-400">/ 10</span>
               </div>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-slate-500">
                 Based on resume-to-job alignment.
               </p>
             </>
           ) : job.fit_score_status === "pending" ? (
             <div className="mt-4 flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
-              <span className="text-sm text-gray-500">Fit score pending</span>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
+              <span className="text-sm text-slate-500">Fit score pending</span>
             </div>
           ) : job.fit_score_status === "failed" ? (
-            <p className="mt-4 text-sm text-gray-500">
-              Unable to calculate fit score.{" "}
-              {job.fit_score_error && (
-                <span className="text-gray-400">({job.fit_score_error})</span>
-              )}
-            </p>
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-slate-500">
+                Unable to calculate fit score.{" "}
+                {job.fit_score_error && (
+                  <span className="text-slate-400">({job.fit_score_error})</span>
+                )}
+              </p>
+              <button
+                onClick={handleReanalyze}
+                disabled={reanalyzing}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
+                {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
+              </button>
+            </div>
           ) : (
-            <p className="mt-4 text-sm text-gray-400">
+            <p className="mt-4 text-sm text-slate-400">
               Attach a resume to generate a fit score.
             </p>
           )}
@@ -214,7 +300,7 @@ export default function JobBriefPage() {
         {/* Strong Alignment — only when data exists */}
         {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Strong Alignment
             </h2>
             <ul className="mt-4 space-y-3">
@@ -223,7 +309,7 @@ export default function JobBriefPage() {
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-emerald-500">
                     <path d="M13.3 4L6 11.3L2.7 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span className="text-sm text-gray-700">{item}</span>
+                  <span className="text-sm text-slate-700">{item}</span>
                 </li>
               ))}
             </ul>
@@ -233,7 +319,7 @@ export default function JobBriefPage() {
         {/* Weak Spots — only when data exists */}
         {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Weak Spots
             </h2>
             <ul className="mt-4 space-y-3">
@@ -244,7 +330,7 @@ export default function JobBriefPage() {
                     <path d="M8 5.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     <circle cx="8" cy="10.5" r="0.5" fill="currentColor" />
                   </svg>
-                  <span className="text-sm text-gray-700">{item}</span>
+                  <span className="text-sm text-slate-700">{item}</span>
                 </li>
               ))}
             </ul>
@@ -254,35 +340,82 @@ export default function JobBriefPage() {
         {/* Areas Likely to Be Probed — only when data exists */}
         {job.fit_areas_to_probe && job.fit_areas_to_probe.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Areas Likely to Be Probed
             </h2>
             <ul className="mt-4 space-y-3">
               {job.fit_areas_to_probe.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-gray-400">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-slate-400">
                     <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
                     <path d="M6 6.5C6 5.67 6.67 5 7.5 5H8.5C9.33 5 10 5.67 10 6.5C10 7.33 9.33 8 8.5 8H8V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
                     <circle cx="8" cy="10.5" r="0.5" fill="currentColor" />
                   </svg>
-                  <span className="text-sm text-gray-700">{item}</span>
+                  <span className="text-sm text-slate-700">{item}</span>
                 </li>
               ))}
             </ul>
           </section>
         )}
 
-        {/* CTA */}
-        <div className="mt-12 border-t border-gray-100 pt-8">
-          <button
-            disabled
-            className="w-full rounded-lg bg-gray-100 px-6 py-3 text-sm font-medium text-gray-400 cursor-not-allowed"
-          >
-            Start Interview — Coming soon
-          </button>
-          <p className="mt-3 text-center text-xs text-gray-400">
-            Live mock interviews are being built. Your brief is saved and ready.
+        {/* Questions */}
+        <section className="mt-10">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Tailored Interview Questions
+          </h2>
+
+          {job.questions_status === "ready" && job.questions && job.questions.length > 0 ? (
+            <ol className="mt-4 space-y-3">
+              {(job.questions as string[]).map((q, i) => (
+                <li key={i} className="flex gap-4 rounded-xl border border-slate-200 p-4">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-mm-violet/[0.06] text-xs font-bold text-mm-violet">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm leading-relaxed text-slate-700">{q}</p>
+                </li>
+              ))}
+            </ol>
+          ) : job.questions_status === "pending" ? (
+            <div className="mt-4 flex items-center gap-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
+              <span className="text-sm text-slate-500">Generating tailored questions...</span>
+            </div>
+          ) : job.questions_status === "failed" ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-slate-500">
+                Unable to generate questions.{" "}
+                {job.questions_error && (
+                  <span className="text-slate-400">({job.questions_error})</span>
+                )}
+              </p>
+              <button
+                onClick={handleReanalyze}
+                disabled={reanalyzing}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
+                {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
+              </button>
+            </div>
+          ) : null}
+        </section>
+
+        {/* Mock Interview CTA */}
+        <div className="mt-12 rounded-xl border border-slate-200 bg-slate-50/50 p-6 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-mm-violet/[0.06]">
+            <Mic className="h-6 w-6 text-mm-violet" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">Mock interviews are coming</h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            Practice with an AI interviewer that adapts in real-time using your fit score and tailored questions. Your brief is saved and ready.
           </p>
+          <a
+            href="mailto:hello@nayld.ai?subject=Early%20access%20to%20mock%20interviews"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-mm-violet transition hover:underline"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Want early access? Let us know
+          </a>
         </div>
       </div>
     </div>

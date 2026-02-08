@@ -3,9 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { GoogleGlyph } from "@/components/ui/google-glyph";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,18 +43,6 @@ export function LoginForm({ onSubmit, isSubmitting = false, serverError }: Login
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <Button variant="outline" className="w-full gap-2" type="button">
-          <GoogleGlyph />
-          Continue with Google
-        </Button>
-        <div className="flex items-center gap-3">
-          <Separator className="flex-1" />
-          <span className="text-xs uppercase tracking-wide text-slate-400">or</span>
-          <Separator className="flex-1" />
-        </div>
-      </div>
-
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <Field
           id="email"

@@ -22,10 +22,10 @@ export function EmptyState() {
         </svg>
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-tight text-gray-900">
+      <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
         Your interview prep starts here
       </h2>
-      <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-gray-500">
+      <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-slate-500">
         Add a job you&apos;re targeting and we&apos;ll build a tailored preparation brief
         grounded in your resume.
       </p>
@@ -37,9 +37,8 @@ export function EmptyState() {
         Prepare for a job
       </Link>
 
-      <p className="mt-16 max-w-xs text-xs leading-relaxed text-gray-400">
-        You&apos;re in the right hands. Everything here is built to help you
-        walk into your next interview with clarity and confidence.
+      <p className="mt-16 max-w-xs text-xs leading-relaxed text-slate-400">
+        Takes under 2 minutes. Free to start.
       </p>
     </div>
   );

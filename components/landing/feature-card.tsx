@@ -16,7 +16,7 @@ export function FeatureCard({ title, description, icon: Icon, badge, className }
     <Card className={cn("group h-full border-slate-200/80 transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800", className)}>
       <CardContent className="space-y-4 p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shadow-sm dark:bg-indigo-500/10 dark:text-indigo-200">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-mm-violet/[0.06] text-mm-violet shadow-sm">
             <Icon className="h-6 w-6" />
           </div>
           {badge ? <Badge className="bg-slate-900 text-white dark:bg-white dark:text-slate-900">{badge}</Badge> : null}

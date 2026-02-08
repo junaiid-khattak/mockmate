@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Header } from "@/components/jobs/Header";
+import { Sparkles } from "lucide-react";
 
 type Resume = { id: string; original_filename: string | null; created_at: string };
 
@@ -136,7 +137,7 @@ export default function NewJobPage() {
     setCreateError(null);
 
     // Small delay so the interstitial feels intentional
-    const minDelay = new Promise((r) => setTimeout(r, 2000));
+    const minDelay = new Promise((r) => setTimeout(r, 800));
 
     try {
       const [res] = await Promise.all([
@@ -167,7 +168,7 @@ export default function NewJobPage() {
   if (checkingAuth) return null;
 
   return (
-    <div className="text-gray-900">
+    <div className="text-slate-900">
       <Header
         firstName={firstName}
         onLogout={handleLogout}
@@ -176,28 +177,35 @@ export default function NewJobPage() {
       />
 
       <div className="mx-auto max-w-xl px-6 py-10">
-        {/* ── Step indicator ── */}
+        {/* ── Progress bar ── */}
         {step < 3 && (
-          <div className="mb-8 text-center">
-            <span className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-500">
-              Step {step} of 2
-            </span>
+          <div className="mb-8">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span className={step >= 1 ? "text-mm-violet" : ""}>Job details</span>
+              <span className={step >= 2 ? "text-mm-violet" : ""}>Resume</span>
+            </div>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-mm-violet to-mm-blue transition-all duration-500 ease-out"
+                style={{ width: step === 1 ? "50%" : "100%" }}
+              />
+            </div>
           </div>
         )}
 
         {/* ── Step 1: Job details ── */}
         {step === 1 && (
           <div>
-            <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">
+            <h1 className="text-center text-2xl font-semibold tracking-tight text-slate-900">
               Tell us about the role
             </h1>
-            <p className="mt-2 text-center text-sm text-gray-500">
+            <p className="mt-2 text-center text-sm text-slate-500">
               We&apos;ll use this to tailor your preparation brief.
             </p>
 
             <div className="mt-8 space-y-5">
               <div>
-                <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label htmlFor="title" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Job title <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -206,13 +214,13 @@ export default function NewJobPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Senior Software Engineer"
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
               </div>
 
               <div>
-                <label htmlFor="company" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Company <span className="text-xs text-gray-400">(recommended)</span>
+                <label htmlFor="company" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Company <span className="text-xs text-slate-400">(recommended)</span>
                 </label>
                 <input
                   id="company"
@@ -220,12 +228,12 @@ export default function NewJobPage() {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="e.g. Google"
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
               </div>
 
               <div>
-                <label htmlFor="content" className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label htmlFor="content" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Job description <span className="text-red-400">*</span>
                 </label>
                 <textarea
@@ -234,16 +242,16 @@ export default function NewJobPage() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Paste the full job description here..."
-                  className="w-full resize-y rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
+                  className="w-full resize-y rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-slate-400">
                   {content.trim().length} / {MIN_CONTENT} characters minimum
                 </p>
               </div>
 
               <div>
-                <label htmlFor="sourceUrl" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Job link <span className="text-xs text-gray-400">(optional)</span>
+                <label htmlFor="sourceUrl" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Job link <span className="text-xs text-slate-400">(optional)</span>
                 </label>
                 <input
                   id="sourceUrl"
@@ -251,7 +259,7 @@ export default function NewJobPage() {
                   value={sourceUrl}
                   onChange={(e) => setSourceUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
               </div>
             </div>
@@ -269,17 +277,17 @@ export default function NewJobPage() {
         {/* ── Step 2: Resume attachment ── */}
         {step === 2 && (
           <div>
-            <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">
+            <h1 className="text-center text-2xl font-semibold tracking-tight text-slate-900">
               Attach your resume
             </h1>
-            <p className="mt-2 text-center text-sm text-gray-500">
+            <p className="mt-2 text-center text-sm text-slate-500">
               We&apos;ll compare your background against the job to build your brief.
             </p>
 
             <div className="mt-8">
               {loadingResumes ? (
                 <div className="flex justify-center py-12">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -289,7 +297,7 @@ export default function NewJobPage() {
                       className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 transition-all ${
                         selectedResumeId === r.id
                           ? "border-mm-violet bg-violet-50/50 ring-1 ring-mm-violet/30"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       <input
@@ -301,7 +309,7 @@ export default function NewJobPage() {
                       />
                       <div
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                          selectedResumeId === r.id ? "border-mm-violet bg-mm-violet" : "border-gray-300"
+                          selectedResumeId === r.id ? "border-mm-violet bg-mm-violet" : "border-slate-300"
                         }`}
                       >
                         {selectedResumeId === r.id && (
@@ -311,10 +319,10 @@ export default function NewJobPage() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-gray-900">
+                        <p className="truncate text-sm font-medium text-slate-900">
                           {r.original_filename ?? "Resume"}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-slate-400">
                           Uploaded {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </p>
                       </div>
@@ -326,20 +334,20 @@ export default function NewJobPage() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-gray-300 p-4 text-left transition-all hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 p-4 text-left transition-all hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50"
                   >
                     {isUploading ? (
                       <div className="flex h-5 w-5 items-center justify-center">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-mm-violet" />
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-mm-violet" />
                       </div>
                     ) : (
-                      <div className="flex h-5 w-5 items-center justify-center text-gray-400">
+                      <div className="flex h-5 w-5 items-center justify-center text-slate-400">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M8 3V13M3 8H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
                       </div>
                     )}
-                    <span className="text-sm font-medium text-gray-600">
+                    <span className="text-sm font-medium text-slate-600">
                       {isUploading ? "Uploading..." : "Upload new resume"}
                     </span>
                   </button>
@@ -369,7 +377,7 @@ export default function NewJobPage() {
             <div className="mt-8 flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 rounded-lg border border-gray-200 px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                className="flex-1 rounded-lg border border-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 Back
               </button>
@@ -387,12 +395,17 @@ export default function NewJobPage() {
         {/* ── Step 3: Generating brief ── */}
         {step === 3 && (
           <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
-            <div className="mb-6 h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
-            <h2 className="text-lg font-semibold text-gray-900">
-              Preparing your brief
+            <div className="relative mb-6">
+              <div className="h-16 w-16 animate-spin rounded-full border-2 border-slate-100 border-t-mm-violet" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-mm-violet" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Building your interview brief
             </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              This will only take a moment.
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-slate-500">
+              Analyzing the job, scoring your resume fit, and generating tailored questions.
             </p>
           </div>
         )}

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRight,
   BarChart3,
   Brain,
   Briefcase,
   CheckCircle2,
+  Menu,
   Mic,
   Play,
   Search,
@@ -15,10 +17,11 @@ import {
   TrendingUp,
   Upload,
   Users,
+  X,
   XCircle,
   Zap,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -261,6 +264,8 @@ const scaleIn = {
 // ---------------------------------------------------------------------------
 
 export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* ================================================================ */}
@@ -298,11 +303,64 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 Log In
               </Button>
             </a>
-            <Button size="sm" onClick={onPrimaryCta}>
+            <Button size="sm" onClick={onPrimaryCta} className="hidden sm:inline-flex">
               Get Started Free
             </Button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 md:hidden"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden border-t border-slate-100 bg-white md:hidden"
+            >
+              <nav className="flex flex-col gap-1 px-6 py-4">
+                {navItems.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+                <Separator className="my-2" />
+                <a
+                  href="/login"
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Log In
+                </a>
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onPrimaryCta?.();
+                  }}
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ================================================================ */}
