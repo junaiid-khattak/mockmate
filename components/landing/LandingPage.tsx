@@ -12,7 +12,6 @@ import {
   Play,
   Search,
   Shield,
-  Sparkles,
   Target,
   TrendingUp,
   Upload,
@@ -21,6 +20,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -273,13 +273,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       {/* ================================================================ */}
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <a href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-mm-violet to-mm-blue text-white shadow-sm">
-              <Sparkles className="h-[18px] w-[18px]" />
-            </div>
-            <span className="text-lg font-semibold text-slate-900">
-              nayld.ai
-            </span>
+          <a href="/">
+            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-9 w-auto" priority />
           </a>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-500 md:flex">
@@ -749,13 +744,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       {/* ================================================================ */}
       <footer className="border-t border-slate-100 bg-white py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <a href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-mm-violet to-mm-blue text-white">
-              <Sparkles className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-sm font-semibold text-slate-900">
-              nayld.ai
-            </span>
+          <a href="/">
+            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-7 w-auto" />
           </a>
 
           <nav className="flex items-center gap-6 text-sm text-slate-500">

@@ -80,7 +80,7 @@ export default function JobBriefPage() {
       setFirstName(metaName ?? fallback);
       setCheckingAuth(false);
 
-      const jd = await fetchJob();
+      let jd = await fetchJob();
       if (cancelled) return;
       if (!jd) {
         setNotFound(true);
@@ -99,6 +99,23 @@ export default function JobBriefPage() {
       }
 
       setLoading(false);
+
+      // Auto-trigger analysis if resume attached but analysis never started
+      if (jd.resume_id && jd.fit_score_status == null) {
+        try {
+          const runRes = await fetch(`/api/jobs/${jobId}/analyze/run`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ force: false }),
+          });
+          if (runRes.ok) {
+            jd = { ...jd, fit_score_status: "pending", questions_status: "pending" };
+            if (!cancelled) setJob(jd);
+          }
+        } catch {
+          // Silently fail — user can always re-trigger manually
+        }
+      }
 
       // Start polling if analysis is pending
       if (needsPolling(jd)) {

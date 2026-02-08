@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 type HeaderProps = {
   firstName?: string;
@@ -26,11 +26,8 @@ export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps
               {backLabel ?? "Back"}
             </Link>
           ) : (
-            <Link href="/jobs" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-mm-violet to-mm-blue text-white shadow-sm">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <span className="text-lg font-semibold tracking-tight text-slate-900">nayld.ai</span>
+            <Link href="/jobs">
+              <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-8 w-auto" />
             </Link>
           )}
         </div>

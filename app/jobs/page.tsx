@@ -43,7 +43,33 @@ export default function JobsLibraryPage() {
       const res = await fetch("/api/jobs?limit=50");
       const body = await res.json().catch(() => ({}));
       if (body?.ok) {
-        setJobs(body.jobs ?? []);
+        const loaded: JobSummary[] = body.jobs ?? [];
+        setJobs(loaded);
+
+        // Auto-trigger analysis for jobs with a resume but no analysis started
+        const needsAnalysis = loaded.filter(
+          (j) => j.resume_id && j.fit_score_status == null,
+        );
+        if (needsAnalysis.length > 0) {
+          // Fire all triggers in parallel, then mark them as pending in UI
+          await Promise.allSettled(
+            needsAnalysis.map((j) =>
+              fetch(`/api/jobs/${j.id}/analyze/run`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ force: false }),
+              }),
+            ),
+          );
+          const triggered = new Set(needsAnalysis.map((j) => j.id));
+          setJobs((prev) =>
+            prev.map((j) =>
+              triggered.has(j.id)
+                ? { ...j, fit_score_status: "pending" as const }
+                : j,
+            ),
+          );
+        }
       }
       setLoading(false);
     };

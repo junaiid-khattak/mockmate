@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { ResetPasswordForm } from "@/components/reset-password/ResetPasswordForm";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 
 export default async function Page() {
   const supabase = createServerSupabaseClient();
@@ -32,12 +32,7 @@ export default async function Page() {
       <div className="pointer-events-none absolute inset-x-0 top-[-120px] -z-10 h-64 bg-gradient-to-r from-mm-violet/25 via-purple-300/20 to-blue-300/25 blur-3xl" />
       <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center">
         <div className="mb-6 space-y-2 text-center">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-mm-violet to-mm-blue text-white shadow-sm">
-              <Sparkles className="h-[18px] w-[18px]" />
-            </div>
-            <span className="text-lg font-semibold text-slate-900">nayld.ai</span>
-          </div>
+          <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-10 w-auto" priority />
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Set a new password</h1>
           <p className="text-sm text-slate-600 dark:text-slate-300">Choose a strong password to secure your account.</p>
         </div>
