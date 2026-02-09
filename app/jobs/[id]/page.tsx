@@ -44,6 +44,8 @@ export default function JobBriefPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [reanalyzing, setReanalyzing] = useState(false);
+  const [startingInterview, setStartingInterview] = useState(false);
+  const [interviewError, setInterviewError] = useState<string | null>(null);
 
   useEffect(() => {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -177,6 +179,30 @@ export default function JobBriefPage() {
       }
     } finally {
       setReanalyzing(false);
+    }
+  };
+
+  const handleStartInterview = async () => {
+    if (startingInterview) return;
+    setInterviewError(null);
+    setStartingInterview(true);
+
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/interview/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ duration_seconds: 1800 }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body?.ok || typeof body.launch_url !== "string") {
+        throw new Error(body?.error ?? "Unable to start interview.");
+      }
+
+      window.location.assign(body.launch_url);
+    } catch (err) {
+      setInterviewError(err instanceof Error ? err.message : "Unable to start interview.");
+      setStartingInterview(false);
     }
   };
 
@@ -422,17 +448,24 @@ export default function JobBriefPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-mm-violet/[0.06]">
             <Mic className="h-6 w-6 text-mm-violet" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900">Mock interviews are coming</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Ready for a live mock interview?</h3>
           <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-            Practice with an AI interviewer that adapts in real-time using your fit score and tailored questions. Your brief is saved and ready.
+            Start a real-time interview session personalized to this job and your resume.
           </p>
-          <a
-            href="mailto:hello@nayld.ai?subject=Early%20access%20to%20mock%20interviews"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-mm-violet transition hover:underline"
+          <button
+            onClick={handleStartInterview}
+            disabled={startingInterview || !job.resume_id}
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-mm-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            Want early access? Let us know
-          </a>
+            {startingInterview ? "Starting..." : "Start Interview"}
+          </button>
+          {!job.resume_id && (
+            <p className="mt-3 text-xs text-slate-500">Attach a resume before starting an interview.</p>
+          )}
+          {interviewError && (
+            <p className="mt-3 text-xs text-rose-600">{interviewError}</p>
+          )}
         </div>
       </div>
     </div>
