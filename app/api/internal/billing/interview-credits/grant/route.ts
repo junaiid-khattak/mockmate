@@ -2,6 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { getSecrets } from "@/lib/secrets";
 
 type GrantRpcRow = {
   ok: boolean;
@@ -80,8 +81,9 @@ async function createInternalSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
+  const secrets = await getSecrets();
   const billingSecret =
-    process.env.BILLING_INTERNAL_SECRET ?? process.env.INTERVIEW_EXCHANGE_SECRET;
+    process.env.BILLING_INTERNAL_SECRET ?? secrets.INTERVIEW_EXCHANGE_SECRET;
   if (!billingSecret) {
     return NextResponse.json(
       { ok: false, error: "Billing grant endpoint is not configured." },

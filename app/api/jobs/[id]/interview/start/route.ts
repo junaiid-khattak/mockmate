@@ -4,6 +4,7 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywall } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
+import { getSecrets } from "@/lib/secrets";
 
 const MIN_DURATION_SECONDS = 1800;
 const MAX_DURATION_SECONDS = 2700;
@@ -65,15 +66,9 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const interviewAppUrl = process.env.INTERVIEW_APP_URL;
-  const interviewExchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET;
-
-  console.error("interview_env_check", {
-    hasInterviewAppUrl: Boolean(process.env.INTERVIEW_APP_URL),
-    hasInterviewExchangeSecret: Boolean(process.env.INTERVIEW_EXCHANGE_SECRET),
-    awsBranch: process.env.AWS_BRANCH,
-    nodeEnv: process.env.NODE_ENV,
-  });
+  const secrets = await getSecrets();
+  const interviewAppUrl = secrets.INTERVIEW_APP_URL;
+  const interviewExchangeSecret = secrets.INTERVIEW_EXCHANGE_SECRET;
 
   if (!interviewAppUrl || !interviewExchangeSecret) {
     return NextResponse.json(
