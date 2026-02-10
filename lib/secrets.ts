@@ -47,10 +47,24 @@ const INTERVIEW_EXCHANGE_SECRET_KEYS = [
   "INTERVIEW_SHARED_SECRET",
 ] as const;
 
+function resolveSecretName(): string | null {
+  const preferred = process.env.SECRET_NAME;
+  if (typeof preferred === "string" && preferred.trim()) {
+    return preferred.trim();
+  }
+
+  const legacy = process.env.AWS_SECRET_NAME;
+  if (typeof legacy === "string" && legacy.trim()) {
+    return legacy.trim();
+  }
+
+  return null;
+}
+
 /**
  * Returns server-side secrets, fetched once and cached in memory.
  *
- * - If AWS_SECRET_NAME is set, fetches from AWS Secrets Manager (IAM role auth).
+ * - If SECRET_NAME is set, fetches from AWS Secrets Manager (IAM role auth).
  * - Otherwise falls back to process.env (local development).
  */
 export async function getSecrets(): Promise<ServerSecrets> {
@@ -69,12 +83,12 @@ async function loadSecrets(): Promise<ServerSecrets> {
   for (const key of REQUIRED_SECRET_KEYS) {
     const value = parsed[key];
     if (!value) {
-      const secretName = process.env.AWS_SECRET_NAME;
+      const secretName = resolveSecretName();
       if (secretName) {
-        throw new Error(`AWS secret "${secretName}" is missing required key "${key}"`);
+        throw new Error(`Secret "${secretName}" is missing required key "${key}"`);
       }
       throw new Error(
-        `Missing env var "${key}" (set AWS_SECRET_NAME to use Secrets Manager instead)`,
+        `Missing env var "${key}" (set SECRET_NAME to use Secrets Manager instead)`,
       );
     }
     secrets[key] = value;
@@ -95,7 +109,7 @@ function readFromEnv(): ServerSecrets {
   for (const key of REQUIRED_SECRET_KEYS) {
     const value = process.env[key];
     if (!value) {
-      throw new Error(`Missing env var "${key}" (set AWS_SECRET_NAME to use Secrets Manager instead)`);
+      throw new Error(`Missing env var "${key}" (set SECRET_NAME to use Secrets Manager instead)`);
     }
     secrets[key] = value;
   }
@@ -155,7 +169,7 @@ export async function getInterviewAppUrlFromSecrets(): Promise<string | null> {
 
   // Secrets Manager values can be updated without a process restart.
   // Refresh once before concluding the key is missing.
-  if (process.env.AWS_SECRET_NAME) {
+  if (resolveSecretName()) {
     const refreshed = await getRawSecretsFresh();
     return readFirstNonEmptyValue(refreshed, INTERVIEW_APP_URL_KEYS);
   }
@@ -171,7 +185,7 @@ export async function getInterviewExchangeSecretFromSecrets(): Promise<string | 
   );
   if (candidate) return candidate;
 
-  if (process.env.AWS_SECRET_NAME) {
+  if (resolveSecretName()) {
     const refreshed = await getRawSecretsFresh();
     return readFirstNonEmptyValue(refreshed, INTERVIEW_EXCHANGE_SECRET_KEYS);
   }
@@ -199,7 +213,7 @@ export async function getRawSecretsSnapshot(): Promise<Record<string, string>> {
 }
 
 async function loadRawSecrets(): Promise<Record<string, string>> {
-  const secretName = process.env.AWS_SECRET_NAME;
+  const secretName = resolveSecretName();
   if (!secretName) {
     return readRawFromEnv();
   }
@@ -210,7 +224,7 @@ async function loadRawSecrets(): Promise<Record<string, string>> {
   );
 
   if (!response.SecretString) {
-    throw new Error(`AWS secret "${secretName}" has no SecretString`);
+    throw new Error(`Secret "${secretName}" has no SecretString`);
   }
 
   const parsed = JSON.parse(response.SecretString) as Record<string, unknown>;

@@ -97,7 +97,7 @@ export async function POST(
       );
     }
     console.error("Interview service is not configured", {
-      awsSecretName: process.env.AWS_SECRET_NAME ?? null,
+      secretName: process.env.SECRET_NAME ?? process.env.AWS_SECRET_NAME ?? null,
       missing,
     });
     return NextResponse.json(
