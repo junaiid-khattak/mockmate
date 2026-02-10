@@ -13,6 +13,8 @@ type JobSummary = {
   title: string | null;
   company: string | null;
   resume_id: string | null;
+  fit_score: number | null;
+  fit_score_status: "pending" | "ready" | "failed" | null;
   updated_at: string;
 };
 
@@ -41,7 +43,33 @@ export default function JobsLibraryPage() {
       const res = await fetch("/api/jobs?limit=50");
       const body = await res.json().catch(() => ({}));
       if (body?.ok) {
-        setJobs(body.jobs ?? []);
+        const loaded: JobSummary[] = body.jobs ?? [];
+        setJobs(loaded);
+
+        // Auto-trigger analysis for jobs with a resume but no analysis started
+        const needsAnalysis = loaded.filter(
+          (j) => j.resume_id && j.fit_score_status == null,
+        );
+        if (needsAnalysis.length > 0) {
+          // Fire all triggers in parallel, then mark them as pending in UI
+          await Promise.allSettled(
+            needsAnalysis.map((j) =>
+              fetch(`/api/jobs/${j.id}/analyze/run`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ force: false }),
+              }),
+            ),
+          );
+          const triggered = new Set(needsAnalysis.map((j) => j.id));
+          setJobs((prev) =>
+            prev.map((j) =>
+              triggered.has(j.id)
+                ? { ...j, fit_score_status: "pending" as const }
+                : j,
+            ),
+          );
+        }
       }
       setLoading(false);
     };
@@ -56,20 +84,20 @@ export default function JobsLibraryPage() {
   if (checkingAuth) return null;
 
   return (
-    <div className="text-gray-900">
+    <div className="text-slate-900">
       <Header firstName={firstName} onLogout={handleLogout} />
 
       <div className="mx-auto max-w-4xl px-6 py-10">
         {loading ? (
           <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-mm-violet" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
           </div>
         ) : jobs.length === 0 ? (
           <EmptyState />
         ) : (
           <>
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold tracking-tight text-gray-900">
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900">
                 Your jobs
               </h1>
               <Link
@@ -89,6 +117,8 @@ export default function JobsLibraryPage() {
                   company={job.company}
                   resumeId={job.resume_id}
                   updatedAt={job.updated_at}
+                  fitScore={job.fit_score}
+                  fitScoreStatus={job.fit_score_status}
                 />
               ))}
             </div>

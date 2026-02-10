@@ -36,7 +36,7 @@ export function SampleReportCard({
         className
       )}
     >
-      <div className="absolute inset-x-6 top-6 h-32 rounded-3xl bg-gradient-to-r from-indigo-500/20 via-purple-500/15 to-blue-500/20 blur-3xl" />
+      <div className="absolute inset-x-6 top-6 h-32 rounded-3xl bg-gradient-to-r from-mm-violet/20 via-purple-500/15 to-mm-blue/20 blur-3xl" />
       <CardHeader className="relative z-10 space-y-2">
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
           <Sparkles className="h-4 w-4 text-amber-500" />
@@ -55,7 +55,7 @@ export function SampleReportCard({
               </div>
               <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500"
+                  className="h-2 rounded-full bg-gradient-to-r from-mm-violet via-purple-500 to-mm-blue"
                   style={{ width: `${score.value}%` }}
                 />
               </div>

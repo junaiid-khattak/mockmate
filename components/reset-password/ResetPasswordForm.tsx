@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Eye, EyeOff } from "lucide-react";
 
 type ResetPasswordPayload = {
   password: string;
@@ -23,6 +24,8 @@ export function ResetPasswordForm({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [touched, setTouched] = useState({ password: false, confirm: false });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [localSubmitting, setLocalSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | undefined>(undefined);
 
@@ -58,19 +61,32 @@ export function ResetPasswordForm({
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium text-slate-800 dark:text-white">
+        <label htmlFor="password" className="text-sm font-medium text-slate-800">
           New password
         </label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-          required
-          aria-invalid={!!(touched.password && errors.password)}
-          aria-describedby={touched.password && errors.password ? "password-error" : undefined}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+            required
+            className="pr-10"
+            aria-invalid={!!(touched.password && errors.password)}
+            aria-describedby={touched.password && errors.password ? "password-error" : undefined}
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center">
+            <button
+              type="button"
+              className="text-slate-500 transition hover:text-slate-800"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
         {touched.password && errors.password ? (
           <p id="password-error" className="text-xs text-rose-600">
             {errors.password}
@@ -79,19 +95,32 @@ export function ResetPasswordForm({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-800 dark:text-white">
+        <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-800">
           Confirm password
         </label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(event) => setConfirmPassword(event.target.value)}
-          onBlur={() => setTouched((prev) => ({ ...prev, confirm: true }))}
-          required
-          aria-invalid={!!(touched.confirm && errors.confirm)}
-          aria-describedby={touched.confirm && errors.confirm ? "confirm-error" : undefined}
-        />
+        <div className="relative">
+          <Input
+            id="confirmPassword"
+            type={showConfirm ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            onBlur={() => setTouched((prev) => ({ ...prev, confirm: true }))}
+            required
+            className="pr-10"
+            aria-invalid={!!(touched.confirm && errors.confirm)}
+            aria-describedby={touched.confirm && errors.confirm ? "confirm-error" : undefined}
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center">
+            <button
+              type="button"
+              className="text-slate-500 transition hover:text-slate-800"
+              aria-label={showConfirm ? "Hide password" : "Show password"}
+              onClick={() => setShowConfirm((v) => !v)}
+            >
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
         {touched.confirm && errors.confirm ? (
           <p id="confirm-error" className="text-xs text-rose-600">
             {errors.confirm}

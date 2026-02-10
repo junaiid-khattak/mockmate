@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LoginForm } from "@/components/login/LoginForm";
 import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
 
 export default function Page() {
   const router = useRouter();
@@ -40,12 +41,10 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-10 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="pointer-events-none absolute inset-x-0 top-[-120px] -z-10 h-64 bg-gradient-to-r from-indigo-300/25 via-purple-300/20 to-blue-300/25 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-[-120px] -z-10 h-64 bg-gradient-to-r from-mm-violet/25 via-purple-300/20 to-blue-300/25 blur-3xl" />
       <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center">
         <div className="mb-6 space-y-2 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900/70 dark:text-slate-300 dark:ring-slate-800">
-            nayld.ai
-          </div>
+          <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-10 w-auto" priority />
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Welcome back</h1>
           <p className="text-sm text-slate-600 dark:text-slate-300">Pick up where you left off. No stress.</p>
         </div>
@@ -55,7 +54,7 @@ export default function Page() {
             <LoginForm onSubmit={handleSubmit} isSubmitting={isSubmitting} serverError={serverError} />
             <div className="flex items-center justify-between text-sm">
               <div />
-              <Link href="/forgot-password" className="text-indigo-600 hover:underline">
+              <Link href="/forgot-password" className="text-mm-violet hover:underline">
                 Forgot password?
               </Link>
             </div>
@@ -64,7 +63,7 @@ export default function Page() {
 
         <div className="mt-6 text-sm text-slate-600 dark:text-slate-300">
           Don’t have an account?{" "}
-          <Link href="/signup" className="text-indigo-600 hover:underline">
+          <Link href="/signup" className="text-mm-violet hover:underline">
             Create one
           </Link>
         </div>

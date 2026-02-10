@@ -1,24 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRight,
   BarChart3,
   Brain,
   Briefcase,
   CheckCircle2,
+  Menu,
   Mic,
   Play,
   Search,
   Shield,
-  Sparkles,
   Target,
   TrendingUp,
   Upload,
   Users,
+  X,
   XCircle,
   Zap,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -27,6 +30,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { SectionTitle } from "@/components/landing/section-title";
 import { FeatureCard } from "@/components/landing/feature-card";
 import { FitScorePreview } from "@/components/landing/fit-score-preview";
+import { PricingCard, type Plan } from "@/components/landing/pricing-card";
 import { TestimonialCard } from "@/components/landing/testimonial-card";
 
 // ---------------------------------------------------------------------------
@@ -39,6 +43,7 @@ type NavItem = { label: string; href: string };
 const navItems: NavItem[] = [
   { label: "How It Works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
+  { label: "Pricing", href: "#pricing" },
   { label: "Results", href: "#results" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -169,6 +174,47 @@ const stats = [
   { value: "8.4/10", label: "Average Satisfaction" },
 ];
 
+const pricingPlans: Plan[] = [
+  {
+    name: "Free",
+    price: "$0 / month",
+    description:
+      "Basic prep tools without interview credits.",
+    features: [
+      "0 interview credits included",
+      "Fit analysis and tailored question generation",
+      "Can unlock interviews by purchasing one-off credits",
+    ],
+    cta: "Start Free",
+  },
+  {
+    name: "Standard",
+    price: "$15 / month",
+    description:
+      "For active candidates interviewing regularly.",
+    features: [
+      "2 interview credits per successful billing cycle",
+      "All prep tools unlocked",
+      "One-off interview credits stack on top",
+    ],
+    cta: "Choose Standard",
+    highlighted: true,
+    popular: true,
+  },
+  {
+    name: "Pro",
+    price: "$29 / month",
+    description:
+      "For high-volume interview prep and rapid iteration.",
+    features: [
+      "5 interview credits per successful billing cycle",
+      "All prep tools unlocked",
+      "Purchased credits never expire and always stack",
+    ],
+    cta: "Choose Pro",
+  },
+];
+
 const faqs = [
   {
     id: "faq-1",
@@ -261,6 +307,8 @@ const scaleIn = {
 // ---------------------------------------------------------------------------
 
 export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* ================================================================ */}
@@ -268,13 +316,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       {/* ================================================================ */}
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <a href="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-mm-violet to-mm-blue text-white shadow-sm">
-              <Sparkles className="h-[18px] w-[18px]" />
-            </div>
-            <span className="text-lg font-semibold text-slate-900">
-              nayld.ai
-            </span>
+          <a href="/">
+            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-9 w-auto" priority />
           </a>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-500 md:flex">
@@ -298,11 +341,64 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 Log In
               </Button>
             </a>
-            <Button size="sm" onClick={onPrimaryCta}>
+            <Button size="sm" onClick={onPrimaryCta} className="hidden sm:inline-flex">
               Get Started Free
             </Button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 md:hidden"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden border-t border-slate-100 bg-white md:hidden"
+            >
+              <nav className="flex flex-col gap-1 px-6 py-4">
+                {navItems.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+                <Separator className="my-2" />
+                <a
+                  href="/login"
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Log In
+                </a>
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onPrimaryCta?.();
+                  }}
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ================================================================ */}
@@ -620,6 +716,74 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       </motion.section>
 
       {/* ================================================================ */}
+      {/* PRICING                                                          */}
+      {/* ================================================================ */}
+      <motion.section
+        id="pricing"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+        className="bg-slate-50/80 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="Pricing"
+              title="Subscription + usage credits that stack"
+              subtitle="Use a monthly plan for recurring credits, then add one-off interview credits any time."
+              align="center"
+            />
+          </motion.div>
+
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <motion.div key={plan.name} variants={fadeInUp}>
+                <PricingCard plan={plan} onCta={onPrimaryCta} />
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div variants={fadeInUp} className="mt-8">
+            <Card className="border-mm-violet/20 bg-gradient-to-br from-mm-violet/[0.05] via-white to-mm-blue/[0.04] p-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-2xl space-y-3">
+                  <Badge className="w-fit border-mm-violet/20 bg-white text-mm-violet">
+                    One-off Interview Credits
+                  </Badge>
+                  <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+                    $10 per interview credit
+                  </h3>
+                  <p className="text-sm leading-relaxed text-slate-600">
+                    Purchase any number of interview credits in a single transaction. One-off credits stack with subscription credits and do not expire.
+                  </p>
+                  <ul className="space-y-2 text-sm text-slate-700">
+                    {[
+                      "Available credits = granted subscription credits + purchased credits - consumed credits",
+                      "Each interview consumes exactly one credit",
+                      "No available credit means interview launch is blocked",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  type="button"
+                  onClick={onPrimaryCta}
+                  className="shrink-0"
+                >
+                  Get Started
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ================================================================ */}
       {/* FAQ                                                              */}
       {/* ================================================================ */}
       <motion.section
@@ -691,13 +855,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       {/* ================================================================ */}
       <footer className="border-t border-slate-100 bg-white py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <a href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-mm-violet to-mm-blue text-white">
-              <Sparkles className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-sm font-semibold text-slate-900">
-              nayld.ai
-            </span>
+          <a href="/">
+            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-7 w-auto" />
           </a>
 
           <nav className="flex items-center gap-6 text-sm text-slate-500">
@@ -706,6 +865,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               className="transition-colors hover:text-slate-900"
             >
               Features
+            </a>
+            <a
+              href="#pricing"
+              className="transition-colors hover:text-slate-900"
+            >
+              Pricing
             </a>
             <a href="#faq" className="transition-colors hover:text-slate-900">
               FAQ

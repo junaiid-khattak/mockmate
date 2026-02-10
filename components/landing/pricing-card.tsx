@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
-type Plan = {
+export type Plan = {
   name: string;
   price: string;
   description: string;
@@ -16,14 +16,15 @@ type Plan = {
 
 type Props = {
   plan: Plan;
+  onCta?: () => void;
 };
 
-export function PricingCard({ plan }: Props) {
+export function PricingCard({ plan, onCta }: Props) {
   return (
     <Card
       className={cn(
         "relative flex h-full flex-col border-slate-200/80 transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800",
-        plan.highlighted ? "border-indigo-200 bg-gradient-to-b from-indigo-50/80 to-white dark:from-indigo-500/10 dark:to-slate-900" : ""
+        plan.highlighted ? "border-mm-violet/20 bg-gradient-to-b from-mm-violet/[0.04] to-white" : ""
       )}
     >
       {plan.popular ? (
@@ -33,7 +34,7 @@ export function PricingCard({ plan }: Props) {
         <div className="flex items-center gap-2">
           <CardTitle className="text-xl">{plan.name}</CardTitle>
           {plan.highlighted ? (
-            <Badge variant="outline" className="border-indigo-200 text-indigo-700 dark:border-indigo-500/50 dark:text-indigo-200">
+            <Badge variant="outline" className="border-mm-violet/20 text-mm-violet">
               Recommended
             </Badge>
           ) : null}
@@ -50,7 +51,12 @@ export function PricingCard({ plan }: Props) {
             </li>
           ))}
         </ul>
-        <Button className="w-full" variant={plan.highlighted ? "default" : "secondary"}>
+        <Button
+          type="button"
+          className="w-full"
+          variant={plan.highlighted ? "default" : "secondary"}
+          onClick={onCta}
+        >
           {plan.cta}
         </Button>
       </CardContent>

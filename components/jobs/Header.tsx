@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   firstName?: string;
@@ -10,14 +13,17 @@ type HeaderProps = {
 };
 
 export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps) {
+  const pathname = usePathname();
+  const isBillingPage = pathname === "/settings/billing";
+
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-4">
           {backHref ? (
             <Link
               href={backHref}
-              className="flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900"
+              className="flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-900"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
                 <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -25,15 +31,27 @@ export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps
               {backLabel ?? "Back"}
             </Link>
           ) : (
-            <span className="text-lg font-semibold tracking-tight text-gray-900">nayld.ai</span>
+            <Link href="/jobs">
+              <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-8 w-auto" />
+            </Link>
           )}
         </div>
 
         <div className="flex items-center gap-4">
-          {firstName && <span className="text-sm text-gray-400">{firstName}</span>}
+          {firstName && <span className="text-sm text-slate-400">{firstName}</span>}
+          <Link
+            href="/settings/billing"
+            aria-current={isBillingPage ? "page" : undefined}
+            className={cn(
+              "text-sm transition-colors",
+              isBillingPage ? "text-slate-700" : "text-slate-400 hover:text-slate-600",
+            )}
+          >
+            Billing
+          </Link>
           <button
             onClick={onLogout}
-            className="text-sm text-gray-400 transition-colors hover:text-gray-600"
+            className="text-sm text-slate-400 transition-colors hover:text-slate-600"
           >
             Sign out
           </button>
