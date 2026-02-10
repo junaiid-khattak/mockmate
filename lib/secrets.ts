@@ -8,13 +8,20 @@ export interface ServerSecrets {
   S3_BUCKET_RESUMES: string;
   SQS_QUEUE_URL: string;
   AWS_REGION: string;
+  INTERVIEW_EXCHANGE_SECRET?: string;
+  INTERVIEW_APP_URL?: string;
 }
 
-const SECRET_KEYS: readonly (keyof ServerSecrets)[] = [
+const REQUIRED_SECRET_KEYS: readonly (keyof ServerSecrets)[] = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "S3_BUCKET_RESUMES",
   "SQS_QUEUE_URL",
   "AWS_REGION",
+];
+
+const OPTIONAL_SECRET_KEYS: readonly (keyof ServerSecrets)[] = [
+  "INTERVIEW_EXCHANGE_SECRET",
+  "INTERVIEW_APP_URL",
 ];
 
 let cached: ServerSecrets | null = null;
@@ -54,8 +61,8 @@ async function loadSecrets(): Promise<ServerSecrets> {
 
   const parsed = JSON.parse(response.SecretString) as Record<string, unknown>;
 
-  const secrets: Record<string, string> = {};
-  for (const key of SECRET_KEYS) {
+  const secrets: Partial<ServerSecrets> = {};
+  for (const key of REQUIRED_SECRET_KEYS) {
     const value = parsed[key];
     if (typeof value !== "string" || !value) {
       throw new Error(`AWS secret "${secretName}" is missing required key "${key}"`);
@@ -63,17 +70,32 @@ async function loadSecrets(): Promise<ServerSecrets> {
     secrets[key] = value;
   }
 
-  return secrets as unknown as ServerSecrets;
+  for (const key of OPTIONAL_SECRET_KEYS) {
+    const value = parsed[key];
+    if (typeof value === "string" && value.trim()) {
+      secrets[key] = value;
+    }
+  }
+
+  return secrets as ServerSecrets;
 }
 
 function readFromEnv(): ServerSecrets {
-  const secrets: Record<string, string> = {};
-  for (const key of SECRET_KEYS) {
+  const secrets: Partial<ServerSecrets> = {};
+  for (const key of REQUIRED_SECRET_KEYS) {
     const value = process.env[key];
     if (!value) {
       throw new Error(`Missing env var "${key}" (set AWS_SECRET_NAME to use Secrets Manager instead)`);
     }
     secrets[key] = value;
   }
-  return secrets as unknown as ServerSecrets;
+
+  for (const key of OPTIONAL_SECRET_KEYS) {
+    const value = process.env[key];
+    if (typeof value === "string" && value.trim()) {
+      secrets[key] = value;
+    }
+  }
+
+  return secrets as ServerSecrets;
 }
