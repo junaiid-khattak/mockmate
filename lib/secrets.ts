@@ -28,6 +28,24 @@ let cached: ServerSecrets | null = null;
 let pending: Promise<ServerSecrets> | null = null;
 let rawCached: Record<string, string> | null = null;
 let rawPending: Promise<Record<string, string>> | null = null;
+let rawCachedAt = 0;
+const RAW_CACHE_TTL_MS = Number.parseInt(
+  process.env.SECRETS_CACHE_TTL_MS ?? "300000",
+  10,
+);
+
+const INTERVIEW_APP_URL_KEYS = [
+  "INTERVIEW_APP_URL",
+  "INTERVIEW_WORKER_URL",
+  "INTERVIEW_SERVICE_URL",
+  "INTERVIEW_EXCHANGE_URL",
+] as const;
+
+const INTERVIEW_EXCHANGE_SECRET_KEYS = [
+  "INTERVIEW_EXCHANGE_SECRET",
+  "INTERVIEW_KEY",
+  "INTERVIEW_SHARED_SECRET",
+] as const;
 
 /**
  * Returns server-side secrets, fetched once and cached in memory.
@@ -93,29 +111,91 @@ function readFromEnv(): ServerSecrets {
 }
 
 export async function getRawSecrets(): Promise<Record<string, string>> {
+  const now = Date.now();
+  const cacheStillFresh =
+    Number.isFinite(RAW_CACHE_TTL_MS) &&
+    RAW_CACHE_TTL_MS > 0 &&
+    now - rawCachedAt < RAW_CACHE_TTL_MS;
+
+  if (rawCached && cacheStillFresh) return rawCached;
+  if (rawPending) return rawPending;
+
+  rawPending = loadRawSecrets();
+  rawCached = await rawPending;
+  rawCachedAt = Date.now();
+  rawPending = null;
+  return rawCached;
+}
+
+async function getRawSecretsFresh(): Promise<Record<string, string>> {
+  rawPending = loadRawSecrets();
+  rawCached = await rawPending;
+  rawCachedAt = Date.now();
+  rawPending = null;
+  return rawCached;
+}
+
+function readFirstNonEmptyValue(
+  source: Record<string, string>,
+  keys: readonly string[],
+): string | null {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (trimmed.length > 0) return trimmed;
+  }
+  return null;
+}
+
+export async function getInterviewAppUrlFromSecrets(): Promise<string | null> {
+  const secrets = await getRawSecrets();
+  const candidate = readFirstNonEmptyValue(secrets, INTERVIEW_APP_URL_KEYS);
+  if (candidate) return candidate;
+
+  // Secrets Manager values can be updated without a process restart.
+  // Refresh once before concluding the key is missing.
+  if (process.env.AWS_SECRET_NAME) {
+    const refreshed = await getRawSecretsFresh();
+    return readFirstNonEmptyValue(refreshed, INTERVIEW_APP_URL_KEYS);
+  }
+
+  return null;
+}
+
+export async function getInterviewExchangeSecretFromSecrets(): Promise<string | null> {
+  const secrets = await getRawSecrets();
+  const candidate = readFirstNonEmptyValue(
+    secrets,
+    INTERVIEW_EXCHANGE_SECRET_KEYS,
+  );
+  if (candidate) return candidate;
+
+  if (process.env.AWS_SECRET_NAME) {
+    const refreshed = await getRawSecretsFresh();
+    return readFirstNonEmptyValue(refreshed, INTERVIEW_EXCHANGE_SECRET_KEYS);
+  }
+
+  return null;
+}
+
+export function getInterviewAppUrlSecretKeyAliases(): readonly string[] {
+  return INTERVIEW_APP_URL_KEYS;
+}
+
+export function getInterviewExchangeSecretKeyAliases(): readonly string[] {
+  return INTERVIEW_EXCHANGE_SECRET_KEYS;
+}
+
+export async function getRawSecretsSnapshot(): Promise<Record<string, string>> {
   if (rawCached) return rawCached;
   if (rawPending) return rawPending;
 
   rawPending = loadRawSecrets();
   rawCached = await rawPending;
+  rawCachedAt = Date.now();
   rawPending = null;
   return rawCached;
-}
-
-export async function getInterviewAppUrlFromSecrets(): Promise<string | null> {
-  const secrets = await getRawSecrets();
-  const value = secrets.INTERVIEW_APP_URL;
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-export async function getInterviewExchangeSecretFromSecrets(): Promise<string | null> {
-  const secrets = await getRawSecrets();
-  const value = secrets.INTERVIEW_EXCHANGE_SECRET;
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
 }
 
 async function loadRawSecrets(): Promise<Record<string, string>> {

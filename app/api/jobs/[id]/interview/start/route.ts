@@ -5,7 +5,9 @@ import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywall } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import {
+  getInterviewAppUrlSecretKeyAliases,
   getInterviewAppUrlFromSecrets,
+  getInterviewExchangeSecretKeyAliases,
   getInterviewExchangeSecretFromSecrets,
 } from "@/lib/secrets";
 
@@ -85,8 +87,25 @@ export async function POST(
   }
 
   if (!interviewAppUrl || !interviewExchangeSecret) {
+    const missing: string[] = [];
+    if (!interviewAppUrl) {
+      missing.push(`INTERVIEW_APP_URL (${getInterviewAppUrlSecretKeyAliases().join(", ")})`);
+    }
+    if (!interviewExchangeSecret) {
+      missing.push(
+        `INTERVIEW_EXCHANGE_SECRET (${getInterviewExchangeSecretKeyAliases().join(", ")})`,
+      );
+    }
+    console.error("Interview service is not configured", {
+      awsSecretName: process.env.AWS_SECRET_NAME ?? null,
+      missing,
+    });
     return NextResponse.json(
-      { ok: false, error: "Interview service is not configured." },
+      {
+        ok: false,
+        error: "Interview service is not configured.",
+        missing,
+      },
       { status: 500 },
     );
   }
