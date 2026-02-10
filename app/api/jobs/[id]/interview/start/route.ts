@@ -4,8 +4,8 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { signInterviewSessionToken } from "@/lib/interview-token";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
-const MIN_DURATION_SECONDS = 300;
-const MAX_DURATION_SECONDS = 7200;
+const MIN_DURATION_SECONDS = 1800;
+const MAX_DURATION_SECONDS = 2700;
 const DEFAULT_DURATION_SECONDS = 1800;
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
@@ -135,6 +135,8 @@ export async function POST(
   const ttlSeconds = parseTokenTtlSeconds();
   const issuer = process.env.INTERVIEW_SESSION_ISSUER ?? DEFAULT_ISSUER;
   const audience = process.env.INTERVIEW_SESSION_AUDIENCE ?? DEFAULT_AUDIENCE;
+  const dashboardReturnUrl = new URL(`/jobs/${job.id}`, getAppUrl(request));
+  dashboardReturnUrl.searchParams.set("interview_id", interviewId);
 
   const token = signInterviewSessionToken(
     {
@@ -153,7 +155,7 @@ export async function POST(
       language,
       voice,
       model,
-      dashboard_return_url: `${getAppUrl(request)}/jobs/${job.id}`,
+      dashboard_return_url: dashboardReturnUrl.toString(),
     },
     interviewJwtSecret,
   );

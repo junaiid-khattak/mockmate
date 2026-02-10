@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Header } from "@/components/jobs/Header";
 import { Mic, RefreshCw, Sparkles, Trash2 } from "lucide-react";
@@ -26,13 +26,36 @@ type Job = {
   updated_at: string;
 };
 
+type InterviewSession = {
+  id: string;
+  performance_status: "pending" | "ready" | "failed" | null;
+  performance_error: string | null;
+  performance_updated_at: string | null;
+  performance_overall_score: number | null;
+  question_understanding_score: number | null;
+  answer_correctness_score: number | null;
+  reasoning_quality_score: number | null;
+  followup_depth_score: number | null;
+  communication_clarity_score: number | null;
+  behavioral_story_quality_score: number | null;
+  role_alignment_coverage_score: number | null;
+  confidence_calibration_score: number | null;
+  time_management_score: number | null;
+  recovery_ability_score: number | null;
+  performance_strengths: string[] | null;
+  performance_growth_areas: string[] | null;
+  performance_next_steps: string[] | null;
+};
+
 const POLL_INTERVAL_MS = 3000;
 
 
 export default function JobBriefPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const jobId = params.id as string;
+  const interviewSessionId = searchParams.get("interview_id");
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -46,6 +69,13 @@ export default function JobBriefPage() {
   const [reanalyzing, setReanalyzing] = useState(false);
   const [startingInterview, setStartingInterview] = useState(false);
   const [interviewError, setInterviewError] = useState<string | null>(null);
+  const [interviewSession, setInterviewSession] = useState<InterviewSession | null>(
+    null,
+  );
+  const [interviewSessionLoading, setInterviewSessionLoading] = useState(false);
+  const [interviewSessionError, setInterviewSessionError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,6 +162,54 @@ export default function JobBriefPage() {
     };
   }, [router, supabase, jobId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadInterviewSession = async () => {
+      if (!interviewSessionId || checkingAuth) {
+        setInterviewSession(null);
+        setInterviewSessionError(null);
+        setInterviewSessionLoading(false);
+        return;
+      }
+
+      setInterviewSessionLoading(true);
+      setInterviewSessionError(null);
+
+      try {
+        const res = await fetch(`/api/interviews/${interviewSessionId}`);
+        const body = await res.json().catch(() => ({}));
+
+        if (!res.ok || !body?.ok) {
+          if (res.status === 404) {
+            if (!cancelled) setInterviewSession(null);
+            return;
+          }
+          throw new Error(body?.error ?? "Unable to load interview feedback.");
+        }
+
+        if (!cancelled) {
+          setInterviewSession(body.interview as InterviewSession);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setInterviewSessionError(
+            err instanceof Error ? err.message : "Unable to load interview feedback.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setInterviewSessionLoading(false);
+        }
+      }
+    };
+
+    void loadInterviewSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [interviewSessionId, checkingAuth]);
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
@@ -163,17 +241,17 @@ export default function JobBriefPage() {
         setJob((prev) =>
           prev
             ? {
-                ...prev,
-                fit_score_status: "pending",
-                fit_score: null,
-                fit_score_error: null,
-                fit_strong_alignment: null,
-                fit_weak_spots: null,
-                fit_areas_to_probe: null,
-                questions_status: "pending",
-                questions: null,
-                questions_error: null,
-              }
+              ...prev,
+              fit_score_status: "pending",
+              fit_score: null,
+              fit_score_error: null,
+              fit_strong_alignment: null,
+              fit_weak_spots: null,
+              fit_areas_to_probe: null,
+              questions_status: "pending",
+              questions: null,
+              questions_error: null,
+            }
             : prev,
         );
       }
@@ -232,6 +310,18 @@ export default function JobBriefPage() {
   }
 
   const displayTitle = job.title || "Untitled position";
+  const interviewMetricRows: Array<{ key: keyof InterviewSession; label: string }> = [
+    { key: "question_understanding_score", label: "Question understanding" },
+    { key: "answer_correctness_score", label: "Answer correctness" },
+    { key: "reasoning_quality_score", label: "Reasoning quality" },
+    { key: "followup_depth_score", label: "Depth under follow-ups" },
+    { key: "communication_clarity_score", label: "Communication clarity" },
+    { key: "behavioral_story_quality_score", label: "Behavioral story quality" },
+    { key: "role_alignment_coverage_score", label: "Role alignment coverage" },
+    { key: "confidence_calibration_score", label: "Confidence calibration" },
+    { key: "time_management_score", label: "Time management" },
+    { key: "recovery_ability_score", label: "Recovery ability" },
+  ];
 
   return (
     <div className="text-slate-900">
@@ -442,6 +532,112 @@ export default function JobBriefPage() {
             </div>
           ) : null}
         </section>
+
+        {interviewSessionId && (
+          <section className="mt-10 rounded-xl border border-slate-200 p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Interview Performance
+            </h2>
+
+            {interviewSessionLoading ? (
+              <div className="mt-4 flex items-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
+                <span className="text-sm text-slate-500">Loading performance metrics...</span>
+              </div>
+            ) : interviewSessionError ? (
+              <p className="mt-4 text-sm text-rose-600">{interviewSessionError}</p>
+            ) : interviewSession?.performance_status === "ready" ? (
+              <>
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="text-4xl font-bold text-mm-violet">
+                    {interviewSession.performance_overall_score ?? "--"}
+                  </span>
+                  <span className="pb-1 text-sm text-slate-500">overall / 100</span>
+                </div>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {interviewMetricRows.map((row) => {
+                    const value = interviewSession[row.key] as number | null;
+                    return (
+                      <div
+                        key={String(row.key)}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+                      >
+                        <span className="text-xs text-slate-600">{row.label}</span>
+                        <span className="text-sm font-semibold text-slate-900">
+                          {value ?? "--"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {interviewSession.performance_strengths &&
+                  interviewSession.performance_strengths.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Strengths
+                      </h3>
+                      <ul className="mt-2 space-y-1">
+                        {interviewSession.performance_strengths.map((item, idx) => (
+                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {interviewSession.performance_growth_areas &&
+                  interviewSession.performance_growth_areas.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Growth Areas
+                      </h3>
+                      <ul className="mt-2 space-y-1">
+                        {interviewSession.performance_growth_areas.map((item, idx) => (
+                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                {interviewSession.performance_next_steps &&
+                  interviewSession.performance_next_steps.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Next Steps
+                      </h3>
+                      <ul className="mt-2 space-y-1">
+                        {interviewSession.performance_next_steps.map((item, idx) => (
+                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </>
+            ) : interviewSession?.performance_status === "pending" ? (
+              <p className="mt-4 text-sm text-slate-500">
+                Performance scoring is still running. Refresh in a few seconds.
+              </p>
+            ) : interviewSession?.performance_status === "failed" ? (
+              <p className="mt-4 text-sm text-slate-500">
+                We couldn&apos;t generate interview performance feedback yet.
+                {interviewSession.performance_error && (
+                  <span className="text-slate-400"> ({interviewSession.performance_error})</span>
+                )}
+              </p>
+            ) : (
+              <p className="mt-4 text-sm text-slate-500">
+                No interview feedback found for this session yet.
+              </p>
+            )}
+          </section>
+        )}
 
         {/* Mock Interview CTA */}
         <div className="mt-12 rounded-xl border border-slate-200 bg-slate-50/50 p-6 text-center">
