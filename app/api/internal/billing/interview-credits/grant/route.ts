@@ -2,7 +2,7 @@ import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
-import { getSecrets } from "@/lib/secrets";
+import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
 
 type GrantRpcRow = {
   ok: boolean;
@@ -81,9 +81,18 @@ async function createInternalSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
-  const secrets = await getSecrets();
+  let interviewExchangeSecret: string | null = null;
+  try {
+    interviewExchangeSecret = await getInterviewExchangeSecretFromSecrets();
+  } catch (err) {
+    console.error("Failed to read interview exchange secret", err);
+    return NextResponse.json(
+      { ok: false, error: "Unable to read interview exchange secret." },
+      { status: 500 },
+    );
+  }
   const billingSecret =
-    process.env.BILLING_INTERNAL_SECRET ?? secrets.INTERVIEW_EXCHANGE_SECRET;
+    process.env.BILLING_INTERNAL_SECRET ?? interviewExchangeSecret;
   if (!billingSecret) {
     return NextResponse.json(
       { ok: false, error: "Billing grant endpoint is not configured." },

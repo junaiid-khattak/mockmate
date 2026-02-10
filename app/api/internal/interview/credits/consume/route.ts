@@ -6,7 +6,7 @@ import {
   consumeInterviewCredit,
   readInterviewCreditConsumptionMode,
 } from "@/lib/interview-paywall";
-import { getSecrets } from "@/lib/secrets";
+import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
 
 function readBearerToken(headerValue: string | null): string | null {
   if (!headerValue) return null;
@@ -35,8 +35,16 @@ async function createInternalSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
-  const secrets = await getSecrets();
-  const exchangeSecret = secrets.INTERVIEW_EXCHANGE_SECRET;
+  let exchangeSecret: string | null = null;
+  try {
+    exchangeSecret = await getInterviewExchangeSecretFromSecrets();
+  } catch (err) {
+    console.error("Failed to read interview exchange secret", err);
+    return NextResponse.json(
+      { ok: false, error: "Unable to read interview exchange secret." },
+      { status: 500 },
+    );
+  }
   if (!exchangeSecret) {
     return NextResponse.json(
       { ok: false, error: "Interview credit consume endpoint is not configured." },
