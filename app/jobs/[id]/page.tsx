@@ -274,7 +274,11 @@ export default function JobBriefPage() {
 
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.ok || typeof body.launch_url !== "string") {
-        throw new Error(body?.error ?? "Unable to start interview.");
+        throw new Error(
+          typeof body?.message === "string"
+            ? body.message
+            : body?.error ?? "Unable to start interview.",
+        );
       }
 
       window.location.assign(body.launch_url);

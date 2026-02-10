@@ -4,6 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { signInterviewSessionToken } from "@/lib/interview-token";
 import { hashInterviewLaunchCode } from "@/lib/interview-launch-code";
+import {
+  consumeInterviewCredit,
+  readInterviewCreditConsumptionMode,
+  verifyInterviewPaywall,
+} from "@/lib/interview-paywall";
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
@@ -23,6 +28,9 @@ type LaunchCodeRow = {
   model: string | null;
   dashboard_return_url: string | null;
 };
+
+const LAUNCH_SELECT_COLUMNS =
+  "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url";
 
 function isNoRowsError(error: {
   code?: string;
@@ -92,18 +100,96 @@ export async function POST(request: NextRequest) {
 
   const codeHash = hashInterviewLaunchCode(launchCode);
   const nowIso = new Date().toISOString();
+  const creditConsumptionMode = readInterviewCreditConsumptionMode();
   let launchRecord: LaunchCodeRow | null = null;
   try {
     const supabase = await createLaunchExchangeSupabaseClient();
-    const { data, error: consumeErr } = await supabase
+    const { data, error: lookupErr } = await supabase
+      .from("interview_launch_codes")
+      .select(LAUNCH_SELECT_COLUMNS)
+      .eq("code_hash", codeHash)
+      .is("used_at", null)
+      .gt("expires_at", nowIso)
+      .maybeSingle();
+
+    if (lookupErr) {
+      if (isNoRowsError(lookupErr)) {
+        return NextResponse.json(
+          { ok: false, error: "Launch code is invalid or expired." },
+          { status: 401 },
+        );
+      }
+      return NextResponse.json(
+        { ok: false, error: "Unable to exchange launch code." },
+        { status: 500 },
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { ok: false, error: "Launch code is invalid or expired." },
+        { status: 401 },
+      );
+    }
+
+    const paywallDecision = await verifyInterviewPaywall(
+      supabase,
+      data.user_id,
+    );
+    if (!paywallDecision.ok) {
+      if (paywallDecision.code === "verification_failed") {
+        return NextResponse.json(
+          { ok: false, error: "Unable to verify interview credit balance." },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "payment_required",
+          message: paywallDecision.message,
+        },
+        { status: 402 },
+      );
+    }
+
+    if (creditConsumptionMode === "start") {
+      const consumeDecision = await consumeInterviewCredit(
+        supabase,
+        data.user_id,
+        data.interview_id,
+        "interview_start",
+      );
+
+      if (!consumeDecision.ok) {
+        if (consumeDecision.code === "payment_required") {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "payment_required",
+              message: consumeDecision.message,
+            },
+            { status: 402 },
+          );
+        }
+
+        if (consumeDecision.code !== "interview_already_consumed") {
+          return NextResponse.json(
+            { ok: false, error: "Unable to consume interview credit." },
+            { status: 500 },
+          );
+        }
+      }
+    }
+
+    const { data: consumedData, error: consumeErr } = await supabase
       .from("interview_launch_codes")
       .update({ used_at: nowIso })
       .eq("code_hash", codeHash)
       .is("used_at", null)
       .gt("expires_at", nowIso)
-      .select(
-        "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url",
-      )
+      .select(LAUNCH_SELECT_COLUMNS)
       .maybeSingle();
 
     if (consumeErr) {
@@ -119,7 +205,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    launchRecord = data as LaunchCodeRow | null;
+    launchRecord = consumedData as LaunchCodeRow | null;
   } catch {
     return NextResponse.json(
       { ok: false, error: "Unable to initialize launch exchange." },
@@ -191,5 +277,6 @@ export async function POST(request: NextRequest) {
     expires_at: new Date((now + ttlSeconds) * 1000).toISOString(),
     session_claims: sessionClaims,
     session_token: sessionToken ?? undefined,
+    credit_consumption_mode: creditConsumptionMode,
   });
 }

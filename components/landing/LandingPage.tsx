@@ -30,6 +30,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { SectionTitle } from "@/components/landing/section-title";
 import { FeatureCard } from "@/components/landing/feature-card";
 import { FitScorePreview } from "@/components/landing/fit-score-preview";
+import { PricingCard, type Plan } from "@/components/landing/pricing-card";
 import { TestimonialCard } from "@/components/landing/testimonial-card";
 
 // ---------------------------------------------------------------------------
@@ -42,6 +43,7 @@ type NavItem = { label: string; href: string };
 const navItems: NavItem[] = [
   { label: "How It Works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
+  { label: "Pricing", href: "#pricing" },
   { label: "Results", href: "#results" },
   { label: "FAQ", href: "#faq" },
 ];
@@ -170,6 +172,47 @@ const stats = [
   { value: "95%", label: "Users Felt More Prepared" },
   { value: "2,400+", label: "Candidates Preparing" },
   { value: "8.4/10", label: "Average Satisfaction" },
+];
+
+const pricingPlans: Plan[] = [
+  {
+    name: "Free",
+    price: "$0 / month",
+    description:
+      "Basic prep tools without interview credits.",
+    features: [
+      "0 interview credits included",
+      "Fit analysis and tailored question generation",
+      "Can unlock interviews by purchasing one-off credits",
+    ],
+    cta: "Start Free",
+  },
+  {
+    name: "Standard",
+    price: "$15 / month",
+    description:
+      "For active candidates interviewing regularly.",
+    features: [
+      "2 interview credits per successful billing cycle",
+      "All prep tools unlocked",
+      "One-off interview credits stack on top",
+    ],
+    cta: "Choose Standard",
+    highlighted: true,
+    popular: true,
+  },
+  {
+    name: "Pro",
+    price: "$29 / month",
+    description:
+      "For high-volume interview prep and rapid iteration.",
+    features: [
+      "5 interview credits per successful billing cycle",
+      "All prep tools unlocked",
+      "Purchased credits never expire and always stack",
+    ],
+    cta: "Choose Pro",
+  },
 ];
 
 const faqs = [
@@ -673,6 +716,74 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       </motion.section>
 
       {/* ================================================================ */}
+      {/* PRICING                                                          */}
+      {/* ================================================================ */}
+      <motion.section
+        id="pricing"
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+        className="bg-slate-50/80 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="Pricing"
+              title="Subscription + usage credits that stack"
+              subtitle="Use a monthly plan for recurring credits, then add one-off interview credits any time."
+              align="center"
+            />
+          </motion.div>
+
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {pricingPlans.map((plan) => (
+              <motion.div key={plan.name} variants={fadeInUp}>
+                <PricingCard plan={plan} onCta={onPrimaryCta} />
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div variants={fadeInUp} className="mt-8">
+            <Card className="border-mm-violet/20 bg-gradient-to-br from-mm-violet/[0.05] via-white to-mm-blue/[0.04] p-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-2xl space-y-3">
+                  <Badge className="w-fit border-mm-violet/20 bg-white text-mm-violet">
+                    One-off Interview Credits
+                  </Badge>
+                  <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
+                    $10 per interview credit
+                  </h3>
+                  <p className="text-sm leading-relaxed text-slate-600">
+                    Purchase any number of interview credits in a single transaction. One-off credits stack with subscription credits and do not expire.
+                  </p>
+                  <ul className="space-y-2 text-sm text-slate-700">
+                    {[
+                      "Available credits = granted subscription credits + purchased credits - consumed credits",
+                      "Each interview consumes exactly one credit",
+                      "No available credit means interview launch is blocked",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  type="button"
+                  onClick={onPrimaryCta}
+                  className="shrink-0"
+                >
+                  Get Started
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ================================================================ */}
       {/* FAQ                                                              */}
       {/* ================================================================ */}
       <motion.section
@@ -754,6 +865,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               className="transition-colors hover:text-slate-900"
             >
               Features
+            </a>
+            <a
+              href="#pricing"
+              className="transition-colors hover:text-slate-900"
+            >
+              Pricing
             </a>
             <a href="#faq" className="transition-colors hover:text-slate-900">
               FAQ

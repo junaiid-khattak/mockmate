@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
-type Plan = {
+export type Plan = {
   name: string;
   price: string;
   description: string;
@@ -16,9 +16,10 @@ type Plan = {
 
 type Props = {
   plan: Plan;
+  onCta?: () => void;
 };
 
-export function PricingCard({ plan }: Props) {
+export function PricingCard({ plan, onCta }: Props) {
   return (
     <Card
       className={cn(
@@ -50,7 +51,12 @@ export function PricingCard({ plan }: Props) {
             </li>
           ))}
         </ul>
-        <Button className="w-full" variant={plan.highlighted ? "default" : "secondary"}>
+        <Button
+          type="button"
+          className="w-full"
+          variant={plan.highlighted ? "default" : "secondary"}
+          onClick={onCta}
+        >
           {plan.cta}
         </Button>
       </CardContent>

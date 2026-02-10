@@ -86,33 +86,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Failed to initialize profile" }, { status: 500 });
   }
 
-  const { data: existingEntitlements, error: entitlementsError } = await service
-    .from("entitlements")
-    .select("id")
-    .eq("user_id", data.user.id)
-    .eq("source", "free")
-    .eq("plan_id", "free")
-    .limit(1);
-
-  if (entitlementsError) {
-    return NextResponse.json({ ok: false, error: "Failed to verify entitlements" }, { status: 500 });
-  }
-
-  if (!existingEntitlements || existingEntitlements.length === 0) {
-    const { error: insertEntitlementError } = await service.from("entitlements").insert({
-      user_id: data.user.id,
-      source: "free",
-      status: "active",
-      minutes_total: 5,
-      minutes_used: 0,
-      plan_id: "free",
-    });
-
-    if (insertEntitlementError) {
-      return NextResponse.json({ ok: false, error: "Failed to create entitlement" }, { status: 500 });
-    }
-  }
-
   return NextResponse.json({
     ok: true,
     email,

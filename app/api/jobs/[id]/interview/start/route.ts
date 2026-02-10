@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
+import { verifyInterviewPaywall } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
 const MIN_DURATION_SECONDS = 1800;
@@ -131,6 +132,25 @@ export async function POST(
         error: "Resume parsing is not complete yet. Try again in a moment.",
       },
       { status: 409 },
+    );
+  }
+
+  const paywallDecision = await verifyInterviewPaywall(supabase, user.id);
+  if (!paywallDecision.ok) {
+    if (paywallDecision.code === "verification_failed") {
+      return NextResponse.json(
+        { ok: false, error: "Unable to verify interview credit balance." },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "payment_required",
+        message: paywallDecision.message,
+      },
+      { status: 402 },
     );
   }
 
