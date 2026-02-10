@@ -42,8 +42,8 @@ function parseOptionalString(value: unknown, minLength = 2, maxLength = 80): str
 function parseLaunchCodeTtlSeconds(): number {
   const raw = Number(
     process.env.INTERVIEW_LAUNCH_CODE_TTL_SECONDS ??
-      process.env.INTERVIEW_SESSION_TOKEN_TTL_SECONDS ??
-      DEFAULT_LAUNCH_CODE_TTL_SECONDS,
+    process.env.INTERVIEW_SESSION_TOKEN_TTL_SECONDS ??
+    DEFAULT_LAUNCH_CODE_TTL_SECONDS,
   );
   if (!Number.isFinite(raw)) return DEFAULT_LAUNCH_CODE_TTL_SECONDS;
   return Math.min(
@@ -67,6 +67,14 @@ export async function POST(
 
   const interviewAppUrl = process.env.INTERVIEW_APP_URL;
   const interviewExchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET;
+
+  console.error("interview_env_check", {
+    hasInterviewAppUrl: Boolean(process.env.INTERVIEW_APP_URL),
+    hasInterviewExchangeSecret: Boolean(process.env.INTERVIEW_EXCHANGE_SECRET),
+    awsBranch: process.env.AWS_BRANCH,
+    nodeEnv: process.env.NODE_ENV,
+  });
+
   if (!interviewAppUrl || !interviewExchangeSecret) {
     return NextResponse.json(
       { ok: false, error: "Interview service is not configured." },
