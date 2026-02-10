@@ -1,19 +1,16 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
-import { signInterviewSessionToken } from "@/lib/interview-token";
+import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
 const MIN_DURATION_SECONDS = 1800;
 const MAX_DURATION_SECONDS = 2700;
 const DEFAULT_DURATION_SECONDS = 1800;
 
-const DEFAULT_TOKEN_TTL_SECONDS = 120;
-const MIN_TOKEN_TTL_SECONDS = 30;
-const MAX_TOKEN_TTL_SECONDS = 600;
-
-const DEFAULT_ISSUER = "nayld-dashboard";
-const DEFAULT_AUDIENCE = "nayld-interview-worker";
+const DEFAULT_LAUNCH_CODE_TTL_SECONDS = 120;
+const MIN_LAUNCH_CODE_TTL_SECONDS = 30;
+const MAX_LAUNCH_CODE_TTL_SECONDS = 600;
 
 function parseDurationSeconds(value: unknown): number | null {
   if (value == null) return null;
@@ -41,10 +38,17 @@ function parseOptionalString(value: unknown, minLength = 2, maxLength = 80): str
   return trimmed;
 }
 
-function parseTokenTtlSeconds(): number {
-  const raw = Number(process.env.INTERVIEW_SESSION_TOKEN_TTL_SECONDS ?? DEFAULT_TOKEN_TTL_SECONDS);
-  if (!Number.isFinite(raw)) return DEFAULT_TOKEN_TTL_SECONDS;
-  return Math.min(MAX_TOKEN_TTL_SECONDS, Math.max(MIN_TOKEN_TTL_SECONDS, Math.floor(raw)));
+function parseLaunchCodeTtlSeconds(): number {
+  const raw = Number(
+    process.env.INTERVIEW_LAUNCH_CODE_TTL_SECONDS ??
+      process.env.INTERVIEW_SESSION_TOKEN_TTL_SECONDS ??
+      DEFAULT_LAUNCH_CODE_TTL_SECONDS,
+  );
+  if (!Number.isFinite(raw)) return DEFAULT_LAUNCH_CODE_TTL_SECONDS;
+  return Math.min(
+    MAX_LAUNCH_CODE_TTL_SECONDS,
+    Math.max(MIN_LAUNCH_CODE_TTL_SECONDS, Math.floor(raw)),
+  );
 }
 
 export async function POST(
@@ -61,8 +65,8 @@ export async function POST(
   }
 
   const interviewAppUrl = process.env.INTERVIEW_APP_URL;
-  const interviewJwtSecret = process.env.INTERVIEW_JWT_SECRET;
-  if (!interviewAppUrl || !interviewJwtSecret) {
+  const interviewExchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET;
+  if (!interviewAppUrl || !interviewExchangeSecret) {
     return NextResponse.json(
       { ok: false, error: "Interview service is not configured." },
       { status: 500 },
@@ -132,38 +136,40 @@ export async function POST(
 
   const interviewId = randomUUID();
   const now = Math.floor(Date.now() / 1000);
-  const ttlSeconds = parseTokenTtlSeconds();
-  const issuer = process.env.INTERVIEW_SESSION_ISSUER ?? DEFAULT_ISSUER;
-  const audience = process.env.INTERVIEW_SESSION_AUDIENCE ?? DEFAULT_AUDIENCE;
+  const ttlSeconds = parseLaunchCodeTtlSeconds();
+  const expiresAtIso = new Date((now + ttlSeconds) * 1000).toISOString();
   const dashboardReturnUrl = new URL(`/jobs/${job.id}`, getAppUrl(request));
   dashboardReturnUrl.searchParams.set("interview_id", interviewId);
+  const { code: launchCode, codeHash } = createInterviewLaunchCode();
 
-  const token = signInterviewSessionToken(
-    {
-      iss: issuer,
-      aud: audience,
-      sub: user.id,
-      iat: now,
-      nbf: now - 5,
-      exp: now + ttlSeconds,
-      jti: randomUUID(),
+  const { error: launchCodeErr } = await supabase
+    .from("interview_launch_codes")
+    .insert({
+      code_hash: codeHash,
       user_id: user.id,
       job_id: job.id,
       interview_id: interviewId,
       duration_seconds: durationSeconds,
-      interview_types: interviewTypes,
-      language,
-      voice,
-      model,
+      interview_types: interviewTypes ?? null,
+      language: language ?? null,
+      voice: voice ?? null,
+      model: model ?? null,
       dashboard_return_url: dashboardReturnUrl.toString(),
-    },
-    interviewJwtSecret,
-  );
+      expires_at: expiresAtIso,
+      used_at: null,
+    });
+
+  if (launchCodeErr) {
+    return NextResponse.json(
+      { ok: false, error: "Unable to create interview launch session." },
+      { status: 500 },
+    );
+  }
 
   let launchUrl: string;
   try {
     const url = new URL("/", interviewAppUrl);
-    url.searchParams.set("token", token);
+    url.searchParams.set("launch_code", launchCode);
     launchUrl = url.toString();
   } catch {
     return NextResponse.json(
@@ -176,7 +182,7 @@ export async function POST(
     ok: true,
     interview_id: interviewId,
     launch_url: launchUrl,
-    expires_at: new Date((now + ttlSeconds) * 1000).toISOString(),
+    expires_at: expiresAtIso,
   });
   applyCookies(response);
   return response;
