@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { BILLING_PURCHASES_COMING_SOON_MESSAGE } from "@/lib/billing";
 import { Header } from "@/components/jobs/Header";
 import { Mic, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
@@ -49,6 +50,8 @@ type InterviewSession = {
 
 const POLL_INTERVAL_MS = 3000;
 
+type PaywallPurchaseOption = "standard" | "pro" | "one_off";
+
 
 export default function JobBriefPage() {
   const router = useRouter();
@@ -69,6 +72,13 @@ export default function JobBriefPage() {
   const [reanalyzing, setReanalyzing] = useState(false);
   const [startingInterview, setStartingInterview] = useState(false);
   const [interviewError, setInterviewError] = useState<string | null>(null);
+  const [showInterviewPaywall, setShowInterviewPaywall] = useState(false);
+  const [interviewPaywallMessage, setInterviewPaywallMessage] = useState<string | null>(
+    null,
+  );
+  const [paywallPurchaseMessage, setPaywallPurchaseMessage] = useState<string | null>(
+    null,
+  );
   const [interviewSession, setInterviewSession] = useState<InterviewSession | null>(
     null,
   );
@@ -260,11 +270,10 @@ export default function JobBriefPage() {
     }
   };
 
-  const handleStartInterview = async () => {
-    if (startingInterview) return;
-    setInterviewError(null);
-    setStartingInterview(true);
-
+  const startInterview = async (): Promise<
+    | { ok: true; launchUrl: string }
+    | { ok: false; code: "payment_required" | "error"; message: string }
+  > => {
     try {
       const res = await fetch(`/api/jobs/${jobId}/interview/start`, {
         method: "POST",
@@ -273,19 +282,72 @@ export default function JobBriefPage() {
       });
 
       const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body?.ok || typeof body.launch_url !== "string") {
-        throw new Error(
-          typeof body?.message === "string"
-            ? body.message
-            : body?.error ?? "Unable to start interview.",
-        );
+      if (res.status === 402 || body?.error === "payment_required") {
+        return {
+          ok: false,
+          code: "payment_required",
+          message:
+            typeof body?.message === "string" && body.message.trim()
+              ? body.message
+              : "You need at least one interview credit to start this interview.",
+        };
       }
 
-      window.location.assign(body.launch_url);
+      if (!res.ok || !body?.ok || typeof body.launch_url !== "string") {
+        return {
+          ok: false,
+          code: "error",
+          message:
+            typeof body?.message === "string"
+              ? body.message
+              : body?.error ?? "Unable to start interview.",
+        };
+      }
+
+      return { ok: true, launchUrl: body.launch_url };
     } catch (err) {
-      setInterviewError(err instanceof Error ? err.message : "Unable to start interview.");
-      setStartingInterview(false);
+      return {
+        ok: false,
+        code: "error",
+        message: err instanceof Error ? err.message : "Unable to start interview.",
+      };
     }
+  };
+
+  const handleStartInterview = async () => {
+    if (startingInterview) return;
+
+    setInterviewError(null);
+    setShowInterviewPaywall(false);
+    setPaywallPurchaseMessage(null);
+    setStartingInterview(true);
+
+    const result = await startInterview();
+
+    if (result.ok) {
+      window.location.assign(result.launchUrl);
+      return;
+    }
+
+    if (result.code === "payment_required") {
+      setInterviewPaywallMessage(result.message);
+      setShowInterviewPaywall(true);
+      setStartingInterview(false);
+      return;
+    }
+
+    setInterviewError(result.message);
+    setStartingInterview(false);
+  };
+
+  const handlePaywallPurchase = (option: PaywallPurchaseOption) => {
+    const label =
+      option === "one_off"
+        ? "one-time interview purchase"
+        : `${option === "standard" ? "Standard" : "Pro"} subscription checkout`;
+    setPaywallPurchaseMessage(
+      `${label} is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
+    );
   };
 
   if (checkingAuth) return null;
@@ -641,6 +703,85 @@ export default function JobBriefPage() {
               </p>
             )}
           </section>
+        )}
+
+        {showInterviewPaywall && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">
+                You&apos;re out of interview credits
+              </h3>
+              <p className="mt-2 text-sm text-slate-600">
+                {interviewPaywallMessage ??
+                  "Purchase credits to continue with this interview."}
+              </p>
+
+              <div className="mt-5 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => handlePaywallPurchase("one_off")}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">One-time interview</p>
+                    <p className="text-xs text-slate-500">1 interview credit for $10</p>
+                  </div>
+                  <span className="text-xs font-medium text-mm-violet">Buy</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePaywallPurchase("standard")}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Standard subscription</p>
+                    <p className="text-xs text-slate-500">$15/month for 2 interview credits</p>
+                  </div>
+                  <span className="text-xs font-medium text-mm-violet">Choose</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePaywallPurchase("pro")}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Pro subscription</p>
+                    <p className="text-xs text-slate-500">$29/month for 5 interview credits</p>
+                  </div>
+                  <span className="text-xs font-medium text-mm-violet">Choose</span>
+                </button>
+              </div>
+
+              {paywallPurchaseMessage && (
+                <p className="mt-3 text-xs text-sky-700">{paywallPurchaseMessage}</p>
+              )}
+
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInterviewPaywall(false);
+                    router.push("/settings/billing");
+                  }}
+                  className="text-xs font-medium text-mm-violet hover:underline"
+                >
+                  Open billing page
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInterviewPaywall(false);
+                    setPaywallPurchaseMessage(null);
+                  }}
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                >
+                  Maybe later
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Mock Interview CTA */}

@@ -1,6 +1,8 @@
 export const BILLING_PROVIDER = "dashboard";
 export const INTERVIEW_CREDIT_UNIT_PRICE_CENTS = 1000;
 export const ONE_OFF_CREDIT_ORDER_PLAN_ID = "one_off";
+export const BILLING_PURCHASES_COMING_SOON_MESSAGE =
+  "Paid subscriptions and one-off interview purchases are coming soon. For now, plans and credits are managed manually.";
 
 export const BILLING_PLAN_IDS = ["free", "standard", "pro"] as const;
 export type BillingPlanId = (typeof BILLING_PLAN_IDS)[number];

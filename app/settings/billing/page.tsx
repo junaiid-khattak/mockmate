@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import {
+  BILLING_PURCHASES_COMING_SOON_MESSAGE,
   INTERVIEW_CREDIT_UNIT_PRICE_CENTS,
   type BillingPlanId,
   type PurchasableBillingPlanId,
@@ -59,16 +60,9 @@ type BillingSummary = {
 };
 
 type ActionMessage = {
-  kind: "success" | "error";
+  kind: "success" | "notice" | "error";
   text: string;
 };
-
-function createIdempotencyKey(prefix: string): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `${prefix}-${crypto.randomUUID()}`;
-  }
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 function formatMoney(cents: number, currency: string): string {
   const normalized = Number.isFinite(cents) ? cents : 0;
@@ -117,8 +111,6 @@ export default function BillingPage() {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  const [planPurchasePending, setPlanPurchasePending] = useState<PurchasableBillingPlanId | null>(null);
-  const [creditsPurchasePending, setCreditsPurchasePending] = useState(false);
   const [creditQuantity, setCreditQuantity] = useState("1");
 
   const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
@@ -181,59 +173,16 @@ export default function BillingPage() {
     router.replace("/login");
   };
 
-  const handlePurchasePlan = async (planId: PurchasableBillingPlanId) => {
-    if (planPurchasePending || creditsPurchasePending) return;
-
-    setActionMessage(null);
-    setPlanPurchasePending(planId);
-
-    try {
-      const res = await fetch("/api/billing/purchase/subscription", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan_id: planId,
-          idempotency_key: createIdempotencyKey("plan"),
-        }),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body?.ok) {
-        throw new Error(
-          typeof body?.error === "string" ? body.error : "Unable to complete plan purchase.",
-        );
-      }
-
-      const planName =
-        body?.plan && typeof body.plan.name === "string" ? body.plan.name : "Plan";
-      const creditsIncluded =
-        typeof body?.plan?.interview_credits_included === "number"
-          ? body.plan.interview_credits_included
-          : null;
-
-      setActionMessage({
-        kind: "success",
-        text:
-          creditsIncluded != null
-            ? `${planName} activated. ${creditsIncluded} interview credit${creditsIncluded === 1 ? "" : "s"} granted.`
-            : `${planName} activated successfully.`,
-      });
-
-      await loadSummary();
-    } catch (err) {
-      setActionMessage({
-        kind: "error",
-        text:
-          err instanceof Error ? err.message : "Unable to complete plan purchase.",
-      });
-    } finally {
-      setPlanPurchasePending(null);
-    }
+  const handlePurchasePlan = (planId: PurchasableBillingPlanId) => {
+    const selectedPlanName =
+      summary?.plans.find((plan) => plan.id === planId)?.name ?? "Paid plan";
+    setActionMessage({
+      kind: "notice",
+      text: `${selectedPlanName} checkout is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
+    });
   };
 
-  const handlePurchaseCredits = async () => {
-    if (creditsPurchasePending || planPurchasePending) return;
-
+  const handlePurchaseCredits = () => {
     const quantity = Number.parseInt(creditQuantity, 10);
     if (!Number.isFinite(quantity) || quantity < 1 || quantity > 100) {
       setActionMessage({
@@ -243,41 +192,10 @@ export default function BillingPage() {
       return;
     }
 
-    setActionMessage(null);
-    setCreditsPurchasePending(true);
-
-    try {
-      const res = await fetch("/api/billing/purchase/credits", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          quantity,
-          idempotency_key: createIdempotencyKey("credits"),
-        }),
-      });
-
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body?.ok) {
-        throw new Error(
-          typeof body?.error === "string" ? body.error : "Unable to complete credit purchase.",
-        );
-      }
-
-      setActionMessage({
-        kind: "success",
-        text: `${quantity} interview credit${quantity === 1 ? "" : "s"} added to your balance.`,
-      });
-
-      await loadSummary();
-    } catch (err) {
-      setActionMessage({
-        kind: "error",
-        text:
-          err instanceof Error ? err.message : "Unable to complete credit purchase.",
-      });
-    } finally {
-      setCreditsPurchasePending(false);
-    }
+    setActionMessage({
+      kind: "notice",
+      text: `Checkout for ${quantity} interview credit${quantity === 1 ? "" : "s"} is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
+    });
   };
 
   if (checkingAuth) return null;
@@ -315,7 +233,9 @@ export default function BillingPage() {
               "mt-5 rounded-xl border px-4 py-3 text-sm",
               actionMessage.kind === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-red-200 bg-red-50 text-red-700",
+                : actionMessage.kind === "notice"
+                  ? "border-sky-200 bg-sky-50 text-sky-700"
+                  : "border-red-200 bg-red-50 text-red-700",
             )}
           >
             {actionMessage.text}
@@ -403,7 +323,6 @@ export default function BillingPage() {
                     if (!purchasableId) return null;
 
                     const isCurrent = currentPlanId === plan.id;
-                    const isPending = planPurchasePending === purchasableId;
 
                     return (
                       <div
@@ -429,18 +348,11 @@ export default function BillingPage() {
                           className="mt-4 w-full"
                           disabled={
                             !plan.active ||
-                            isCurrent ||
-                            creditsPurchasePending ||
-                            planPurchasePending !== null
+                            isCurrent
                           }
                           onClick={() => handlePurchasePlan(purchasableId)}
                         >
-                          {isPending ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processing...
-                            </>
-                          ) : isCurrent ? (
+                          {isCurrent ? (
                             "Current plan"
                           ) : (
                             `Choose ${plan.name}`
@@ -494,17 +406,9 @@ export default function BillingPage() {
 
                   <Button
                     type="button"
-                    disabled={planPurchasePending !== null || creditsPurchasePending}
                     onClick={handlePurchaseCredits}
                   >
-                    {creditsPurchasePending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Purchase credits"
-                    )}
+                    Purchase credits
                   </Button>
                 </div>
               </CardContent>
