@@ -86,6 +86,9 @@ export async function POST(
     );
   }
 
+  interviewAppUrl = "http://interview.nayld.ai/interview"
+  interviewExchangeSecret = "5ZOU+gvb]I/41.@2|OFSafjih348C*422wcrbhRg<Abq<gfRCx"
+
   if (!interviewAppUrl || !interviewExchangeSecret) {
     const missing: string[] = [];
     if (!interviewAppUrl) {
