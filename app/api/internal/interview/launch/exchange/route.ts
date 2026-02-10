@@ -9,7 +9,7 @@ import {
   readInterviewCreditConsumptionMode,
   verifyInterviewPaywall,
 } from "@/lib/interview-paywall";
-import { getSecrets } from "@/lib/secrets";
+import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
@@ -78,8 +78,16 @@ async function createLaunchExchangeSupabaseClient() {
 }
 
 export async function POST(request: NextRequest) {
-  const secrets = await getSecrets();
-  const exchangeSecret = secrets.INTERVIEW_EXCHANGE_SECRET;
+  let exchangeSecret: string | null = null;
+  try {
+    exchangeSecret = await getInterviewExchangeSecretFromSecrets();
+  } catch (err) {
+    console.error("Failed to read interview exchange secret", err);
+    return NextResponse.json(
+      { ok: false, error: "Unable to read interview exchange secret." },
+      { status: 500 },
+    );
+  }
   const interviewJwtSecret = process.env.INTERVIEW_JWT_SECRET?.trim() || null;
   if (!exchangeSecret) {
     return NextResponse.json(

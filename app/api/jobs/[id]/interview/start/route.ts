@@ -4,7 +4,10 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywall } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
-import { getSecrets } from "@/lib/secrets";
+import {
+  getInterviewAppUrlFromSecrets,
+  getInterviewExchangeSecretFromSecrets,
+} from "@/lib/secrets";
 
 const MIN_DURATION_SECONDS = 1800;
 const MAX_DURATION_SECONDS = 2700;
@@ -66,9 +69,20 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const secrets = await getSecrets();
-  const interviewAppUrl = secrets.INTERVIEW_APP_URL;
-  const interviewExchangeSecret = secrets.INTERVIEW_EXCHANGE_SECRET;
+  let interviewAppUrl: string | null = null;
+  let interviewExchangeSecret: string | null = null;
+  try {
+    [interviewAppUrl, interviewExchangeSecret] = await Promise.all([
+      getInterviewAppUrlFromSecrets(),
+      getInterviewExchangeSecretFromSecrets(),
+    ]);
+  } catch (err) {
+    console.error("Failed to read interview service secrets", err);
+    return NextResponse.json(
+      { ok: false, error: "Unable to read interview service secrets." },
+      { status: 500 },
+    );
+  }
 
   if (!interviewAppUrl || !interviewExchangeSecret) {
     return NextResponse.json(
