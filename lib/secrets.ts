@@ -8,6 +8,7 @@ export interface ServerSecrets {
   S3_BUCKET_RESUMES: string;
   SQS_QUEUE_URL: string;
   AWS_REGION: string;
+  BILLING_INTERNAL_SECRET?: string;
   INTERVIEW_EXCHANGE_SECRET?: string;
   INTERVIEW_APP_URL?: string;
 }
@@ -22,6 +23,7 @@ const REQUIRED_SECRET_KEYS: readonly (keyof ServerSecrets)[] = [
 const OPTIONAL_SECRET_KEYS: readonly (keyof ServerSecrets)[] = [
   "INTERVIEW_EXCHANGE_SECRET",
   "INTERVIEW_APP_URL",
+  "BILLING_INTERNAL_SECRET",
 ];
 
 let cached: ServerSecrets | null = null;
@@ -45,6 +47,11 @@ const INTERVIEW_EXCHANGE_SECRET_KEYS = [
   "INTERVIEW_EXCHANGE_SECRET",
   "INTERVIEW_KEY",
   "INTERVIEW_SHARED_SECRET",
+] as const;
+
+const BILLING_INTERNAL_SECRET_KEYS = [
+  "BILLING_INTERNAL_SECRET",
+  ...INTERVIEW_EXCHANGE_SECRET_KEYS,
 ] as const;
 
 function resolveSecretName(): string | null {
@@ -104,26 +111,6 @@ async function loadSecrets(): Promise<ServerSecrets> {
   return secrets as ServerSecrets;
 }
 
-function readFromEnv(): ServerSecrets {
-  const secrets: Partial<ServerSecrets> = {};
-  for (const key of REQUIRED_SECRET_KEYS) {
-    const value = process.env[key];
-    if (!value) {
-      throw new Error(`Missing env var "${key}" (set SECRET_NAME to use Secrets Manager instead)`);
-    }
-    secrets[key] = value;
-  }
-
-  for (const key of OPTIONAL_SECRET_KEYS) {
-    const value = process.env[key];
-    if (typeof value === "string" && value.trim()) {
-      secrets[key] = value;
-    }
-  }
-
-  return secrets as ServerSecrets;
-}
-
 export async function getRawSecrets(): Promise<Record<string, string>> {
   const now = Date.now();
   const cacheStillFresh =
@@ -163,34 +150,15 @@ function readFirstNonEmptyValue(
 }
 
 export async function getInterviewAppUrlFromSecrets(): Promise<string | null> {
-  const secrets = await getRawSecrets();
-  const candidate = readFirstNonEmptyValue(secrets, INTERVIEW_APP_URL_KEYS);
-  if (candidate) return candidate;
-
-  // Secrets Manager values can be updated without a process restart.
-  // Refresh once before concluding the key is missing.
-  if (resolveSecretName()) {
-    const refreshed = await getRawSecretsFresh();
-    return readFirstNonEmptyValue(refreshed, INTERVIEW_APP_URL_KEYS);
-  }
-
-  return null;
+  return readSecretWithRefresh(INTERVIEW_APP_URL_KEYS);
 }
 
 export async function getInterviewExchangeSecretFromSecrets(): Promise<string | null> {
-  const secrets = await getRawSecrets();
-  const candidate = readFirstNonEmptyValue(
-    secrets,
-    INTERVIEW_EXCHANGE_SECRET_KEYS,
-  );
-  if (candidate) return candidate;
+  return readSecretWithRefresh(INTERVIEW_EXCHANGE_SECRET_KEYS);
+}
 
-  if (resolveSecretName()) {
-    const refreshed = await getRawSecretsFresh();
-    return readFirstNonEmptyValue(refreshed, INTERVIEW_EXCHANGE_SECRET_KEYS);
-  }
-
-  return null;
+export async function getBillingInternalSecretFromSecrets(): Promise<string | null> {
+  return readSecretWithRefresh(BILLING_INTERNAL_SECRET_KEYS);
 }
 
 export function getInterviewAppUrlSecretKeyAliases(): readonly string[] {
@@ -199,6 +167,10 @@ export function getInterviewAppUrlSecretKeyAliases(): readonly string[] {
 
 export function getInterviewExchangeSecretKeyAliases(): readonly string[] {
   return INTERVIEW_EXCHANGE_SECRET_KEYS;
+}
+
+export function getBillingInternalSecretKeyAliases(): readonly string[] {
+  return BILLING_INTERNAL_SECRET_KEYS;
 }
 
 export async function getRawSecretsSnapshot(): Promise<Record<string, string>> {
@@ -246,4 +218,19 @@ function readRawFromEnv(): Record<string, string> {
     }
   }
   return secrets;
+}
+
+async function readSecretWithRefresh(keys: readonly string[]): Promise<string | null> {
+  const secrets = await getRawSecrets();
+  const candidate = readFirstNonEmptyValue(secrets, keys);
+  if (candidate) return candidate;
+
+  // Secrets Manager values can be updated without a process restart.
+  // Refresh once before concluding the key is missing.
+  if (resolveSecretName()) {
+    const refreshed = await getRawSecretsFresh();
+    return readFirstNonEmptyValue(refreshed, keys);
+  }
+
+  return null;
 }
