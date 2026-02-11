@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
-import { getSecrets } from "@/lib/secrets";
+
 
 const MIN_CONTENT_LENGTH = 50;
 
@@ -118,7 +118,7 @@ export async function POST(
   }
 
   // Enqueue SQS message
-  const queueUrl = (await getSecrets()).SQS_QUEUE_URL;
+  const queueUrl = process.env.SQS_QUEUE_URL;
   if (!queueUrl) {
     // Queue not configured — analysis row is marked pending but won't be
     // picked up until infra is deployed. Return success so the UI shows

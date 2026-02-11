@@ -7,7 +7,6 @@ import {
   readInterviewCreditConsumptionMode,
   verifyInterviewPaywall,
 } from "@/lib/interview-paywall";
-import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
@@ -62,16 +61,7 @@ function parseTokenTtlSeconds(): number {
 }
 
 export async function POST(request: NextRequest) {
-  let exchangeSecret: string | null = null;
-  try {
-    exchangeSecret = await getInterviewExchangeSecretFromSecrets();
-  } catch (err) {
-    console.error("Failed to read interview exchange secret", err);
-    return NextResponse.json(
-      { ok: false, error: "Unable to read interview exchange secret." },
-      { status: 500 },
-    );
-  }
+  const exchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET?.trim() || null;
   if (!exchangeSecret) {
     return NextResponse.json(
       { ok: false, error: "Interview launch exchange is not configured." },
@@ -96,7 +86,7 @@ export async function POST(request: NextRequest) {
   const creditConsumptionMode = readInterviewCreditConsumptionMode();
   let launchRecord: LaunchCodeRow | null = null;
   try {
-    const supabase = await createServiceRoleSupabaseClient();
+    const supabase = createServiceRoleSupabaseClient();
     const { data, error: lookupErr } = await supabase
       .from("interview_launch_codes")
       .select(LAUNCH_SELECT_COLUMNS)

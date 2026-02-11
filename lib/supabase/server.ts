@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import type { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
-import { getSecrets } from "@/lib/secrets";
 
 export function createServerSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -68,10 +67,9 @@ export function createRouteHandlerSupabaseClient(request: NextRequest) {
   return { supabase, applyCookies };
 }
 
-export async function createServiceRoleSupabaseClient() {
+export function createServiceRoleSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secrets = await getSecrets();
-  const serviceKey = secrets.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");

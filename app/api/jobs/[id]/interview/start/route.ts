@@ -4,12 +4,6 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywall } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
-import {
-  getInterviewAppUrlSecretKeyAliases,
-  getInterviewAppUrlFromSecrets,
-  getInterviewExchangeSecretKeyAliases,
-  getInterviewExchangeSecretFromSecrets,
-} from "@/lib/secrets";
 
 const MIN_DURATION_SECONDS = 1800;
 const MAX_DURATION_SECONDS = 2700;
@@ -71,41 +65,16 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  let interviewAppUrl: string | null = null;
-  let interviewExchangeSecret: string | null = null;
-  try {
-    [interviewAppUrl, interviewExchangeSecret] = await Promise.all([
-      getInterviewAppUrlFromSecrets(),
-      getInterviewExchangeSecretFromSecrets(),
-    ]);
-  } catch (err) {
-    console.error("Failed to read interview service secrets", err);
-    return NextResponse.json(
-      { ok: false, error: "Unable to read interview service secrets." },
-      { status: 500 },
-    );
-  }
+  const interviewAppUrl = process.env.INTERVIEW_APP_URL?.trim() || null;
+  const interviewExchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET?.trim() || null;
 
   if (!interviewAppUrl || !interviewExchangeSecret) {
     const missing: string[] = [];
-    if (!interviewAppUrl) {
-      missing.push(`INTERVIEW_APP_URL (${getInterviewAppUrlSecretKeyAliases().join(", ")})`);
-    }
-    if (!interviewExchangeSecret) {
-      missing.push(
-        `INTERVIEW_EXCHANGE_SECRET (${getInterviewExchangeSecretKeyAliases().join(", ")})`,
-      );
-    }
-    console.error("Interview service is not configured", {
-      secretName: process.env.SECRET_NAME ?? process.env.AWS_SECRET_NAME ?? null,
-      missing,
-    });
+    if (!interviewAppUrl) missing.push("INTERVIEW_APP_URL");
+    if (!interviewExchangeSecret) missing.push("INTERVIEW_EXCHANGE_SECRET");
+    console.error("Interview service is not configured", { missing });
     return NextResponse.json(
-      {
-        ok: false,
-        error: "Interview service is not configured.",
-        missing,
-      },
+      { ok: false, error: "Interview service is not configured.", missing },
       { status: 500 },
     );
   }

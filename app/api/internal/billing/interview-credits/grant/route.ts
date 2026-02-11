@@ -1,7 +1,6 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
-import { getBillingInternalSecretFromSecrets } from "@/lib/secrets";
 
 type GrantRpcRow = {
   ok: boolean;
@@ -69,16 +68,10 @@ function parseRow(data: unknown): GrantRpcRow | null {
 }
 
 export async function POST(request: NextRequest) {
-  let billingSecret: string | null = null;
-  try {
-    billingSecret = await getBillingInternalSecretFromSecrets();
-  } catch (err) {
-    console.error("Failed to read billing internal secret", err);
-    return NextResponse.json(
-      { ok: false, error: "Unable to read billing internal secret." },
-      { status: 500 },
-    );
-  }
+  const billingSecret =
+    process.env.BILLING_INTERNAL_SECRET?.trim() ||
+    process.env.INTERVIEW_EXCHANGE_SECRET?.trim() ||
+    null;
   if (!billingSecret) {
     return NextResponse.json(
       { ok: false, error: "Billing grant endpoint is not configured." },
@@ -122,7 +115,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createServiceRoleSupabaseClient();
+  const supabase = createServiceRoleSupabaseClient();
   const { data, error } = await supabase.rpc("grant_interview_credits", {
     p_user_id: userId,
     p_grant_key: grantKey,

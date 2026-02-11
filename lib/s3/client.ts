@@ -1,22 +1,19 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { getSecrets } from "@/lib/secrets";
 
 let cachedClient: S3Client | null = null;
 
-export async function getS3Client(): Promise<S3Client> {
+export function getS3Client(): S3Client {
   if (cachedClient) return cachedClient;
-  const secrets = await getSecrets();
 
   cachedClient = new S3Client({
-    region: secrets.AWS_REGION,
+    region: process.env.AWS_REGION!,
   });
 
   return cachedClient;
 }
 
-export async function getResumeBucket(): Promise<string> {
-  const secrets = await getSecrets();
-  return secrets.S3_BUCKET_RESUMES;
+export function getResumeBucket(): string {
+  return process.env.S3_BUCKET_RESUMES!;
 }
 
 function sanitizeFilename(filename: string) {

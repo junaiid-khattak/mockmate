@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
   }
 
-  const envBucket = await getResumeBucket();
+  const envBucket = getResumeBucket();
   if (bucket !== envBucket) {
     return NextResponse.json({ ok: false, error: "Invalid bucket." }, { status: 400 });
   }

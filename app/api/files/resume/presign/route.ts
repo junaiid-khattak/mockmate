@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unsupported file type." }, { status: 400 });
   }
 
-  const bucket = await getResumeBucket();
+  const bucket = getResumeBucket();
   const storageKey = buildResumeKey(data.user.id, body.filename);
 
   const command = new PutObjectCommand({
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     ContentType: body.contentType,
   });
 
-  const uploadUrl = await getSignedUrl(await getS3Client(), command, { expiresIn: 600 });
+  const uploadUrl = await getSignedUrl(getS3Client(), command, { expiresIn: 600 });
 
   return NextResponse.json({
     ok: true,

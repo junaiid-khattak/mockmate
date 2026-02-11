@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
-import { getSecrets } from "@/lib/secrets";
+
 
 const MIN_CONTENT_LENGTH = 50;
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
   // Auto-trigger analysis when a resume is attached
   if (resumeId && jd) {
-    const queueUrl = (await getSecrets()).SQS_QUEUE_URL;
+    const queueUrl = process.env.SQS_QUEUE_URL;
     if (queueUrl) {
       const analysisRunId = randomUUID();
       const { error: updateErr } = await supabase
