@@ -2,7 +2,7 @@ const REQUIRED_ENV_VARS = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "S3_BUCKET_RESUMES",
   "SQS_QUEUE_URL",
-  "AWS_REGION",
+  "REGION",
 ] as const;
 
 /**
