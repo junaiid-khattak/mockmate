@@ -1,8 +1,6 @@
-import { randomUUID, timingSafeEqual } from "crypto";
+import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
-import { signInterviewSessionToken } from "@/lib/interview-token";
 import { hashInterviewLaunchCode } from "@/lib/interview-launch-code";
 import {
   consumeInterviewCredit,
@@ -14,9 +12,6 @@ import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
 const MAX_TOKEN_TTL_SECONDS = 600;
-
-const DEFAULT_ISSUER = "nayld-dashboard";
-const DEFAULT_AUDIENCE = "nayld-interview-worker";
 
 type LaunchCodeRow = {
   user_id: string;
@@ -66,17 +61,6 @@ function parseTokenTtlSeconds(): number {
   return Math.min(MAX_TOKEN_TTL_SECONDS, Math.max(MIN_TOKEN_TTL_SECONDS, Math.floor(raw)));
 }
 
-async function createLaunchExchangeSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (supabaseUrl && serviceRoleKey) {
-    return createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
-  }
-  return createServiceRoleSupabaseClient();
-}
-
 export async function POST(request: NextRequest) {
   let exchangeSecret: string | null = null;
   try {
@@ -88,7 +72,6 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-  const interviewJwtSecret = process.env.INTERVIEW_JWT_SECRET?.trim() || null;
   if (!exchangeSecret) {
     return NextResponse.json(
       { ok: false, error: "Interview launch exchange is not configured." },
@@ -113,7 +96,7 @@ export async function POST(request: NextRequest) {
   const creditConsumptionMode = readInterviewCreditConsumptionMode();
   let launchRecord: LaunchCodeRow | null = null;
   try {
-    const supabase = await createLaunchExchangeSupabaseClient();
+    const supabase = await createServiceRoleSupabaseClient();
     const { data, error: lookupErr } = await supabase
       .from("interview_launch_codes")
       .select(LAUNCH_SELECT_COLUMNS)
@@ -232,8 +215,6 @@ export async function POST(request: NextRequest) {
 
   const now = Math.floor(Date.now() / 1000);
   const ttlSeconds = parseTokenTtlSeconds();
-  const issuer = process.env.INTERVIEW_SESSION_ISSUER ?? DEFAULT_ISSUER;
-  const audience = process.env.INTERVIEW_SESSION_AUDIENCE ?? DEFAULT_AUDIENCE;
   const interviewTypes = Array.isArray(launchRecord.interview_types)
     ? launchRecord.interview_types
         .filter((entry) => typeof entry === "string")
@@ -253,40 +234,11 @@ export async function POST(request: NextRequest) {
     dashboard_return_url: launchRecord.dashboard_return_url ?? undefined,
   };
 
-  let sessionToken: string | null = null;
-  if (interviewJwtSecret) {
-    sessionToken = signInterviewSessionToken(
-      {
-        iss: issuer,
-        aud: audience,
-        sub: launchRecord.user_id,
-        iat: now,
-        nbf: now - 5,
-        exp: now + ttlSeconds,
-        jti: randomUUID(),
-        user_id: launchRecord.user_id,
-        job_id: launchRecord.job_id,
-        interview_id: launchRecord.interview_id,
-        duration_seconds: launchRecord.duration_seconds ?? undefined,
-        interview_types:
-          interviewTypes && interviewTypes.length > 0
-            ? interviewTypes
-            : undefined,
-        language: launchRecord.language ?? undefined,
-        voice: launchRecord.voice ?? undefined,
-        model: launchRecord.model ?? undefined,
-        dashboard_return_url: launchRecord.dashboard_return_url ?? undefined,
-      },
-      interviewJwtSecret,
-    );
-  }
-
   return NextResponse.json({
     ok: true,
     interview_id: launchRecord.interview_id,
     expires_at: new Date((now + ttlSeconds) * 1000).toISOString(),
     session_claims: sessionClaims,
-    session_token: sessionToken ?? undefined,
     credit_consumption_mode: creditConsumptionMode,
   });
 }

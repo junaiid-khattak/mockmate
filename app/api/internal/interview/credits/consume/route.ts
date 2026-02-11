@@ -1,6 +1,5 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import {
   consumeInterviewCredit,
@@ -21,17 +20,6 @@ function secureEquals(left: string, right: string): boolean {
   const rightBuf = Buffer.from(right);
   if (leftBuf.length !== rightBuf.length) return false;
   return timingSafeEqual(leftBuf, rightBuf);
-}
-
-async function createInternalSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (supabaseUrl && serviceRoleKey) {
-    return createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
-  }
-  return createServiceRoleSupabaseClient();
 }
 
 export async function POST(request: NextRequest) {
@@ -81,7 +69,7 @@ export async function POST(request: NextRequest) {
   }
 
   const reason = reasonRaw === "interview_start" ? "interview_start" : "interview_complete";
-  const supabase = await createInternalSupabaseClient();
+  const supabase = await createServiceRoleSupabaseClient();
   const consumeDecision = await consumeInterviewCredit(
     supabase,
     userId,

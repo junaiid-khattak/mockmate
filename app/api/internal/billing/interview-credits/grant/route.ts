@@ -1,8 +1,7 @@
 import { timingSafeEqual } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
-import { getInterviewExchangeSecretFromSecrets } from "@/lib/secrets";
+import { getBillingInternalSecretFromSecrets } from "@/lib/secrets";
 
 type GrantRpcRow = {
   ok: boolean;
@@ -69,30 +68,17 @@ function parseRow(data: unknown): GrantRpcRow | null {
   };
 }
 
-async function createInternalSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (supabaseUrl && serviceRoleKey) {
-    return createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false },
-    });
-  }
-  return createServiceRoleSupabaseClient();
-}
-
 export async function POST(request: NextRequest) {
-  let interviewExchangeSecret: string | null = null;
+  let billingSecret: string | null = null;
   try {
-    interviewExchangeSecret = await getInterviewExchangeSecretFromSecrets();
+    billingSecret = await getBillingInternalSecretFromSecrets();
   } catch (err) {
-    console.error("Failed to read interview exchange secret", err);
+    console.error("Failed to read billing internal secret", err);
     return NextResponse.json(
-      { ok: false, error: "Unable to read interview exchange secret." },
+      { ok: false, error: "Unable to read billing internal secret." },
       { status: 500 },
     );
   }
-  const billingSecret =
-    process.env.BILLING_INTERNAL_SECRET ?? interviewExchangeSecret;
   if (!billingSecret) {
     return NextResponse.json(
       { ok: false, error: "Billing grant endpoint is not configured." },
@@ -136,7 +122,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createInternalSupabaseClient();
+  const supabase = await createServiceRoleSupabaseClient();
   const { data, error } = await supabase.rpc("grant_interview_credits", {
     p_user_id: userId,
     p_grant_key: grantKey,
