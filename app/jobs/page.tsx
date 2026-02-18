@@ -24,6 +24,7 @@ export default function JobsLibraryPage() {
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [firstName, setFirstName] = useState("");
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,14 @@ export default function JobsLibraryPage() {
       const metaName = data.user.user_metadata?.first_name as string | undefined;
       setFirstName(metaName ?? fallback);
       setCheckingAuth(false);
+
+      // Fetch credit balance for header
+      fetch("/api/billing/summary")
+        .then((r) => r.json())
+        .then((b) => {
+          if (b?.ok && b.summary) setCreditBalance(b.summary.available_credits);
+        })
+        .catch(() => {});
 
       const res = await fetch("/api/jobs?limit=50");
       const body = await res.json().catch(() => ({}));
@@ -85,7 +94,7 @@ export default function JobsLibraryPage() {
 
   return (
     <div className="text-slate-900">
-      <Header firstName={firstName} onLogout={handleLogout} />
+      <Header firstName={firstName} creditBalance={creditBalance} onLogout={handleLogout} />
 
       <div className="mx-auto max-w-4xl px-6 py-10">
         {loading ? (

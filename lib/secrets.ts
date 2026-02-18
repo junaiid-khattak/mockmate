@@ -3,6 +3,8 @@ const REQUIRED_ENV_VARS = [
   "S3_BUCKET_RESUMES",
   "SQS_QUEUE_URL",
   "REGION",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
 ] as const;
 
 /**

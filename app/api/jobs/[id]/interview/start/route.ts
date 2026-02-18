@@ -2,7 +2,10 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
-import { verifyInterviewPaywall } from "@/lib/interview-paywall";
+import {
+  verifyInterviewPaywall,
+  consumeInterviewCredit,
+} from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
 const MIN_DURATION_SECONDS = 1800;
@@ -159,7 +162,35 @@ export async function POST(
     );
   }
 
+  // Consume credit BEFORE creating the launch code
   const interviewId = randomUUID();
+
+  const consumeResult = await consumeInterviewCredit(
+    supabase,
+    user.id,
+    interviewId,
+    "interview_start",
+  );
+
+  if (!consumeResult.ok) {
+    if (consumeResult.code === "payment_required") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "payment_required",
+          message: consumeResult.message,
+        },
+        { status: 402 },
+      );
+    }
+    // interview_already_consumed is OK (idempotent retry)
+    if (consumeResult.code !== "interview_already_consumed") {
+      return NextResponse.json(
+        { ok: false, error: "Unable to consume interview credit." },
+        { status: 500 },
+      );
+    }
+  }
   const now = Math.floor(Date.now() / 1000);
   const ttlSeconds = parseLaunchCodeTtlSeconds();
   const expiresAtIso = new Date((now + ttlSeconds) * 1000).toISOString();

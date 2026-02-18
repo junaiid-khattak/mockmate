@@ -7,12 +7,13 @@ import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   firstName?: string;
+  creditBalance?: number | null;
   onLogout: () => void;
   backHref?: string;
   backLabel?: string;
 };
 
-export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps) {
+export function Header({ firstName, creditBalance, onLogout, backHref, backLabel }: HeaderProps) {
   const pathname = usePathname();
   const isBillingPage = pathname === "/settings/billing";
 
@@ -39,6 +40,19 @@ export function Header({ firstName, onLogout, backHref, backLabel }: HeaderProps
 
         <div className="flex items-center gap-4">
           {firstName && <span className="text-sm text-slate-400">{firstName}</span>}
+          {typeof creditBalance === "number" && (
+            <Link
+              href="/settings/billing"
+              className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-mm-violet/30 hover:text-mm-violet"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-mm-violet">
+                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M6 3.5V6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M4.5 8H7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+              </svg>
+              {creditBalance} credit{creditBalance !== 1 ? "s" : ""}
+            </Link>
+          )}
           <Link
             href="/settings/billing"
             aria-current={isBillingPage ? "page" : undefined}

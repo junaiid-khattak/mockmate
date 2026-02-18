@@ -1,31 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, Wallet, ShieldCheck, CreditCard } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, Wallet, CreditCard } from "lucide-react";
 import { Header } from "@/components/jobs/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import {
-  BILLING_PURCHASES_COMING_SOON_MESSAGE,
-  INTERVIEW_CREDIT_UNIT_PRICE_CENTS,
-  type BillingPlanId,
-  type PurchasableBillingPlanId,
-} from "@/lib/billing";
-
-type BillingPlan = {
-  id: BillingPlanId;
-  name: string;
-  price_cents: number;
-  currency: string;
-  interval: string | null;
-  interview_credits_included: number;
-  active: boolean;
-};
+import { CREDIT_PACKS } from "@/lib/billing";
 
 type BillingGrant = {
   id: string;
@@ -47,12 +31,9 @@ type BillingConsumption = {
 
 type BillingSummary = {
   available_credits: number;
-  current_plan: BillingPlan;
-  plans: BillingPlan[];
   credit_totals: {
-    granted_total: number;
-    granted_subscription: number;
     granted_purchased: number;
+    refunded_total: number;
     consumed_total: number;
   };
   recent_grants: BillingGrant[];
@@ -64,44 +45,23 @@ type ActionMessage = {
   text: string;
 };
 
-function formatMoney(cents: number, currency: string): string {
-  const normalized = Number.isFinite(cents) ? cents : 0;
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(normalized / 100);
-  } catch {
-    return `$${(normalized / 100).toFixed(2)}`;
-  }
-}
-
-function formatPlanPrice(plan: BillingPlan): string {
-  if (plan.price_cents <= 0) {
-    return "$0 / month";
-  }
-
-  const base = formatMoney(plan.price_cents, plan.currency);
-  if (!plan.interval) return base;
-  return `${base} / ${plan.interval}`;
-}
-
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleString();
 }
 
-function toPurchasablePlanId(planId: BillingPlanId): PurchasableBillingPlanId | null {
-  if (planId === "standard" || planId === "pro") {
-    return planId;
-  }
-  return null;
+export default function BillingPageWrapper() {
+  return (
+    <Suspense>
+      <BillingPage />
+    </Suspense>
+  );
 }
 
-export default function BillingPage() {
+function BillingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
 
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -111,8 +71,7 @@ export default function BillingPage() {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  const [creditQuantity, setCreditQuantity] = useState("1");
-
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
 
   const loadSummary = useCallback(async () => {
@@ -168,62 +127,74 @@ export default function BillingPage() {
     };
   }, [loadSummary, router, supabase]);
 
+  // Handle post-checkout redirect
+  useEffect(() => {
+    const checkoutStatus = searchParams.get("checkout");
+    if (checkoutStatus === "success") {
+      setActionMessage({
+        kind: "success",
+        text: "Payment successful! Your credits have been added to your account.",
+      });
+      loadSummary();
+      window.history.replaceState({}, "", "/settings/billing");
+    } else if (checkoutStatus === "cancelled") {
+      setActionMessage({
+        kind: "notice",
+        text: "Checkout was cancelled. No charges were made.",
+      });
+      window.history.replaceState({}, "", "/settings/billing");
+    }
+  }, [searchParams, loadSummary]);
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
   };
 
-  const handlePurchasePlan = (planId: PurchasableBillingPlanId) => {
-    const selectedPlanName =
-      summary?.plans.find((plan) => plan.id === planId)?.name ?? "Paid plan";
-    setActionMessage({
-      kind: "notice",
-      text: `${selectedPlanName} checkout is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
-    });
-  };
+  const handleBuyPack = async (packId: string) => {
+    setCheckingOut(packId);
+    setActionMessage(null);
 
-  const handlePurchaseCredits = () => {
-    const quantity = Number.parseInt(creditQuantity, 10);
-    if (!Number.isFinite(quantity) || quantity < 1 || quantity > 100) {
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pack_id: packId }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+
+      if (!res.ok || !body?.ok || !body.checkout_url) {
+        throw new Error(body?.error ?? "Unable to start checkout.");
+      }
+
+      window.location.assign(body.checkout_url);
+    } catch (err) {
       setActionMessage({
         kind: "error",
-        text: "Enter a quantity between 1 and 100 interview credits.",
+        text: err instanceof Error ? err.message : "Unable to start checkout.",
       });
-      return;
+      setCheckingOut(null);
     }
-
-    setActionMessage({
-      kind: "notice",
-      text: `Checkout for ${quantity} interview credit${quantity === 1 ? "" : "s"} is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
-    });
   };
 
   if (checkingAuth) return null;
 
-  const parsedCreditQuantity = Number.parseInt(creditQuantity, 10);
-  const safeCreditQuantity =
-    Number.isFinite(parsedCreditQuantity) && parsedCreditQuantity > 0
-      ? parsedCreditQuantity
-      : 1;
-  const oneOffTotal = safeCreditQuantity * INTERVIEW_CREDIT_UNIT_PRICE_CENTS;
-
-  const currentPlanId = summary?.current_plan.id ?? "free";
-  const purchasablePlans = (summary?.plans ?? [])
-    .map((plan) => ({
-      plan,
-      purchasableId: toPurchasablePlanId(plan.id),
-    }))
-    .filter((item) => item.purchasableId !== null);
-
   return (
     <div className="text-slate-900">
-      <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
+      <Header
+        firstName={firstName}
+        creditBalance={summary?.available_credits ?? null}
+        onLogout={handleLogout}
+        backHref="/jobs"
+        backLabel="Jobs"
+      />
 
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Billing and credits</h1>
           <p className="text-sm text-slate-600">
-            Manage your subscription package, buy additional interview credits, and track your available balance.
+            Purchase interview credit packs and track your balance.
           </p>
         </div>
 
@@ -254,7 +225,8 @@ export default function BillingPage() {
           </div>
         ) : summary ? (
           <>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {/* Balance & Breakdown */}
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardDescription>Available interview credits</CardDescription>
@@ -269,36 +241,20 @@ export default function BillingPage() {
 
               <Card>
                 <CardHeader>
-                  <CardDescription>Current package</CardDescription>
-                  <CardTitle className="flex items-center gap-2 text-slate-900">
-                    <ShieldCheck className="h-5 w-5 text-mm-violet" />
-                    {summary.current_plan.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-slate-600">
-                    {formatPlanPrice(summary.current_plan)}
-                  </p>
-                  <p className="text-sm text-slate-600">
-                    Includes {summary.current_plan.interview_credits_included} interview credits per successful billing cycle.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
                   <CardDescription>Credit breakdown</CardDescription>
                   <CardTitle className="text-slate-900">Usage snapshot</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-slate-600">
                   <div className="flex items-center justify-between">
-                    <span>Granted from subscriptions</span>
-                    <span className="font-medium text-slate-900">{summary.credit_totals.granted_subscription}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Granted from one-off purchases</span>
+                    <span>Purchased</span>
                     <span className="font-medium text-slate-900">{summary.credit_totals.granted_purchased}</span>
                   </div>
+                  {summary.credit_totals.refunded_total > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span>Refunded</span>
+                      <span className="font-medium text-rose-600">-{summary.credit_totals.refunded_total}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span>Consumed by interviews</span>
                     <span className="font-medium text-slate-900">{summary.credit_totals.consumed_total}</span>
@@ -307,118 +263,67 @@ export default function BillingPage() {
               </Card>
             </div>
 
+            {/* Credit Packs */}
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-900">
                   <CreditCard className="h-5 w-5 text-mm-violet" />
-                  Subscription packages
+                  Buy interview credits
                 </CardTitle>
                 <CardDescription>
-                  Upgrade or switch to a monthly package. Package credits stack with one-off credit purchases.
+                  Purchase credit packs. Credits never expire and stack with each purchase.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {purchasablePlans.map(({ plan, purchasableId }) => {
-                    if (!purchasableId) return null;
-
-                    const isCurrent = currentPlanId === plan.id;
-
-                    return (
-                      <div
-                        key={plan.id}
-                        className={cn(
-                          "rounded-2xl border p-5",
-                          isCurrent
-                            ? "border-mm-violet/40 bg-mm-violet/[0.03]"
-                            : "border-slate-200 bg-white",
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <h3 className="text-lg font-semibold text-slate-900">{plan.name}</h3>
-                          {isCurrent ? <Badge>Current</Badge> : null}
-                        </div>
-                        <p className="mt-1 text-sm text-slate-600">{formatPlanPrice(plan)}</p>
-                        <p className="mt-2 text-sm text-slate-600">
-                          {plan.interview_credits_included} interview credits per cycle
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  {CREDIT_PACKS.map((pack) => (
+                    <div
+                      key={pack.id}
+                      className={cn(
+                        "rounded-2xl border p-5 text-center",
+                        pack.recommended
+                          ? "border-mm-violet/40 bg-mm-violet/[0.03]"
+                          : "border-slate-200 bg-white",
+                      )}
+                    >
+                      {pack.recommended && (
+                        <Badge className="mb-2">Recommended</Badge>
+                      )}
+                      <h3 className="text-lg font-semibold text-slate-900">{pack.name}</h3>
+                      <p className="mt-1 text-2xl font-bold text-slate-900">
+                        ${(pack.priceCents / 100).toFixed(0)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {pack.credits} credit{pack.credits !== 1 ? "s" : ""}
+                      </p>
+                      {pack.savingsPercent > 0 && (
+                        <p className="mt-1 text-xs font-medium text-emerald-600">
+                          Save {pack.savingsPercent}%
                         </p>
-
-                        <Button
-                          type="button"
-                          className="mt-4 w-full"
-                          disabled={
-                            !plan.active ||
-                            isCurrent
-                          }
-                          onClick={() => handlePurchasePlan(purchasableId)}
-                        >
-                          {isCurrent ? (
-                            "Current plan"
-                          ) : (
-                            `Choose ${plan.name}`
-                          )}
-                        </Button>
-                      </div>
-                    );
-                  })}
+                      )}
+                      <Button
+                        type="button"
+                        className="mt-4 w-full"
+                        disabled={checkingOut !== null}
+                        onClick={() => handleBuyPack(pack.id)}
+                      >
+                        {checkingOut === pack.id ? "Redirecting..." : "Buy"}
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-slate-900">
-                  <Wallet className="h-5 w-5 text-mm-violet" />
-                  One-off interview credits
-                </CardTitle>
-                <CardDescription>
-                  Buy additional credits at any time. Purchased credits do not expire.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-4 md:flex-row md:items-end">
-                  <div className="w-full max-w-xs">
-                    <label htmlFor="credit-quantity" className="mb-2 block text-sm text-slate-600">
-                      Quantity
-                    </label>
-                    <Input
-                      id="credit-quantity"
-                      type="number"
-                      min={1}
-                      max={100}
-                      step={1}
-                      inputMode="numeric"
-                      value={creditQuantity}
-                      onChange={(event) => {
-                        setCreditQuantity(event.target.value);
-                      }}
-                    />
-                  </div>
-
-                  <div className="text-sm text-slate-600">
-                    <div>
-                      Unit price: {formatMoney(INTERVIEW_CREDIT_UNIT_PRICE_CENTS, "USD")}
-                    </div>
-                    <div className="font-medium text-slate-900">
-                      Total: {formatMoney(oneOffTotal, "USD")}
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handlePurchaseCredits}
-                  >
-                    Purchase credits
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
+            {/* Recent History */}
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-slate-900">Recent credit grants</CardTitle>
-                  <CardDescription>Latest subscription and purchase credit grants.</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-slate-900">
+                    <Wallet className="h-5 w-5 text-mm-violet" />
+                    Recent credit grants
+                  </CardTitle>
+                  <CardDescription>Latest credit purchases and adjustments.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {summary.recent_grants.length === 0 ? (
@@ -429,15 +334,24 @@ export default function BillingPage() {
                         <li key={row.id} className="flex items-start justify-between gap-3">
                           <div>
                             <p className="font-medium text-slate-900">
-                              {row.source === "subscription_cycle"
-                                ? "Subscription cycle"
-                                : row.source === "one_off_purchase"
-                                  ? "One-off purchase"
-                                  : row.source}
+                              {row.source === "one_off_purchase"
+                                ? "Credit purchase"
+                                : row.source === "stripe_refund"
+                                  ? "Refund"
+                                  : row.source === "subscription_cycle"
+                                    ? "Subscription cycle"
+                                    : row.source}
                             </p>
                             <p className="text-slate-500">{formatDateTime(row.granted_at)}</p>
                           </div>
-                          <span className="font-medium text-emerald-700">+{row.credits}</span>
+                          <span
+                            className={cn(
+                              "font-medium",
+                              row.credits > 0 ? "text-emerald-700" : "text-rose-600",
+                            )}
+                          >
+                            {row.credits > 0 ? `+${row.credits}` : `${row.credits}`}
+                          </span>
                         </li>
                       ))}
                     </ul>

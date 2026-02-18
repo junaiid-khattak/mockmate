@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { BILLING_PURCHASES_COMING_SOON_MESSAGE } from "@/lib/billing";
+import { CREDIT_PACKS } from "@/lib/billing";
 import { Header } from "@/components/jobs/Header";
+import { cn } from "@/lib/utils";
 import { Mic, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 
 type Job = {
@@ -50,9 +51,6 @@ type InterviewSession = {
 
 const POLL_INTERVAL_MS = 3000;
 
-type PaywallPurchaseOption = "standard" | "pro" | "one_off";
-
-
 export default function JobBriefPage() {
   const router = useRouter();
   const params = useParams();
@@ -63,6 +61,7 @@ export default function JobBriefPage() {
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [firstName, setFirstName] = useState("");
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +78,8 @@ export default function JobBriefPage() {
   const [paywallPurchaseMessage, setPaywallPurchaseMessage] = useState<string | null>(
     null,
   );
+  const [paywallCheckingOut, setPaywallCheckingOut] = useState<string | null>(null);
+  const [showCreditConfirm, setShowCreditConfirm] = useState(false);
   const [interviewSession, setInterviewSession] = useState<InterviewSession | null>(
     null,
   );
@@ -121,6 +122,14 @@ export default function JobBriefPage() {
       const metaName = data.user.user_metadata?.first_name as string | undefined;
       setFirstName(metaName ?? fallback);
       setCheckingAuth(false);
+
+      // Fetch credit balance for header
+      fetch("/api/billing/summary")
+        .then((r) => r.json())
+        .then((b) => {
+          if (b?.ok && b.summary) setCreditBalance(b.summary.available_credits);
+        })
+        .catch(() => {});
 
       let jd = await fetchJob();
       if (cancelled) return;
@@ -316,11 +325,34 @@ export default function JobBriefPage() {
 
   const handleStartInterview = async () => {
     if (startingInterview) return;
-
     setInterviewError(null);
-    setShowInterviewPaywall(false);
-    setPaywallPurchaseMessage(null);
+
+    // Check balance client-side first for UX
+    try {
+      const balanceRes = await fetch("/api/billing/summary");
+      const balanceBody = await balanceRes.json().catch(() => ({}));
+      const credits = balanceBody?.summary?.available_credits ?? 0;
+      setCreditBalance(credits);
+
+      if (credits < 1) {
+        setInterviewPaywallMessage(
+          "You need at least one interview credit to start this interview.",
+        );
+        setShowInterviewPaywall(true);
+        return;
+      }
+
+      // Show confirmation dialog
+      setShowCreditConfirm(true);
+    } catch {
+      setInterviewError("Unable to check credit balance.");
+    }
+  };
+
+  const handleConfirmStartInterview = async () => {
+    setShowCreditConfirm(false);
     setStartingInterview(true);
+    setInterviewError(null);
 
     const result = await startInterview();
 
@@ -340,14 +372,26 @@ export default function JobBriefPage() {
     setStartingInterview(false);
   };
 
-  const handlePaywallPurchase = (option: PaywallPurchaseOption) => {
-    const label =
-      option === "one_off"
-        ? "one-time interview purchase"
-        : `${option === "standard" ? "Standard" : "Pro"} subscription checkout`;
-    setPaywallPurchaseMessage(
-      `${label} is coming soon. ${BILLING_PURCHASES_COMING_SOON_MESSAGE}`,
-    );
+  const handlePaywallBuy = async (packId: string) => {
+    setPaywallCheckingOut(packId);
+    setPaywallPurchaseMessage(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pack_id: packId }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (body?.ok && body.checkout_url) {
+        window.location.assign(body.checkout_url);
+        return;
+      }
+      setPaywallPurchaseMessage(body?.error ?? "Unable to start checkout.");
+    } catch {
+      setPaywallPurchaseMessage("Unable to start checkout.");
+    } finally {
+      setPaywallCheckingOut(null);
+    }
   };
 
   if (checkingAuth) return null;
@@ -355,7 +399,7 @@ export default function JobBriefPage() {
   if (loading) {
     return (
       <div className="text-slate-900">
-        <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
+        <Header firstName={firstName} creditBalance={creditBalance} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
         </div>
@@ -366,7 +410,7 @@ export default function JobBriefPage() {
   if (notFound || !job) {
     return (
       <div className="text-slate-900">
-        <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
+        <Header firstName={firstName} creditBalance={creditBalance} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
         <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
           <h2 className="text-lg font-semibold text-slate-900">Job not found</h2>
           <p className="mt-2 text-sm text-slate-500">This job may have been deleted or doesn&apos;t belong to you.</p>
@@ -705,6 +749,38 @@ export default function JobBriefPage() {
           </section>
         )}
 
+        {/* Credit confirmation dialog */}
+        {showCreditConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold text-slate-900">Start interview?</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                This will use 1 interview credit. You have{" "}
+                <span className="font-semibold">{creditBalance}</span> credit
+                {creditBalance !== 1 ? "s" : ""} remaining.
+              </p>
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleConfirmStartInterview}
+                  disabled={startingInterview}
+                  className="flex-1 rounded-lg bg-mm-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-600 disabled:opacity-50"
+                >
+                  {startingInterview ? "Starting..." : "Confirm"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreditConfirm(false)}
+                  className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Paywall modal — no credits */}
         {showInterviewPaywall && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
             <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
@@ -716,46 +792,41 @@ export default function JobBriefPage() {
                   "Purchase credits to continue with this interview."}
               </p>
 
-              <div className="mt-5 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => handlePaywallPurchase("one_off")}
-                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">One-time interview</p>
-                    <p className="text-xs text-slate-500">1 interview credit for $10</p>
-                  </div>
-                  <span className="text-xs font-medium text-mm-violet">Buy</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handlePaywallPurchase("standard")}
-                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Standard subscription</p>
-                    <p className="text-xs text-slate-500">$15/month for 2 interview credits</p>
-                  </div>
-                  <span className="text-xs font-medium text-mm-violet">Choose</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handlePaywallPurchase("pro")}
-                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Pro subscription</p>
-                    <p className="text-xs text-slate-500">$29/month for 5 interview credits</p>
-                  </div>
-                  <span className="text-xs font-medium text-mm-violet">Choose</span>
-                </button>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {CREDIT_PACKS.map((pack) => (
+                  <button
+                    key={pack.id}
+                    type="button"
+                    disabled={paywallCheckingOut !== null}
+                    onClick={() => handlePaywallBuy(pack.id)}
+                    className={cn(
+                      "flex flex-col items-center rounded-xl border px-4 py-3 text-center transition",
+                      pack.recommended
+                        ? "border-mm-violet/50 bg-mm-violet/[0.03] hover:bg-mm-violet/[0.06]"
+                        : "border-slate-200 hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]",
+                    )}
+                  >
+                    <p className="text-sm font-semibold text-slate-900">{pack.name}</p>
+                    <p className="text-lg font-bold text-slate-900">
+                      ${(pack.priceCents / 100).toFixed(0)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {pack.credits} credit{pack.credits !== 1 ? "s" : ""}
+                    </p>
+                    {pack.savingsPercent > 0 && (
+                      <p className="text-xs font-medium text-emerald-600">
+                        Save {pack.savingsPercent}%
+                      </p>
+                    )}
+                    {paywallCheckingOut === pack.id && (
+                      <span className="mt-1 text-xs text-mm-violet">Redirecting...</span>
+                    )}
+                  </button>
+                ))}
               </div>
 
               {paywallPurchaseMessage && (
-                <p className="mt-3 text-xs text-sky-700">{paywallPurchaseMessage}</p>
+                <p className="mt-3 text-xs text-rose-600">{paywallPurchaseMessage}</p>
               )}
 
               <div className="mt-5 flex items-center justify-between gap-3">

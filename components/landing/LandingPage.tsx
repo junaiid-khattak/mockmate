@@ -176,42 +176,54 @@ const stats = [
 
 const pricingPlans: Plan[] = [
   {
-    name: "Free",
-    price: "$0 / month",
-    description:
-      "Basic prep tools without interview credits.",
+    name: "Starter",
+    price: "$10",
+    description: "Try a single mock interview.",
     features: [
-      "0 interview credits included",
-      "Fit analysis and tailored question generation",
-      "Can unlock interviews by purchasing one-off credits",
+      "1 interview credit",
+      "Full AI mock interview session",
+      "Detailed performance assessment",
+      "Credits never expire",
     ],
-    cta: "Start Free",
+    cta: "Get Started",
   },
   {
     name: "Standard",
-    price: "$15 / month",
-    description:
-      "For active candidates interviewing regularly.",
+    price: "$25",
+    description: "The sweet spot for active job seekers.",
     features: [
-      "2 interview credits per successful billing cycle",
-      "All prep tools unlocked",
-      "One-off interview credits stack on top",
+      "3 interview credits",
+      "Save 17% vs. buying individually",
+      "Full AI mock interview sessions",
+      "Credits never expire and stack",
     ],
-    cta: "Choose Standard",
+    cta: "Buy 3 Credits",
     highlighted: true,
     popular: true,
   },
   {
     name: "Pro",
-    price: "$29 / month",
-    description:
-      "For high-volume interview prep and rapid iteration.",
+    price: "$39",
+    description: "Serious prep across multiple roles.",
     features: [
-      "5 interview credits per successful billing cycle",
-      "All prep tools unlocked",
-      "Purchased credits never expire and always stack",
+      "5 interview credits",
+      "Save 22% vs. buying individually",
+      "Full AI mock interview sessions",
+      "Credits never expire and stack",
     ],
-    cta: "Choose Pro",
+    cta: "Buy 5 Credits",
+  },
+  {
+    name: "Power",
+    price: "$69",
+    description: "Maximum prep with best value per credit.",
+    features: [
+      "10 interview credits",
+      "Save 31% vs. buying individually",
+      "Full AI mock interview sessions",
+      "Credits never expire and stack",
+    ],
+    cta: "Buy 10 Credits",
   },
 ];
 
@@ -730,13 +742,13 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <motion.div variants={fadeInUp}>
             <SectionTitle
               eyebrow="Pricing"
-              title="Subscription + usage credits that stack"
-              subtitle="Use a monthly plan for recurring credits, then add one-off interview credits any time."
+              title="Buy credit packs — no subscriptions"
+              subtitle="Prep tools are free. Buy interview credits only when you need them. Credits never expire."
               align="center"
             />
           </motion.div>
 
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
+          <div className="mt-14 grid gap-5 grid-cols-2 lg:grid-cols-4">
             {pricingPlans.map((plan) => (
               <motion.div key={plan.name} variants={fadeInUp}>
                 <PricingCard plan={plan} onCta={onPrimaryCta} />
@@ -749,19 +761,20 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                 <div className="max-w-2xl space-y-3">
                   <Badge className="w-fit border-mm-violet/20 bg-white text-mm-violet">
-                    One-off Interview Credits
+                    Free Forever
                   </Badge>
                   <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
-                    $10 per interview credit
+                    Prep tools at no cost
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
-                    Purchase any number of interview credits in a single transaction. One-off credits stack with subscription credits and do not expire.
+                    Resume analysis, fit scoring, gap analysis, and tailored question generation are completely free. You only pay when you want a live mock interview.
                   </p>
                   <ul className="space-y-2 text-sm text-slate-700">
                     {[
-                      "Available credits = granted subscription credits + purchased credits - consumed credits",
-                      "Each interview consumes exactly one credit",
-                      "No available credit means interview launch is blocked",
+                      "Upload resumes and job postings for free",
+                      "Get a 1\u201310 fit score with gap analysis",
+                      "Receive tailored interview questions",
+                      "Each mock interview consumes exactly one credit",
                     ].map((item) => (
                       <li key={item} className="flex items-start gap-2.5">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -775,7 +788,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   onClick={onPrimaryCta}
                   className="shrink-0"
                 >
-                  Get Started
+                  Get Started Free
                 </Button>
               </div>
             </Card>
