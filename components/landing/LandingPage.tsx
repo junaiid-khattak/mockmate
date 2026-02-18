@@ -859,7 +859,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-7 w-auto" />
           </a>
 
-          <nav className="flex items-center gap-6 text-sm text-slate-500">
+          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
             <a
               href="#features"
               className="transition-colors hover:text-slate-900"
@@ -883,6 +883,15 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             </a>
             <a href="/login" className="transition-colors hover:text-slate-900">
               Log In
+            </a>
+            <a href="/privacy" className="transition-colors hover:text-slate-900">
+              Privacy
+            </a>
+            <a href="/terms" className="transition-colors hover:text-slate-900">
+              Terms
+            </a>
+            <a href="/refund" className="transition-colors hover:text-slate-900">
+              Refund Policy
             </a>
           </nav>
 
