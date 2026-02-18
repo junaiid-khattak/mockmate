@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
+import { getCreditPack, isCreditPackId } from "@/lib/billing";
 import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
@@ -52,30 +53,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, skipped: true });
     }
 
-    // Retrieve session with expanded line items to read price metadata
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-      expand: ["line_items.data.price"],
-    });
-
-    const lineItem = fullSession.line_items?.data?.[0];
-    const price = lineItem?.price as Stripe.Price | undefined;
-    const creditsStr = price?.metadata?.credits;
-    const credits = creditsStr ? parseInt(creditsStr, 10) : null;
-
-    if (!credits || credits <= 0 || !Number.isFinite(credits)) {
+    // Resolve credits from pack_id stored in session metadata
+    const packId = session.metadata?.pack_id;
+    if (!packId || !isCreditPackId(packId)) {
       console.error(
-        "checkout.session.completed: could not resolve credits from price metadata",
-        {
-          sessionId: session.id,
-          priceId: price?.id,
-          metadata: price?.metadata,
-        },
+        "checkout.session.completed: missing or invalid pack_id in session metadata",
+        { sessionId: session.id, packId },
       );
       return NextResponse.json(
-        { ok: false, error: "Could not resolve credits" },
+        { ok: false, error: "Could not resolve pack_id" },
         { status: 400 },
       );
     }
+
+    const pack = getCreditPack(packId);
+    if (!pack) {
+      console.error(
+        "checkout.session.completed: unknown credit pack",
+        { sessionId: session.id, packId },
+      );
+      return NextResponse.json(
+        { ok: false, error: "Unknown credit pack" },
+        { status: 400 },
+      );
+    }
+
+    const credits = pack.credits;
 
     // Grant credits (idempotent via grant_key)
     const grantKey = `stripe_checkout_${session.id}`;
