@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { NayldLogo } from "@/components/NayldLogo";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ export function Header({ firstName, creditBalance, onLogout, backHref, backLabel
             </Link>
           ) : (
             <Link href="/jobs">
-              <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-8 w-auto" />
+              <NayldLogo className="h-8 w-auto" />
             </Link>
           )}
         </div>

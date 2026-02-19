@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { NayldLogo } from "@/components/NayldLogo";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
       <header className="border-b border-slate-100">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
           <Link href="/">
-            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-8 w-auto" priority />
+            <NayldLogo className="h-8 w-auto" />
           </Link>
           <Link href="/" className="text-sm text-slate-500 transition-colors hover:text-slate-900">
             Back to Home

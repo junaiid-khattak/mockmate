@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ForgotPasswordForm } from "@/components/forgot-password/ForgotPasswordForm";
 import { CheckEmailNotice } from "@/components/forgot-password/CheckEmailNotice";
 import { Card, CardContent } from "@/components/ui/card";
-import Image from "next/image";
+import { NayldLogo } from "@/components/NayldLogo";
 
 type ForgotPasswordPayload = {
   email: string;
@@ -51,7 +51,7 @@ export default function Page() {
       <div className="mx-auto flex min-h-[80vh] max-w-lg flex-col items-center justify-center">
         {step === "form" ? (
           <div className="mb-6 space-y-2 text-center">
-            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-10 w-auto" priority />
+            <NayldLogo className="h-10 w-auto" />
             <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">Reset your password</h1>
             <p className="text-sm text-slate-600 dark:text-slate-300">Enter your email and we’ll send a reset link.</p>
           </div>

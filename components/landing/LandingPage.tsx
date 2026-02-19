@@ -20,7 +20,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
+import { NayldLogo } from "@/components/NayldLogo";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -329,7 +329,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <a href="/">
-            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-9 w-auto" priority />
+            <NayldLogo className="h-9 w-auto" />
           </a>
 
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-500 md:flex">
@@ -869,7 +869,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       <footer className="border-t border-slate-100 bg-white py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
           <a href="/">
-            <Image src="/logo.png" alt="nayld.ai" width={861} height={351} className="h-7 w-auto" />
+            <NayldLogo className="h-7 w-auto" />
           </a>
 
           <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
