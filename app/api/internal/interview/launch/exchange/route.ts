@@ -4,7 +4,6 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { hashInterviewLaunchCode } from "@/lib/interview-launch-code";
 import {
   consumeInterviewCredit,
-  readInterviewCreditConsumptionMode,
   verifyInterviewPaywall,
 } from "@/lib/interview-paywall";
 
@@ -83,7 +82,6 @@ export async function POST(request: NextRequest) {
 
   const codeHash = hashInterviewLaunchCode(launchCode);
   const nowIso = new Date().toISOString();
-  const creditConsumptionMode = readInterviewCreditConsumptionMode();
   let launchRecord: LaunchCodeRow | null = null;
   try {
     const supabase = createServiceRoleSupabaseClient();
@@ -137,32 +135,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (creditConsumptionMode === "start") {
-      const consumeDecision = await consumeInterviewCredit(
-        supabase,
-        data.user_id,
-        data.interview_id,
-        "interview_start",
-      );
+    const consumeDecision = await consumeInterviewCredit(
+      supabase,
+      data.user_id,
+      data.interview_id,
+      "interview_start",
+    );
 
-      if (!consumeDecision.ok) {
-        if (consumeDecision.code === "payment_required") {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: "payment_required",
-              message: consumeDecision.message,
-            },
-            { status: 402 },
-          );
-        }
+    if (!consumeDecision.ok) {
+      if (consumeDecision.code === "payment_required") {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "payment_required",
+            message: consumeDecision.message,
+          },
+          { status: 402 },
+        );
+      }
 
-        if (consumeDecision.code !== "interview_already_consumed") {
-          return NextResponse.json(
-            { ok: false, error: "Unable to consume interview credit." },
-            { status: 500 },
-          );
-        }
+      if (consumeDecision.code !== "interview_already_consumed") {
+        return NextResponse.json(
+          { ok: false, error: "Unable to consume interview credit." },
+          { status: 500 },
+        );
       }
     }
 
@@ -229,6 +225,6 @@ export async function POST(request: NextRequest) {
     interview_id: launchRecord.interview_id,
     expires_at: new Date((now + ttlSeconds) * 1000).toISOString(),
     session_claims: sessionClaims,
-    credit_consumption_mode: creditConsumptionMode,
+    credit_consumption_mode: "start",
   });
 }
