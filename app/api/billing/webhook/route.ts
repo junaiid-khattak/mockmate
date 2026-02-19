@@ -58,8 +58,6 @@ async function grantCreditsForCheckoutSession(
     p_grant_key: grantKey,
     p_source: "one_off_purchase",
     p_credits: credits,
-    p_plan_id: null,
-    p_order_id: null,
     p_provider: "stripe",
     p_metadata: {
       stripe_checkout_session_id: session.id,
@@ -185,8 +183,6 @@ export async function POST(request: NextRequest) {
       p_grant_key: refundGrantKey,
       p_source: "stripe_refund",
       p_credits: refundCredits,
-      p_plan_id: null,
-      p_order_id: null,
       p_provider: "stripe",
       p_metadata: {
         stripe_charge_id: charge.id,

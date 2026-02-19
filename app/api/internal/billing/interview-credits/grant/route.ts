@@ -118,8 +118,6 @@ export async function POST(request: NextRequest) {
     p_grant_key: grantKey,
     p_source: source,
     p_credits: Math.floor(credits),
-    p_plan_id: null,
-    p_order_id: null,
     p_provider: provider,
     p_metadata: metadata,
     p_expires_at: expiresAt,
