@@ -6,6 +6,87 @@ import type Stripe from "stripe";
 
 export const dynamic = "force-dynamic";
 
+type SupabaseServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
+
+async function grantCreditsForCheckoutSession(
+  supabase: SupabaseServiceClient,
+  session: Stripe.Checkout.Session,
+): Promise<NextResponse> {
+  if (session.mode !== "payment") {
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const userId = session.metadata?.supabase_user_id;
+  if (!userId) {
+    console.error(
+      "checkout session missing supabase_user_id",
+      session.id,
+    );
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const packId = session.metadata?.pack_id;
+  if (!packId || !isCreditPackId(packId)) {
+    console.error(
+      "checkout session: missing or invalid pack_id in session metadata",
+      { sessionId: session.id, packId },
+    );
+    return NextResponse.json(
+      { ok: false, error: "Could not resolve pack_id" },
+      { status: 400 },
+    );
+  }
+
+  const pack = getCreditPack(packId);
+  if (!pack) {
+    console.error(
+      "checkout session: unknown credit pack",
+      { sessionId: session.id, packId },
+    );
+    return NextResponse.json(
+      { ok: false, error: "Unknown credit pack" },
+      { status: 400 },
+    );
+  }
+
+  const credits = pack.credits;
+
+  // Grant credits (idempotent via grant_key)
+  const grantKey = `stripe_checkout_${session.id}`;
+  const { error } = await supabase.rpc("grant_interview_credits", {
+    p_user_id: userId,
+    p_grant_key: grantKey,
+    p_source: "one_off_purchase",
+    p_credits: credits,
+    p_plan_id: null,
+    p_order_id: null,
+    p_provider: "stripe",
+    p_metadata: {
+      stripe_checkout_session_id: session.id,
+      stripe_payment_intent_id: session.payment_intent,
+      pack_id: session.metadata?.pack_id ?? null,
+    },
+    p_expires_at: null,
+  });
+
+  if (error) {
+    console.error(
+      "Failed to grant credits for checkout session",
+      session.id,
+      error,
+    );
+    return NextResponse.json({ error: "Grant failed" }, { status: 500 });
+  }
+
+  console.log("Granted credits for checkout session", {
+    sessionId: session.id,
+    userId,
+    credits,
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -37,81 +118,33 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceRoleSupabaseClient();
 
+  // Handle synchronous payments (card, link)
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    if (session.mode !== "payment" || session.payment_status !== "paid") {
-      return NextResponse.json({ ok: true, skipped: true });
+    if (session.payment_status === "paid") {
+      return grantCreditsForCheckoutSession(supabase, session);
     }
 
-    const userId = session.metadata?.supabase_user_id;
-    if (!userId) {
-      console.error(
-        "checkout.session.completed missing supabase_user_id",
-        session.id,
-      );
-      return NextResponse.json({ ok: true, skipped: true });
-    }
+    // Async payment methods (Klarna, CashApp) fire with payment_status "unpaid"
+    // — credits will be granted when checkout.session.async_payment_succeeded arrives
+    return NextResponse.json({ ok: true, skipped: true, reason: "async_payment_pending" });
+  }
 
-    // Resolve credits from pack_id stored in session metadata
-    const packId = session.metadata?.pack_id;
-    if (!packId || !isCreditPackId(packId)) {
-      console.error(
-        "checkout.session.completed: missing or invalid pack_id in session metadata",
-        { sessionId: session.id, packId },
-      );
-      return NextResponse.json(
-        { ok: false, error: "Could not resolve pack_id" },
-        { status: 400 },
-      );
-    }
+  // Handle async payment methods (Klarna, CashApp, etc.)
+  if (event.type === "checkout.session.async_payment_succeeded") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    return grantCreditsForCheckoutSession(supabase, session);
+  }
 
-    const pack = getCreditPack(packId);
-    if (!pack) {
-      console.error(
-        "checkout.session.completed: unknown credit pack",
-        { sessionId: session.id, packId },
-      );
-      return NextResponse.json(
-        { ok: false, error: "Unknown credit pack" },
-        { status: 400 },
-      );
-    }
-
-    const credits = pack.credits;
-
-    // Grant credits (idempotent via grant_key)
-    const grantKey = `stripe_checkout_${session.id}`;
-    const { error } = await supabase.rpc("grant_interview_credits", {
-      p_user_id: userId,
-      p_grant_key: grantKey,
-      p_source: "one_off_purchase",
-      p_credits: credits,
-      p_plan_id: null,
-      p_order_id: null,
-      p_provider: "stripe",
-      p_metadata: {
-        stripe_checkout_session_id: session.id,
-        stripe_payment_intent_id: session.payment_intent,
-        pack_id: session.metadata?.pack_id ?? null,
-      },
-      p_expires_at: null,
-    });
-
-    if (error) {
-      console.error(
-        "Failed to grant credits for checkout session",
-        session.id,
-        error,
-      );
-      return NextResponse.json({ error: "Grant failed" }, { status: 500 });
-    }
-
-    console.log("Granted credits for checkout session", {
+  if (event.type === "checkout.session.async_payment_failed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    console.warn("Async payment failed for checkout session", {
       sessionId: session.id,
-      userId,
-      credits,
+      userId: session.metadata?.supabase_user_id,
+      packId: session.metadata?.pack_id,
     });
+    return NextResponse.json({ ok: true });
   }
 
   if (event.type === "charge.refunded") {
