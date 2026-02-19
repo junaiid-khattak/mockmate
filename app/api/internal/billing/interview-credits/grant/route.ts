@@ -96,9 +96,6 @@ export async function POST(request: NextRequest) {
       ? sourceRaw
       : "";
   const credits = Number(body?.credits);
-  const planId = typeof body?.plan_id === "string" ? body.plan_id.trim() : null;
-  const orderId =
-    typeof body?.order_id === "string" ? body.order_id.trim() : null;
   const provider =
     typeof body?.provider === "string" ? body.provider.trim() : null;
   const metadata =
@@ -121,8 +118,8 @@ export async function POST(request: NextRequest) {
     p_grant_key: grantKey,
     p_source: source,
     p_credits: Math.floor(credits),
-    p_plan_id: planId,
-    p_order_id: orderId,
+    p_plan_id: null,
+    p_order_id: null,
     p_provider: provider,
     p_metadata: metadata,
     p_expires_at: expiresAt,

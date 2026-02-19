@@ -4,7 +4,6 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 const INTERVIEW_COLUMNS = `
   id,
   user_id,
-  entitlement_id,
   resume_file_id,
   mode,
   status,

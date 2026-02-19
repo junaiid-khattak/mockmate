@@ -5,10 +5,8 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 type CreditGrantRow = {
   id: string;
   source: string;
-  plan_id: string | null;
   credits: number | null;
   granted_at: string;
-  order_id: string | null;
   provider: string | null;
 };
 
@@ -41,7 +39,7 @@ export async function GET(request: NextRequest) {
   const [grantsResult, consumptionsResult, balanceResult] = await Promise.all([
     supabase
       .from("interview_credit_grants")
-      .select("id,source,plan_id,credits,granted_at,order_id,provider")
+      .select("id,source,credits,granted_at,provider")
       .eq("user_id", user.id)
       .order("granted_at", { ascending: false })
       .limit(25),
@@ -89,10 +87,8 @@ export async function GET(request: NextRequest) {
       recent_grants: grants.map((row) => ({
         id: row.id,
         source: row.source,
-        plan_id: row.plan_id,
         credits: toInteger(row.credits),
         granted_at: row.granted_at,
-        order_id: row.order_id,
         provider: row.provider,
       })),
       recent_consumptions: consumptions.map((row) => ({

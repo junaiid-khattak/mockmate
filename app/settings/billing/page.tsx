@@ -14,10 +14,8 @@ import { CREDIT_PACKS } from "@/lib/billing";
 type BillingGrant = {
   id: string;
   source: string;
-  plan_id: string | null;
   credits: number;
   granted_at: string;
-  order_id: string | null;
   provider: string | null;
 };
 
