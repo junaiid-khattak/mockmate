@@ -30,7 +30,7 @@ export default function TermsPage() {
         <div className="prose prose-slate mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-p:leading-relaxed prose-li:leading-relaxed">
           <p>
             These Terms and Conditions (&quot;Terms&quot;) govern your use of the nayld.ai website
-            and service. By creating an account or using the service, you agree to these Terms.
+            and service, operated by NayldAi. By creating an account or using the service, you agree to these Terms.
           </p>
 
           <h2>1. The Service</h2>
@@ -160,8 +160,9 @@ export default function TermsPage() {
             &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
           </p>
           <nav className="flex gap-6 text-xs text-slate-500">
+            <Link href="/terms" className="hover:text-slate-900">Terms</Link>
+            <Link href="/refund" className="hover:text-slate-900">Refund</Link>
             <Link href="/privacy" className="hover:text-slate-900">Privacy</Link>
-            <Link href="/refund" className="hover:text-slate-900">Refund Policy</Link>
           </nav>
         </div>
       </footer>

@@ -154,7 +154,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <nav className="flex gap-6 text-xs text-slate-500">
             <Link href="/terms" className="hover:text-slate-900">Terms</Link>
-            <Link href="/refund" className="hover:text-slate-900">Refund Policy</Link>
+            <Link href="/refund" className="hover:text-slate-900">Refund</Link>
+            <Link href="/privacy" className="hover:text-slate-900">Privacy</Link>
           </nav>
         </div>
       </footer>
