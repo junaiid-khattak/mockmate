@@ -811,7 +811,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <motion.div variants={fadeInUp}>
             <SectionTitle
               eyebrow="FAQ"
-              title="Answers for the details people"
+              title="Want to know more?"
               subtitle="Still deciding? Here are the common questions."
               align="center"
             />
