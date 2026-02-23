@@ -6,6 +6,7 @@ import { SignupForm } from "@/components/signup/SignupForm";
 import { CheckEmailNotice } from "@/components/signup/CheckEmailNotice";
 import { Card, CardContent } from "@/components/ui/card";
 import { NayldLogo } from "@/components/NayldLogo";
+import { trackSignupConversion } from "@/lib/google-ads";
 
 type SignupPayload = {
   firstName: string;
@@ -43,6 +44,9 @@ export default function Page() {
 
       setEmail(data.email ?? payload.email);
       setStep("check_email");
+
+      // Track Google Ads signup conversion
+      trackSignupConversion();
     } catch {
       setServerError("Unable to sign up");
     } finally {
