@@ -743,19 +743,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               As Featured On
             </p>
             <div className="flex flex-wrap items-center justify-center gap-8">
-              <a
-                href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
-                target="_blank"
-                rel="nofollow"
-                className="transition-opacity hover:opacity-80"
-              >
-                <img
-                  width="240"
-                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
-                  alt="Featured on There's An AI For That"
-                  className="h-auto"
-                />
-              </a>
+              <a href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283" target="_blank" rel="nofollow"><img width="300" src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"></img></a>
               {/* Add more featured badges here as needed */}
             </div>
           </motion.div>
