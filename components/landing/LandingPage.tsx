@@ -908,6 +908,20 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             </a>
           </nav>
 
+          <div className="flex items-center justify-center">
+            <a
+              href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
+              target="_blank"
+              rel="nofollow"
+            >
+              <img
+                width="300"
+                src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                alt="Featured on There's An AI For That"
+              />
+            </a>
+          </div>
+
           <p className="text-xs text-slate-400">
             &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
           </p>
