@@ -1,8 +1,18 @@
 import { MetadataRoute } from "next";
+import { getAllPosts } from "@/lib/blog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://nayld.ai";
   const now = new Date();
+
+  // Get all blog posts
+  const posts = getAllPosts();
+  const blogPosts = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: post.updatedDate ? new Date(post.updatedDate) : new Date(post.date),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
 
   return [
     {
@@ -59,5 +69,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...blogPosts,
   ];
 }

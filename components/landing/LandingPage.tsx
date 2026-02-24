@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   { label: "How It Works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Impact", href: "#results" },
+  { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
 ];
 
