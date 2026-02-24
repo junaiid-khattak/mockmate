@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { HubSpotTracking } from "@/components/HubSpotTracking";
 import { GoogleTracking } from "@/components/GoogleTracking";
+import { UmamiTracking } from "@/components/UmamiTracking";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: ["700", "800"] });
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <GoogleTracking />
         <HubSpotTracking />
+        <UmamiTracking />
       </body>
     </html>
   );
