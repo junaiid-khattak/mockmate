@@ -728,6 +728,41 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       </motion.section>
 
       {/* ================================================================ */}
+      {/* FEATURED IN                                                      */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={staggerContainer}
+        className="py-16"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp} className="text-center">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-8">
+              As Featured On
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-8">
+              <a
+                href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
+                target="_blank"
+                rel="nofollow"
+                className="transition-opacity hover:opacity-80"
+              >
+                <img
+                  width="240"
+                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                  alt="Featured on There's An AI For That"
+                  className="h-auto"
+                />
+              </a>
+              {/* Add more featured badges here as needed */}
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ================================================================ */}
       {/* PRICING                                                          */}
       {/* ================================================================ */}
       <motion.section
@@ -907,20 +942,6 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               Refund Policy
             </a>
           </nav>
-
-          <div className="flex items-center justify-center">
-            <a
-              href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
-              target="_blank"
-              rel="nofollow"
-            >
-              <img
-                width="300"
-                src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
-                alt="Featured on There's An AI For That"
-              />
-            </a>
-          </div>
 
           <p className="text-xs text-slate-400">
             &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
