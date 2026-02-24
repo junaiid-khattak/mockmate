@@ -908,6 +908,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             >
               Pricing
             </a>
+            <a href="/compare" className="transition-colors hover:text-slate-900">
+              Comparisons
+            </a>
             <a href="#faq" className="transition-colors hover:text-slate-900">
               FAQ
             </a>
