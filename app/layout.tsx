@@ -11,7 +11,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: [
 export const metadata: Metadata = {
   metadataBase: new URL("https://nayld.ai"),
   title: {
-    default: "nayld.ai — AI-Powered Mock Interviews",
+    default: "nayld.ai — AI Mock Interviews & Resume Fit Score",
     template: "%s | nayld.ai",
   },
   description:
@@ -65,9 +65,23 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "nayld.ai",
+    url: "https://nayld.ai",
+    description:
+      "AI-powered interview preparation platform that scores resume-job fit, generates tailored questions, and conducts realistic mock interviews.",
+    sameAs: [],
+  };
+
   return (
     <html lang="en">
       <body className={inter.variable + " " + outfit.variable + " min-h-screen bg-white text-slate-900 antialiased"}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         {children}
         <GoogleTracking />
         <HubSpotTracking />

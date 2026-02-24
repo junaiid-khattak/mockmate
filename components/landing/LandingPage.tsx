@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   BarChart3,
@@ -41,11 +42,11 @@ type LandingPageProps = { onPrimaryCta?: () => void };
 
 type NavItem = { label: string; href: string };
 const navItems: NavItem[] = [
-  { label: "How It Works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Fit Score", href: "/resume-fit-score" },
+  { label: "Mock Interviews", href: "/ai-mock-interviews" },
+  { label: "Pricing", href: "/pricing" },
   { label: "Blog", href: "/blog" },
-  { label: "FAQ", href: "#faq" },
 ];
 
 const painPoints = [
@@ -629,6 +630,16 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             </motion.div>
           ))}
         </div>
+
+        <motion.div variants={fadeInUp} className="mt-8 text-center">
+          <Link
+            href="/ai-mock-interviews"
+            className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors group"
+          >
+            Learn more about AI Mock Interviews
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </motion.div>
       </motion.section>
 
       {/* ================================================================ */}
@@ -672,10 +683,19 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   </li>
                 ))}
               </ul>
-              <Button onClick={onPrimaryCta} className="glow-accent-light">
-                Try It With Your Resume
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <Button onClick={onPrimaryCta} className="glow-accent-light">
+                  Try It With Your Resume
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Link
+                  href="/resume-fit-score"
+                  className="text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors flex items-center gap-1 group"
+                >
+                  Learn more about Resume Fit Score
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
             </motion.div>
 
             <motion.div variants={slideInRight}>
@@ -816,6 +836,16 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </div>
             </Card>
           </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-6 text-center">
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors group"
+            >
+              View full pricing details
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </motion.div>
         </div>
       </motion.section>
 
@@ -889,54 +919,110 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       {/* ================================================================ */}
       {/* FOOTER                                                           */}
       {/* ================================================================ */}
-      <footer className="border-t border-slate-100 bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 sm:flex-row">
-          <a href="/">
-            <NayldLogo className="h-7 w-auto" />
-          </a>
+      <footer className="border-t border-slate-100 bg-white py-12">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 md:grid-cols-4">
+            {/* Brand Column */}
+            <div className="md:col-span-1">
+              <a href="/">
+                <NayldLogo className="h-7 w-auto mb-4" />
+              </a>
+              <p className="text-sm text-slate-600">
+                AI-powered interview preparation platform that scores resume-job fit, generates tailored questions, and conducts realistic mock interviews.
+              </p>
+            </div>
 
-          <nav className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
-            <a
-              href="#features"
-              className="transition-colors hover:text-slate-900"
-            >
-              Features
-            </a>
-            <a
-              href="#pricing"
-              className="transition-colors hover:text-slate-900"
-            >
-              Pricing
-            </a>
-            <a href="/compare" className="transition-colors hover:text-slate-900">
-              Comparisons
-            </a>
-            <a href="#faq" className="transition-colors hover:text-slate-900">
-              FAQ
-            </a>
-            <a
-              href="mailto:hello@nayld.ai"
-              className="transition-colors hover:text-slate-900"
-            >
-              Contact
-            </a>
-            <a href="/login" className="transition-colors hover:text-slate-900">
-              Log In
-            </a>
-            <a href="/privacy" className="transition-colors hover:text-slate-900">
-              Privacy
-            </a>
-            <a href="/terms" className="transition-colors hover:text-slate-900">
-              Terms
-            </a>
-            <a href="/refund" className="transition-colors hover:text-slate-900">
-              Refund Policy
-            </a>
-          </nav>
+            {/* Product Column */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">Product</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/resume-fit-score" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Resume Fit Score
+                  </a>
+                </li>
+                <li>
+                  <a href="/ai-mock-interviews" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    AI Mock Interviews
+                  </a>
+                </li>
+                <li>
+                  <a href="/pricing" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    How It Works
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-          <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
-          </p>
+            {/* Resources Column */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">Resources</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/blog" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="/compare" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Compare Tools
+                  </a>
+                </li>
+                <li>
+                  <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    FAQ
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Company Column */}
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">Company</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="mailto:hello@nayld.ai" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a href="/privacy" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Privacy
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Terms
+                  </a>
+                </li>
+                <li>
+                  <a href="/refund" className="text-slate-600 hover:text-slate-900 transition-colors">
+                    Refund Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-xs text-slate-400">
+              &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
+            </p>
+            <div className="flex gap-4 text-xs text-slate-500">
+              <a href="/login" className="hover:text-slate-900 transition-colors">
+                Log In
+              </a>
+              <a href="/signup" className="hover:text-slate-900 transition-colors">
+                Sign Up
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
