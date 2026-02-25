@@ -1,44 +1,63 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 export function EmptyState() {
   return (
-    <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-mm-violet">
-          <path
-            d="M20 7H4C2.89543 7 2 7.89543 2 9V19C2 20.1046 2.89543 21 4 21H20C21.1046 21 22 20.1046 22 19V9C22 7.89543 21.1046 7 20 7Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M16 7V5C16 3.89543 15.1046 3 14 3H10C8.89543 3 8 3.89543 8 5V7"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+    <div className="flex min-h-[500px] flex-col items-center justify-center px-6 text-center">
+      {/* Microphone icon — purple gradient rounded square */}
+      <div className="mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-[20px] bg-gradient-to-br from-[#7c5cfc] to-[#9b82fd] text-[32px] shadow-[0_4px_24px_rgba(124,92,252,0.18)]">
+        🎙️
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-        Your interview prep starts here
+      <h2 className="mb-2 text-[26px] font-extrabold tracking-[-0.8px] text-[#111118]">
+        Nail your first interview
       </h2>
-      <p className="mt-3 max-w-sm text-[15px] leading-relaxed text-slate-500">
-        Add a job you&apos;re targeting and we&apos;ll build a tailored preparation brief
-        grounded in your resume.
+
+      <p className="mb-7 max-w-[440px] text-[15px] leading-relaxed text-[#6b6b80]">
+        Add a job you're targeting, upload your resume, and get a fit score +
+        tailored questions — then practice with an AI mock interview.
       </p>
+
+      {/* 3-step flow */}
+      <div className="mb-9 flex items-start gap-8">
+        {[
+          { num: "1", text: ["Add a job &", "your resume"], highlight: false },
+          { num: "2", text: ["Get fit score", "& questions"], highlight: false },
+          { num: "3", text: ["Practice with", "AI interview"], highlight: true },
+        ].map((step, i) => (
+          <Fragment key={i}>
+            {i > 0 && (
+              <span className="mt-[10px] text-lg text-[#e8e8ef]">→</span>
+            )}
+            <div className="flex w-[140px] flex-col items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(124,92,252,0.18)] bg-[rgba(124,92,252,0.06)] text-[13px] font-bold text-[#7c5cfc]">
+                {step.num}
+              </div>
+              <div className="text-xs leading-[1.5] text-[#6b6b80]">
+                {step.text[0]}
+                <br />
+                {step.highlight ? (
+                  <strong className="font-bold text-[#7c5cfc]">
+                    {step.text[1]}
+                  </strong>
+                ) : (
+                  step.text[1]
+                )}
+              </div>
+            </div>
+          </Fragment>
+        ))}
+      </div>
 
       <Link
         href="/jobs/new"
-        className="mt-8 inline-flex items-center rounded-lg bg-mm-violet px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-violet-600"
+        className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-br from-[#7c5cfc] to-[#6341e0] px-9 py-4 text-base font-bold text-white shadow-[0_4px_24px_rgba(124,92,252,0.18)] transition-all hover:shadow-[0_6px_32px_rgba(124,92,252,0.25)]"
       >
-        Prepare for a job
+        + Add Your First Job
       </Link>
 
-      <p className="mt-16 max-w-xs text-xs leading-relaxed text-slate-400">
-        Takes under 2 minutes. Free to start.
+      <p className="mt-[14px] text-xs text-[#9d9db0]">
+        Free to start · Takes under 2 minutes
       </p>
     </div>
   );

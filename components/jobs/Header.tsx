@@ -19,7 +19,7 @@ export function Header({ firstName, creditBalance, onLogout, backHref, backLabel
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/80 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-8 py-4">
         <div className="flex items-center gap-4">
           {backHref ? (
             <Link
