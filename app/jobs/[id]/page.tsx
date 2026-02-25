@@ -6,7 +6,18 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { CREDIT_PACKS } from "@/lib/billing";
 import { Header } from "@/components/jobs/Header";
 import { cn } from "@/lib/utils";
-import { Mic, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
+import { CollapsibleCard } from "@/components/jobs/CollapsibleCard";
+import { InterviewCTACard } from "@/components/jobs/InterviewCTACard";
+import { CreditsCard } from "@/components/jobs/CreditsCard";
+import { StickyBottomBar } from "@/components/jobs/StickyBottomBar";
+import { InterviewResultsHero } from "@/components/jobs/InterviewResultsHero";
+import { Recommendations } from "@/components/jobs/Recommendations";
+import { InterviewTranscript } from "@/components/jobs/InterviewTranscript";
+import { RetryCTACard } from "@/components/jobs/RetryCTACard";
+import { InterviewHistoryCard } from "@/components/jobs/InterviewHistoryCard";
+import { CompareAttemptsTable } from "@/components/jobs/CompareAttemptsTable";
+import { CompareBanner } from "@/components/jobs/CompareBanner";
 
 type Job = {
   id: string;
@@ -30,10 +41,18 @@ type Job = {
 
 type InterviewSession = {
   id: string;
-  performance_status: "pending" | "ready" | "failed" | null;
-  performance_error: string | null;
-  performance_updated_at: string | null;
-  performance_overall_score: number | null;
+  user_id: string;
+  job_id: string | null;
+  resume_file_id: string | null;
+  attempt_number: number;
+  mode: string;
+  status: string;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  overall_score: number | null;
+  summary: string | null;
+  // Performance metrics (0-100)
   question_understanding_score: number | null;
   answer_correctness_score: number | null;
   reasoning_quality_score: number | null;
@@ -44,9 +63,19 @@ type InterviewSession = {
   confidence_calibration_score: number | null;
   time_management_score: number | null;
   recovery_ability_score: number | null;
+  performance_overall_score: number | null;
+  performance_feedback: unknown | null;
   performance_strengths: string[] | null;
   performance_growth_areas: string[] | null;
   performance_next_steps: string[] | null;
+  performance_status: "pending" | "ready" | "failed" | null;
+  performance_version: string | null;
+  performance_error: string | null;
+  performance_updated_at: string | null;
+  // New multi-attempt fields
+  transcript: Array<{ speaker: "ai" | "user"; message: string; timestamp?: string }> | null;
+  recommendations: Array<{ type: "improve" | "strength" | "refine"; text: string }> | null;
+  created_at: string;
 };
 
 const POLL_INTERVAL_MS = 3000;
@@ -87,6 +116,11 @@ export default function JobBriefPage() {
   const [interviewSessionError, setInterviewSessionError] = useState<string | null>(
     null,
   );
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [interviews, setInterviews] = useState<InterviewSession[]>([]);
+  const [interviewsLoading, setInterviewsLoading] = useState(false);
+  const [activeAttemptNumber, setActiveAttemptNumber] = useState<number | null>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
 
   useEffect(() => {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -228,6 +262,57 @@ export default function JobBriefPage() {
       cancelled = true;
     };
   }, [interviewSessionId, checkingAuth]);
+
+  // Fetch all interviews for this job
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchInterviews = async () => {
+      if (checkingAuth || !job) return;
+
+      setInterviewsLoading(true);
+
+      try {
+        const res = await fetch(`/api/jobs/${jobId}/interviews`);
+        const body = await res.json().catch(() => ({}));
+
+        if (!cancelled && res.ok && body?.ok && Array.isArray(body.interviews)) {
+          const fetchedInterviews = body.interviews as InterviewSession[];
+          setInterviews(fetchedInterviews);
+
+          // Set active attempt to the latest (highest attempt number) by default
+          if (fetchedInterviews.length > 0 && activeAttemptNumber === null) {
+            const latestAttempt = Math.max(
+              ...fetchedInterviews.map((i) => i.attempt_number)
+            );
+            setActiveAttemptNumber(latestAttempt);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch interviews:", err);
+      } finally {
+        if (!cancelled) {
+          setInterviewsLoading(false);
+        }
+      }
+    };
+
+    void fetchInterviews();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [checkingAuth, job, jobId, activeAttemptNumber]);
+
+  // Scroll detection for sticky bottom bar
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowStickyBar(window.scrollY > 400);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -433,321 +518,514 @@ export default function JobBriefPage() {
     { key: "recovery_ability_score", label: "Recovery ability" },
   ];
 
-  return (
-    <div className="text-slate-900">
-      <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
+  // Helper function to generate dynamic performance summary
+  const generatePerformanceSummary = (
+    currentInterview: InterviewSession,
+    allInterviews: InterviewSession[],
+  ): string => {
+    const metrics = interviewMetricRows.map((metric) => ({
+      key: metric.key,
+      label: metric.label,
+      score: (currentInterview[metric.key] as number | null) ?? 0,
+    }));
 
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        {/* Title block */}
-        <div>
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              {displayTitle}
-            </h1>
-            {confirmDelete ? (
-              <div className="flex shrink-0 items-center gap-2">
+    // Find top 2 strengths and areas for improvement
+    const sortedByScore = [...metrics].sort((a, b) => b.score - a.score);
+    const topStrengths = sortedByScore.slice(0, 2).filter((m) => m.score >= 70);
+    const areasForImprovement = [...metrics]
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 2)
+      .filter((m) => m.score < 80);
+
+    // Check if there's a previous attempt to compare
+    const previousAttempt = allInterviews.find(
+      (i) => i.attempt_number === currentInterview.attempt_number - 1,
+    );
+
+    let summary = "";
+
+    // Add comparison if this is not the first attempt
+    if (previousAttempt && previousAttempt.performance_overall_score !== null) {
+      const scoreDiff =
+        (currentInterview.performance_overall_score ?? 0) -
+        (previousAttempt.performance_overall_score ?? 0);
+      const scoreDiffScaled = scoreDiff / 10;
+
+      if (scoreDiff > 5) {
+        summary += `Great improvement! Score increased by ${Math.abs(scoreDiffScaled).toFixed(1)} points. `;
+      } else if (scoreDiff < -5) {
+        summary += `Score decreased by ${Math.abs(scoreDiffScaled).toFixed(1)} points. `;
+      } else {
+        summary += "Consistent performance compared to last attempt. ";
+      }
+    }
+
+    // Add strengths
+    if (topStrengths.length > 0) {
+      const strengthsText = topStrengths
+        .map((s) => `${s.label} (${(s.score / 10).toFixed(1)}/10)`)
+        .join(" and ");
+      summary += `Strong performance in ${strengthsText}. `;
+    }
+
+    // Add areas for improvement
+    if (areasForImprovement.length > 0) {
+      const improvementText = areasForImprovement
+        .map((s) => `${s.label} (${(s.score / 10).toFixed(1)}/10)`)
+        .join(" and ");
+      summary += `Focus on improving ${improvementText}.`;
+    }
+
+    return summary.trim();
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-slate-900">
+      <Header firstName={firstName} creditBalance={creditBalance} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
+
+      {/* Page body with padding */}
+      <div className="px-7 py-7 pb-24">
+        {/* Job Header - full width */}
+        <div className="mb-6 flex items-start justify-between gap-6">
+          <div className="flex-1">
+            <div className="flex items-start gap-4">
+              <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
+                {displayTitle}
+              </h2>
+              {confirmDelete ? (
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700 disabled:opacity-50"
+                  >
+                    {deleting ? "Deleting..." : "Confirm"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-rose-700 disabled:opacity-50"
+                  onClick={() => setConfirmDelete(true)}
+                  className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  aria-label="Delete job"
                 >
-                  {deleting ? "Deleting..." : "Confirm"}
+                  <Trash2 className="h-4 w-4" />
                 </button>
-                <button
-                  onClick={() => setConfirmDelete(false)}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              )}
+            </div>
+            <div className="mt-3 flex items-center gap-3 text-sm text-gray-500">
+              {job.company && (
+                <>
+                  <span>{job.company}</span>
+                  <div className="h-1 w-1 rounded-full bg-gray-300" />
+                </>
+              )}
+              {resumeFilename && (
+                <span className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-100 px-3 py-1 text-xs">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M7 1H3C2.44772 1 2 1.44772 2 2V10C2 10.5523 2.44772 11 3 11H9C9.55228 11 10 10.5523 10 10V4L7 1Z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {resumeFilename}
+                </span>
+              )}
+              {job.source_url && (
+                <a
+                  href={job.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-600 hover:underline"
                 >
-                  Cancel
-                </button>
+                  View posting →
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Fit Score Badge - inline on the right */}
+          {job.fit_score != null && job.fit_score_status === "ready" && (
+            <div className="flex items-center gap-3.5 rounded-xl border border-green-200 bg-green-50 px-5 py-3">
+              <div className="text-4xl font-extrabold leading-none tracking-tighter text-green-600">
+                {job.fit_score}
+                <sub className="text-base font-medium text-gray-500">/10</sub>
               </div>
-            ) : (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                aria-label="Delete job"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          {job.company && (
-            <p className="mt-1 text-base text-slate-500">{job.company}</p>
+              <div>
+                <div className="text-sm font-semibold text-green-600">Strong Match</div>
+                <div className="text-xs text-gray-500">Resume-to-job alignment</div>
+              </div>
+            </div>
           )}
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-            {resumeFilename && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M7 1H3C2.44772 1 2 1.44772 2 2V10C2 10.5523 2.44772 11 3 11H9C9.55228 11 10 10.5523 10 10V4L7 1Z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {resumeFilename}
-              </span>
-            )}
-            {job.source_url && (
-              <a
-                href={job.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-mm-violet hover:underline"
-              >
-                View original posting
-              </a>
-            )}
-          </div>
         </div>
 
-        {/* Fit Score */}
-        <section className="mt-10 rounded-xl border border-slate-200 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Fit Score
-          </h2>
-
-          {job.fit_score_status === "ready" && job.fit_score != null ? (
-            <>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-mm-violet">{job.fit_score}</span>
-                <span className="text-lg text-slate-400">/ 10</span>
-              </div>
-              <p className="mt-2 text-sm text-slate-500">
-                Based on resume-to-job alignment.
-              </p>
-            </>
-          ) : job.fit_score_status === "pending" ? (
-            <div className="mt-4 flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
-              <span className="text-sm text-slate-500">Fit score pending</span>
-            </div>
-          ) : job.fit_score_status === "failed" ? (
-            <div className="mt-4 space-y-3">
-              <p className="text-sm text-slate-500">
-                Unable to calculate fit score.{" "}
-                {job.fit_score_error && (
-                  <span className="text-slate-400">({job.fit_score_error})</span>
-                )}
-              </p>
-              <button
-                onClick={handleReanalyze}
-                disabled={reanalyzing}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
-                {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
-              </button>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-slate-400">
-              Attach a resume to generate a fit score.
-            </p>
-          )}
-        </section>
+        {/* Two-column grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+          {/* Main Column */}
+          <div className="flex flex-col gap-4">
 
         {/* Strong Alignment — only when data exists */}
         {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Strong Alignment
-            </h2>
-            <ul className="mt-4 space-y-3">
+          <CollapsibleCard
+            title="Strong Alignment"
+            icon="✓"
+            color="green"
+            count={`${job.fit_strong_alignment.length} matches`}
+            defaultOpen={false}
+          >
+            <div className="flex flex-col">
               {job.fit_strong_alignment.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-emerald-500">
-                    <path d="M13.3 4L6 11.3L2.7 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span className="text-sm text-slate-700">{item}</span>
-                </li>
+                <div
+                  key={i}
+                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                >
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600">
+                    <span className="text-[10px]">✓</span>
+                  </div>
+                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                </div>
               ))}
-            </ul>
-          </section>
+            </div>
+          </CollapsibleCard>
         )}
 
         {/* Weak Spots — only when data exists */}
         {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Weak Spots
-            </h2>
-            <ul className="mt-4 space-y-3">
+          <CollapsibleCard
+            title="Weak Spots"
+            icon="△"
+            color="amber"
+            count={`${job.fit_weak_spots.length} gaps`}
+            defaultOpen={false}
+          >
+            <div className="flex flex-col">
               {job.fit_weak_spots.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-amber-500">
-                    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M8 5.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    <circle cx="8" cy="10.5" r="0.5" fill="currentColor" />
-                  </svg>
-                  <span className="text-sm text-slate-700">{item}</span>
-                </li>
+                <div
+                  key={i}
+                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                >
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600">
+                    <span className="text-[10px]">!</span>
+                  </div>
+                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                </div>
               ))}
-            </ul>
-          </section>
+            </div>
+          </CollapsibleCard>
         )}
 
         {/* Areas Likely to Be Probed — only when data exists */}
         {job.fit_areas_to_probe && job.fit_areas_to_probe.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Areas Likely to Be Probed
-            </h2>
-            <ul className="mt-4 space-y-3">
+          <CollapsibleCard
+            title="Areas Likely to Be Probed"
+            icon="?"
+            color="blue"
+            count={`${job.fit_areas_to_probe.length} areas`}
+            defaultOpen={false}
+          >
+            <div className="flex flex-col">
               {job.fit_areas_to_probe.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0 text-slate-400">
-                    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M6 6.5C6 5.67 6.67 5 7.5 5H8.5C9.33 5 10 5.67 10 6.5C10 7.33 9.33 8 8.5 8H8V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                    <circle cx="8" cy="10.5" r="0.5" fill="currentColor" />
-                  </svg>
-                  <span className="text-sm text-slate-700">{item}</span>
-                </li>
+                <div
+                  key={i}
+                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                >
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+                    <span className="text-[10px]">?</span>
+                  </div>
+                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                </div>
               ))}
-            </ul>
-          </section>
+            </div>
+          </CollapsibleCard>
         )}
 
         {/* Questions */}
-        <section className="mt-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Tailored Interview Questions
-          </h2>
+        {job.questions_status === "ready" && job.questions && job.questions.length > 0 && (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm text-purple-600">✦</span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-600">
+                  Tailored Interview Questions
+                </h3>
+                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                  {job.questions.length} questions
+                </span>
+              </div>
+            </div>
 
-          {job.questions_status === "ready" && job.questions && job.questions.length > 0 ? (
-            <ol className="mt-4 space-y-3">
-              {(job.questions as string[]).map((q, i) => (
-                <li key={i} className="flex gap-4 rounded-xl border border-slate-200 p-4">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-mm-violet/[0.06] text-xs font-bold text-mm-violet">
-                    {i + 1}
-                  </span>
-                  <p className="text-sm leading-relaxed text-slate-700">{q}</p>
-                </li>
-              ))}
-            </ol>
-          ) : job.questions_status === "pending" ? (
-            <div className="mt-4 flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
+            <div className="divide-y divide-gray-100">
+              {(job.questions as string[])
+                .slice(0, showAllQuestions ? undefined : 3)
+                .map((q, i) => (
+                  <div key={i} className="flex gap-3.5 px-5 py-3.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-xs font-bold text-purple-600">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm leading-relaxed text-gray-700">{q}</p>
+                  </div>
+                ))}
+            </div>
+
+            {job.questions.length > 3 && !showAllQuestions && (
+              <button
+                type="button"
+                onClick={() => setShowAllQuestions(true)}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
+              >
+                Show {job.questions.length - 3} more questions ↓
+              </button>
+            )}
+
+            {showAllQuestions && job.questions.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAllQuestions(false)}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
+              >
+                Show fewer questions ↑
+              </button>
+            )}
+          </div>
+        )}
+
+        {job.questions_status === "pending" && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-purple-600" />
               <span className="text-sm text-slate-500">Generating tailored questions...</span>
             </div>
-          ) : job.questions_status === "failed" ? (
-            <div className="mt-4 space-y-3">
-              <p className="text-sm text-slate-500">
-                Unable to generate questions.{" "}
-                {job.questions_error && (
-                  <span className="text-slate-400">({job.questions_error})</span>
-                )}
-              </p>
-              <button
-                onClick={handleReanalyze}
-                disabled={reanalyzing}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
-                {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
-              </button>
-            </div>
-          ) : null}
-        </section>
-
-        {interviewSessionId && (
-          <section className="mt-10 rounded-xl border border-slate-200 p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-              Interview Performance
-            </h2>
-
-            {interviewSessionLoading ? (
-              <div className="mt-4 flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-mm-violet" />
-                <span className="text-sm text-slate-500">Loading performance metrics...</span>
-              </div>
-            ) : interviewSessionError ? (
-              <p className="mt-4 text-sm text-rose-600">{interviewSessionError}</p>
-            ) : interviewSession?.performance_status === "ready" ? (
-              <>
-                <div className="mt-4 flex items-end gap-2">
-                  <span className="text-4xl font-bold text-mm-violet">
-                    {interviewSession.performance_overall_score ?? "--"}
-                  </span>
-                  <span className="pb-1 text-sm text-slate-500">overall / 100</span>
-                </div>
-
-                <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  {interviewMetricRows.map((row) => {
-                    const value = interviewSession[row.key] as number | null;
-                    return (
-                      <div
-                        key={String(row.key)}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                      >
-                        <span className="text-xs text-slate-600">{row.label}</span>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {value ?? "--"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {interviewSession.performance_strengths &&
-                  interviewSession.performance_strengths.length > 0 && (
-                    <div className="mt-6">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Strengths
-                      </h3>
-                      <ul className="mt-2 space-y-1">
-                        {interviewSession.performance_strengths.map((item, idx) => (
-                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                {interviewSession.performance_growth_areas &&
-                  interviewSession.performance_growth_areas.length > 0 && (
-                    <div className="mt-5">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Growth Areas
-                      </h3>
-                      <ul className="mt-2 space-y-1">
-                        {interviewSession.performance_growth_areas.map((item, idx) => (
-                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                {interviewSession.performance_next_steps &&
-                  interviewSession.performance_next_steps.length > 0 && (
-                    <div className="mt-5">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        Next Steps
-                      </h3>
-                      <ul className="mt-2 space-y-1">
-                        {interviewSession.performance_next_steps.map((item, idx) => (
-                          <li key={`${item}-${idx}`} className="text-sm text-slate-700">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-              </>
-            ) : interviewSession?.performance_status === "pending" ? (
-              <p className="mt-4 text-sm text-slate-500">
-                Performance scoring is still running. Refresh in a few seconds.
-              </p>
-            ) : interviewSession?.performance_status === "failed" ? (
-              <p className="mt-4 text-sm text-slate-500">
-                We couldn&apos;t generate interview performance feedback yet.
-                {interviewSession.performance_error && (
-                  <span className="text-slate-400"> ({interviewSession.performance_error})</span>
-                )}
-              </p>
-            ) : (
-              <p className="mt-4 text-sm text-slate-500">
-                No interview feedback found for this session yet.
-              </p>
-            )}
-          </section>
+          </div>
         )}
+
+        {job.questions_status === "failed" && (
+          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <p className="text-sm text-slate-500">
+              Unable to generate questions.{" "}
+              {job.questions_error && (
+                <span className="text-slate-400">({job.questions_error})</span>
+              )}
+            </p>
+            <button
+              onClick={handleReanalyze}
+              disabled={reanalyzing}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
+              {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
+            </button>
+          </div>
+        )}
+
+        {/* Post-Interview Results */}
+        {interviews.length > 0 && (() => {
+          const activeInterview = interviews.find(
+            (i) => i.attempt_number === activeAttemptNumber
+          );
+
+          if (!activeInterview) return null;
+
+          const hasMultipleAttempts = interviews.length >= 3;
+          const firstInterview = interviews[interviews.length - 1];
+          const bestInterview = interviews.reduce((best, curr) =>
+            (curr.performance_overall_score ?? 0) > (best.performance_overall_score ?? 0)
+              ? curr
+              : best
+          );
+          const totalImprovement =
+            (bestInterview.performance_overall_score ?? 0) -
+            (firstInterview.performance_overall_score ?? 0);
+
+          return (
+            <>
+              {/* Compare Banner - only for 3+ attempts */}
+              {hasMultipleAttempts && (
+                <CompareBanner
+                  totalImprovement={totalImprovement / 10}
+                  bestScore={(bestInterview.performance_overall_score ?? 0) / 10}
+                  attemptCount={interviews.length}
+                />
+              )}
+
+              {/* Interview Results Hero */}
+              {activeInterview.performance_status === "ready" &&
+                activeInterview.performance_overall_score !== null && (
+                  <InterviewResultsHero
+                    attemptNumber={activeInterview.attempt_number}
+                    overallScore={activeInterview.performance_overall_score / 10}
+                    title={
+                      // Use a simple title based on score if no custom data available
+                      activeInterview.performance_overall_score >= 80
+                        ? "Excellent Performance"
+                        : activeInterview.performance_overall_score >= 70
+                          ? "Good Progress"
+                          : activeInterview.performance_overall_score >= 60
+                            ? "Solid Foundation"
+                            : "Room for Growth"
+                    }
+                    summary={generatePerformanceSummary(activeInterview, interviews)}
+                    breakdown={[
+                      {
+                        label: "Question understanding",
+                        score: (activeInterview.question_understanding_score ?? 0) / 10,
+                      },
+                      {
+                        label: "Answer correctness",
+                        score: (activeInterview.answer_correctness_score ?? 0) / 10,
+                      },
+                      {
+                        label: "Reasoning quality",
+                        score: (activeInterview.reasoning_quality_score ?? 0) / 10,
+                      },
+                      {
+                        label: "Communication clarity",
+                        score: (activeInterview.communication_clarity_score ?? 0) / 10,
+                      },
+                    ]}
+                    isBestScore={
+                      activeInterview.id === bestInterview.id && hasMultipleAttempts
+                    }
+                  />
+                )}
+
+              {/* Detailed Performance Breakdown - All Metrics */}
+              {activeInterview.performance_status === "ready" && (
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Detailed Performance Breakdown
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[
+                      { key: "question_understanding_score", label: "Question understanding" },
+                      { key: "answer_correctness_score", label: "Answer correctness" },
+                      { key: "reasoning_quality_score", label: "Reasoning quality" },
+                      { key: "followup_depth_score", label: "Depth under follow-ups" },
+                      { key: "communication_clarity_score", label: "Communication clarity" },
+                      { key: "behavioral_story_quality_score", label: "Behavioral story quality" },
+                      { key: "role_alignment_coverage_score", label: "Role alignment coverage" },
+                      { key: "confidence_calibration_score", label: "Confidence calibration" },
+                      { key: "time_management_score", label: "Time management" },
+                      { key: "recovery_ability_score", label: "Recovery ability" },
+                    ].map((metric) => {
+                      const value = activeInterview[metric.key as keyof InterviewSession] as number | null;
+                      return (
+                        <div
+                          key={metric.key}
+                          className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2"
+                        >
+                          <span className="text-xs text-gray-600">{metric.label}</span>
+                          <span className="text-sm font-semibold text-gray-900">
+                            {value !== null ? `${(value / 10).toFixed(1)}` : "--"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Performance Strengths, Growth Areas, Next Steps */}
+                  {activeInterview.performance_strengths && activeInterview.performance_strengths.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Strengths
+                      </h4>
+                      <ul className="mt-2 space-y-1">
+                        {activeInterview.performance_strengths.map((item, idx) => (
+                          <li key={idx} className="text-sm text-gray-700">
+                            • {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {activeInterview.performance_growth_areas && activeInterview.performance_growth_areas.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Growth Areas
+                      </h4>
+                      <ul className="mt-2 space-y-1">
+                        {activeInterview.performance_growth_areas.map((item, idx) => (
+                          <li key={idx} className="text-sm text-gray-700">
+                            • {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {activeInterview.performance_next_steps && activeInterview.performance_next_steps.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Next Steps
+                      </h4>
+                      <ul className="mt-2 space-y-1">
+                        {activeInterview.performance_next_steps.map((item, idx) => (
+                          <li key={idx} className="text-sm text-gray-700">
+                            • {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {activeInterview.recommendations &&
+                activeInterview.recommendations.length > 0 && (
+                  <Recommendations
+                    recommendations={activeInterview.recommendations}
+                    defaultOpen={true}
+                  />
+                )}
+
+              {/* Transcript */}
+              {activeInterview.transcript && activeInterview.transcript.length > 0 && (
+                <InterviewTranscript
+                  exchanges={activeInterview.transcript}
+                  defaultOpen={false}
+                />
+              )}
+
+              {/* Compare Table - only for 3+ attempts */}
+              {hasMultipleAttempts && (
+                <CompareAttemptsTable
+                  attempts={interviews.map((interview) => ({
+                    attemptNumber: interview.attempt_number,
+                    overallScore: (interview.performance_overall_score ?? 0) / 10,
+                    breakdown: {
+                      questionUnderstanding: (interview.question_understanding_score ?? 0) / 10,
+                      answerCorrectness: (interview.answer_correctness_score ?? 0) / 10,
+                      reasoningQuality: (interview.reasoning_quality_score ?? 0) / 10,
+                      followupDepth: (interview.followup_depth_score ?? 0) / 10,
+                      communicationClarity: (interview.communication_clarity_score ?? 0) / 10,
+                      behavioralStoryQuality: (interview.behavioral_story_quality_score ?? 0) / 10,
+                      roleAlignmentCoverage: (interview.role_alignment_coverage_score ?? 0) / 10,
+                      confidenceCalibration: (interview.confidence_calibration_score ?? 0) / 10,
+                      timeManagement: (interview.time_management_score ?? 0) / 10,
+                      recoveryAbility: (interview.recovery_ability_score ?? 0) / 10,
+                    },
+                  }))}
+                  metrics={[
+                    { key: "questionUnderstanding", label: "Question understanding" },
+                    { key: "answerCorrectness", label: "Answer correctness" },
+                    { key: "reasoningQuality", label: "Reasoning quality" },
+                    { key: "followupDepth", label: "Depth under follow-ups" },
+                    { key: "communicationClarity", label: "Communication clarity" },
+                    { key: "behavioralStoryQuality", label: "Behavioral story quality" },
+                    { key: "roleAlignmentCoverage", label: "Role alignment coverage" },
+                    { key: "confidenceCalibration", label: "Confidence calibration" },
+                    { key: "timeManagement", label: "Time management" },
+                    { key: "recoveryAbility", label: "Recovery ability" },
+                  ]}
+                  defaultOpen={true}
+                />
+              )}
+            </>
+          );
+        })()}
 
         {/* Credit confirmation dialog */}
         {showCreditConfirm && (
@@ -855,31 +1133,94 @@ export default function JobBriefPage() {
           </div>
         )}
 
-        {/* Mock Interview CTA */}
-        <div className="mt-12 rounded-xl border border-slate-200 bg-slate-50/50 p-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-mm-violet/[0.06]">
-            <Mic className="h-6 w-6 text-mm-violet" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900">Ready for a live mock interview?</h3>
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-            Start a real-time interview session personalized to this job and your resume.
-          </p>
-          <button
-            onClick={handleStartInterview}
-            disabled={startingInterview || !job.resume_id}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-mm-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {startingInterview ? "Starting..." : "Start Interview"}
-          </button>
-          {!job.resume_id && (
-            <p className="mt-3 text-xs text-slate-500">Attach a resume before starting an interview.</p>
-          )}
-          {interviewError && (
-            <p className="mt-3 text-xs text-rose-600">{interviewError}</p>
-          )}
+          {/* End Main Column */}
+
+          {/* Sidebar */}
+          <div className="flex flex-col gap-4">
+            {/* Show RetryCTACard if user has completed interviews, otherwise show InterviewCTACard */}
+            {interviews.length > 0 && interviews[0]?.performance_overall_score !== null ? (
+              <RetryCTACard
+                onRetryInterview={handleStartInterview}
+                currentScore={interviews[0].performance_overall_score / 10}
+                hasCredits={creditBalance !== null && creditBalance > 0}
+                creditCount={creditBalance ?? 0}
+                disabled={!job.resume_id}
+                isStarting={startingInterview}
+              />
+            ) : (
+              <InterviewCTACard
+                onStartInterview={handleStartInterview}
+                hasCredits={creditBalance !== null && creditBalance > 0}
+                creditCount={creditBalance ?? 0}
+                disabled={!job.resume_id}
+                isStarting={startingInterview}
+              />
+            )}
+
+            {/* Show InterviewHistoryCard if user has interviews */}
+            {interviews.length > 0 && activeAttemptNumber !== null && (
+              <InterviewHistoryCard
+                attempts={interviews.map((interview) => ({
+                  attemptNumber: interview.attempt_number,
+                  score: (interview.performance_overall_score ?? 0) / 10,
+                  date: new Date(interview.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  }),
+                  durationMinutes: Math.round((interview.duration_seconds ?? 0) / 60),
+                  isBest:
+                    interview.performance_overall_score ===
+                    Math.max(...interviews.map((i) => i.performance_overall_score ?? 0)),
+                }))}
+                activeAttemptNumber={activeAttemptNumber}
+                onSelectAttempt={(attemptNumber) => setActiveAttemptNumber(attemptNumber)}
+              />
+            )}
+
+            <CreditsCard
+              creditCount={creditBalance ?? 0}
+              onBuyClick={() => router.push("/settings/billing")}
+              onPackClick={(packId) => handlePaywallBuy(packId)}
+              purchasing={paywallCheckingOut !== null}
+            />
+          </div>
+          {/* End Sidebar */}
         </div>
+        {/* End Two-column grid */}
       </div>
+      {/* End page body */}
+
+      {/* Sticky Bottom Bar - shows on scroll */}
+      <StickyBottomBar
+        onStartInterview={handleStartInterview}
+        disabled={!job.resume_id}
+        isStarting={startingInterview}
+        visible={showStickyBar}
+        icon="🎙️"
+        text={
+          interviews.length === 0
+            ? "Ready to practice?"
+            : interviews.length === 1
+              ? `Score: ${((interviews[0].performance_overall_score ?? 0) / 10).toFixed(1)}/10 —`
+              : `Best: ${(Math.max(...interviews.map((i) => i.performance_overall_score ?? 0)) / 10).toFixed(1)}/10 —`
+        }
+        subtext={
+          interviews.length === 0
+            ? "· Uses 1 credit"
+            : interviews.length === 1
+              ? "Retry to improve"
+              : "Keep improving"
+        }
+        buttonLabel={
+          interviews.length === 0
+            ? "Start Mock Interview"
+            : interviews.length === 1
+              ? "Retry Interview"
+              : `Start Interview #${interviews.length + 1}`
+        }
+      />
     </div>
   );
 }

@@ -43,13 +43,11 @@ export function Header({ firstName, creditBalance, onLogout, backHref, backLabel
           {typeof creditBalance === "number" && (
             <Link
               href="/settings/billing"
-              className="flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-mm-violet/30 hover:text-mm-violet"
+              className="flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3.5 py-1 text-xs font-semibold text-purple-600 transition-colors hover:border-purple-300 hover:bg-purple-100"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-mm-violet">
-                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M6 3.5V6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M4.5 8H7.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-              </svg>
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-600 text-[9px] font-bold text-white">
+                ⚡
+              </div>
               {creditBalance} credit{creditBalance !== 1 ? "s" : ""}
             </Link>
           )}
