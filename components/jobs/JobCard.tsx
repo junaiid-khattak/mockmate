@@ -21,7 +21,7 @@ export function JobCard({ job }: JobCardProps) {
   const needsAttention = job.interview_count === 0;
 
   // Fit score is stored 0-10 in the jobs table (unlike interview scores which are 0-100)
-  const fitScoreGreen = job.fit_score != null && job.fit_score >= 7;
+  const fitScoreGreen = job.fit_score != null && job.fit_score >= 8;
 
   // Best score color
   const bestScoreColor =
@@ -83,23 +83,21 @@ export function JobCard({ job }: JobCardProps) {
           {job.fit_score_status === "ready" && job.fit_score != null && (
             <div
               className={[
-                "flex items-center rounded-lg border px-3.5 py-2",
+                "inline-flex flex-col items-center rounded-lg border px-3.5 py-2",
                 fitScoreGreen
                   ? "border-[rgba(22,163,74,0.15)] bg-[rgba(22,163,74,0.08)]"
                   : "border-[rgba(217,119,6,0.15)] bg-[rgba(217,119,6,0.07)]",
               ].join(" ")}
             >
-              <div>
-                <div
-                  className={`text-xl font-extrabold leading-none ${fitScoreGreen ? "text-green-600" : "text-amber-600"}`}
-                >
-                  {job.fit_score}/10
-                </div>
-                <div
-                  className={`text-[10px] font-semibold uppercase leading-none tracking-[0.8px] ${fitScoreGreen ? "text-green-600" : "text-amber-600"}`}
-                >
-                  Fit
-                </div>
+              <div
+                className={`text-xl font-extrabold leading-none ${fitScoreGreen ? "text-green-600" : "text-amber-600"}`}
+              >
+                {job.fit_score}/10
+              </div>
+              <div
+                className={`text-[10px] font-semibold uppercase leading-none tracking-[0.8px] ${fitScoreGreen ? "text-green-600" : "text-amber-600"}`}
+              >
+                Fit
               </div>
             </div>
           )}
@@ -136,7 +134,7 @@ export function JobCard({ job }: JobCardProps) {
             <>
               <button
                 onClick={handleButtonClick}
-                className="whitespace-nowrap rounded-lg border border-[#e8e8ef] bg-[#f2f2f7] px-6 py-2.5 text-sm font-semibold text-[#2a2a35] transition-colors hover:bg-[#e8e8ef]"
+                className="whitespace-nowrap rounded-lg border border-[#e8e8ef] bg-[#f2f2f7] px-6 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-[#e8e8ef]"
               >
                 View Results
               </button>
