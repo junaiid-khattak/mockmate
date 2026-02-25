@@ -106,7 +106,7 @@ export async function getInterviewsForJob(
     return { interviews: [], error: new Error(error.message) };
   }
 
-  return { interviews: (data as InterviewSession[]) ?? [], error: null };
+  return { interviews: (data as unknown as InterviewSession[]) ?? [], error: null };
 }
 
 /**

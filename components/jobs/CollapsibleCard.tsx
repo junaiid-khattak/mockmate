@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type CollapsibleCardColor = "green" | "amber" | "purple" | "gray";
+type CollapsibleCardColor = "green" | "amber" | "purple" | "gray" | "blue";
 
 interface CollapsibleCardProps {
   title: string;
@@ -18,6 +18,7 @@ const colorClasses: Record<CollapsibleCardColor, string> = {
   amber: "text-amber-600",
   purple: "text-purple-600",
   gray: "text-gray-500",
+  blue: "text-blue-600",
 };
 
 export function CollapsibleCard({
