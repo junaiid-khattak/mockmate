@@ -11,7 +11,7 @@ const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: [
 export const metadata: Metadata = {
   metadataBase: new URL("https://nayld.ai"),
   title: {
-    default: "nayld.ai — AI Mock Interviews & Resume Fit Score",
+    default: "AI Mock Interview Practice & Resume Fit Score | nayld.ai",
     template: "%s | nayld.ai",
   },
   description:
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://nayld.ai",
     siteName: "nayld.ai",
-    title: "nayld.ai — AI-Powered Mock Interviews",
+    title: "AI Mock Interview Practice & Resume Fit Score | nayld.ai",
     description:
-      "Upload your resume, get AI-powered mock interviews tailored to your background. Receive instant feedback and improve fast.",
+      "Get a free resume-job fit score, AI-generated interview questions tailored to the role, and realistic AI mock interviews that push you. No credit card required.",
     images: [
       {
         url: "https://cdn.nayld.ai/logo/nayld-logo-light.png",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "nayld.ai — AI-Powered Mock Interviews",
+    title: "AI Mock Interview Practice & Resume Fit Score | nayld.ai",
     description:
       "Upload your resume, get AI-powered mock interviews tailored to your background.",
     images: ["https://cdn.nayld.ai/logo/nayld-logo-light.png"],
