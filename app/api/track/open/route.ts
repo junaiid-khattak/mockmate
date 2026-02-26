@@ -23,9 +23,8 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
     const userAgent = request.headers.get("user-agent") ?? null;
 
-    // Fire-and-forget — don't await so the pixel response isn't delayed
     const supabase = createServiceRoleSupabaseClient();
-    supabase.from("email_events").insert({
+    await supabase.from("email_events").insert({
       user_id: uid,
       campaign,
       event_type: "open",
