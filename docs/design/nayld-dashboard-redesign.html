@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nayld.ai — Jobs Dashboard Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f8fb; --white: #fff; --surface-dim: #f2f2f7;
+    --border: #e8e8ef; --border-dim: #f0f0f5;
+    --text: #111118; --text-2: #2a2a35; --text-dim: #6b6b80; --text-muted: #9d9db0;
+    --purple: #7c5cfc; --purple-light: #9b82fd; --purple-bg: rgba(124,92,252,0.06); --purple-bg2: rgba(124,92,252,0.1); --purple-border: rgba(124,92,252,0.18);
+    --green: #16a34a; --green-bg: rgba(22,163,74,0.08); --green-border: rgba(22,163,74,0.15);
+    --amber: #d97706; --amber-bg: rgba(217,119,6,0.07); --amber-border: rgba(217,119,6,0.15);
+    --red: #dc2626;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04); --shadow-md: 0 4px 16px rgba(0,0,0,0.06); --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+    --shadow-glow: 0 4px 24px rgba(124,92,252,0.18);
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',-apple-system,sans-serif; background:#0e0e14; color:var(--text); -webkit-font-smoothing:antialiased; }
+
+  .ctrl { position:sticky; top:0; z-index:200; background:rgba(14,14,20,0.95); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,0.06); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; }
+  .ctrl-left { display:flex; align-items:center; gap:16px; }
+  .ctrl-left h1 { font-size:15px; font-weight:700; color:#fff; } .ctrl-left h1 span { color:var(--purple-light); }
+  .ctrl-left .pipe { width:1px; height:16px; background:rgba(255,255,255,0.1); }
+  .ctrl-left .badge { font-size:11px; color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.06); padding:4px 12px; border-radius:100px; }
+  .tabs { display:flex; gap:3px; background:rgba(255,255,255,0.04); padding:3px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); }
+  .tab { padding:8px 18px; border-radius:8px; font-family:inherit; font-size:13px; font-weight:500; border:none; cursor:pointer; background:transparent; color:rgba(255,255,255,0.4); transition:all 0.2s; }
+  .tab:hover { color:rgba(255,255,255,0.7); }
+  .tab.active { background:var(--purple); color:#fff; box-shadow:0 2px 12px rgba(124,92,252,0.35); }
+  .tab .d { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+  .frame { max-width:1200px; margin:32px auto; padding:0 24px 64px; }
+  .chrome { background:var(--white); border-radius:14px 14px 0 0; box-shadow:var(--shadow-lg); overflow:hidden; border:1px solid var(--border); border-bottom:none; }
+  .bar { display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--surface-dim); border-bottom:1px solid var(--border); }
+  .dots { display:flex; gap:6px; } .dots span { width:10px; height:10px; border-radius:50%; background:var(--border); }
+  .url { flex:1; margin-left:8px; font-size:12px; color:var(--text-muted); background:#fff; padding:6px 14px; border-radius:6px; border:1px solid var(--border); }
+
+  .app { background:var(--bg); min-height:660px; }
+  .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background:#fff; border-bottom:1px solid var(--border); }
+  .nav-left { display:flex; align-items:center; gap:16px; }
+  .brand { font-size:16px; font-weight:800; color:var(--text); letter-spacing:-0.5px; } .brand em { font-style:normal; color:var(--purple); }
+  .nav-right { display:flex; align-items:center; gap:16px; font-size:13px; color:var(--text-dim); }
+  .cr-badge { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:5px 14px; border-radius:100px; border:1px solid var(--purple-border); background:var(--purple-bg); color:var(--purple); }
+  .cr-badge .c { width:16px; height:16px; border-radius:50%; background:var(--purple); color:#fff; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+
+  .page { padding:28px; display:none; } .page.active { display:block; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:500px; text-align:center; }
+  .empty-icon { width:72px; height:72px; border-radius:20px; background:linear-gradient(135deg,var(--purple),var(--purple-light)); display:flex; align-items:center; justify-content:center; font-size:32px; box-shadow:var(--shadow-glow); margin-bottom:24px; }
+  .empty h2 { font-size:26px; font-weight:800; color:var(--text); letter-spacing:-0.8px; margin-bottom:8px; }
+  .empty p { font-size:15px; color:var(--text-dim); max-width:440px; line-height:1.6; margin-bottom:28px; }
+  .empty-steps { display:flex; gap:32px; margin-bottom:36px; }
+  .empty-step { display:flex; flex-direction:column; align-items:center; gap:8px; width:140px; }
+  .step-num { width:32px; height:32px; border-radius:50%; background:var(--purple-bg); color:var(--purple); font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; border:1px solid var(--purple-border); }
+  .step-text { font-size:12px; color:var(--text-dim); line-height:1.5; }
+  .step-arrow { color:var(--border); font-size:18px; margin-top:10px; }
+  .empty-cta { display:inline-flex; align-items:center; gap:10px; padding:16px 36px; border-radius:var(--radius); background:linear-gradient(135deg,var(--purple),#6341e0); color:#fff; font-family:inherit; font-size:16px; font-weight:700; border:none; cursor:pointer; box-shadow:var(--shadow-glow); }
+  .empty-sub { margin-top:14px; font-size:12px; color:var(--text-muted); }
+
+  /* ─── STATS ROW ─── */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+  .stat-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow-sm); }
+  .stat-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .stat-val { font-size:28px; font-weight:800; letter-spacing:-1px; color:var(--text); line-height:1; }
+  .stat-val.purple { color:var(--purple); }
+  .stat-val.green { color:var(--green); }
+  .stat-sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
+  .stat-sub .up { color:var(--green); font-weight:600; }
+
+  /* ─── PAGE HEADER ─── */
+  .page-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .page-head h2 { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+  .add-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:var(--radius-sm); background:var(--purple); color:#fff; font-family:inherit; font-size:14px; font-weight:600; border:none; cursor:pointer; box-shadow:0 2px 10px rgba(124,92,252,0.2); }
+
+  /* ─── JOB CARDS ─── */
+  .jobs-list { display:flex; flex-direction:column; gap:12px; }
+
+  .job-card {
+    background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm);
+    padding:20px 24px; display:grid; grid-template-columns:1fr auto auto; gap:20px; align-items:center;
+    cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden;
+  }
+  .job-card:hover { border-color:var(--purple-border); box-shadow:var(--shadow-md); transform:translateY(-1px); }
+
+  .job-card-left { min-width:0; }
+  .job-card-left h3 { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.3px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .job-card-meta { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-dim); flex-wrap:wrap; }
+  .job-card-meta .dot { width:3px; height:3px; border-radius:50%; background:var(--border); }
+
+  .job-card-middle { display:flex; align-items:center; gap:20px; }
+
+  .fit-pill { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:var(--radius-sm); background:var(--green-bg); border:1px solid var(--green-border); }
+  .fit-pill .score { font-size:18px; font-weight:800; color:var(--green); }
+  .fit-pill .label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--green); }
+  .fit-pill.amber { background:var(--amber-bg); border-color:var(--amber-border); }
+  .fit-pill.amber .score, .fit-pill.amber .label { color:var(--amber); }
+
+  /* Interview status chip */
+  .iv-status { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:100px; }
+  .iv-chip { display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:100px; font-size:12px; font-weight:600; }
+  .iv-chip.none { background:var(--purple-bg); color:var(--purple); border:1px solid var(--purple-border); }
+  .iv-chip.done { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+  .iv-chip.multi { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+  .iv-sub { font-size:10px; color:var(--text-muted); }
+
+  .job-card-right { display:flex; align-items:center; gap:10px; }
+  .go-btn { padding:9px 20px; border-radius:var(--radius-sm); font-family:inherit; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .go-btn.primary { background:linear-gradient(135deg,var(--purple),#6341e0); color:#fff; box-shadow:0 2px 10px rgba(124,92,252,0.2); }
+  .go-btn.primary:hover { box-shadow:0 4px 16px rgba(124,92,252,0.3); }
+  .go-btn.secondary { background:var(--surface-dim); color:var(--text-2); border:1px solid var(--border); }
+  .go-btn.green { background:var(--green); color:#fff; box-shadow:0 2px 10px rgba(22,163,74,0.2); }
+
+  /* Interview score inline */
+  .iv-score-inline { text-align:center; }
+  .iv-score-num { font-size:22px; font-weight:800; line-height:1; }
+  .iv-score-num.green { color:var(--green); }
+  .iv-score-num.amber { color:var(--amber); }
+  .iv-score-label { font-size:10px; color:var(--text-muted); margin-top:2px; }
+  .iv-score-delta { font-size:10px; font-weight:600; }
+  .iv-score-delta.up { color:var(--green); }
+
+  /* Progress bar mini */
+  .progress-mini { display:flex; align-items:center; gap:6px; margin-top:6px; }
+  .progress-mini-bar { width:60px; height:4px; border-radius:2px; background:var(--surface-dim); overflow:hidden; }
+  .progress-mini-fill { height:100%; border-radius:2px; }
+  .progress-mini-fill.green { background:var(--green); }
+  .progress-mini-fill.amber { background:var(--amber); }
+  .progress-mini-text { font-size:10px; color:var(--text-muted); }
+
+  /* ─── NUDGE BANNER ─── */
+  .nudge-banner {
+    background:linear-gradient(135deg,rgba(124,92,252,0.06),rgba(56,189,248,0.04));
+    border:1px solid var(--purple-border); border-radius:var(--radius);
+    padding:18px 24px; display:flex; align-items:center; gap:16px; margin-bottom:20px;
+  }
+  .nudge-icon { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--purple),var(--purple-light)); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; box-shadow:0 3px 12px rgba(124,92,252,0.25); }
+  .nudge-text { flex:1; }
+  .nudge-text strong { font-size:14px; font-weight:700; color:var(--text); display:block; margin-bottom:2px; }
+  .nudge-text span { font-size:13px; color:var(--text-dim); }
+  .nudge-btn { padding:10px 24px; border-radius:var(--radius-sm); background:var(--purple); color:#fff; font-family:inherit; font-size:13px; font-weight:600; border:none; cursor:pointer; white-space:nowrap; box-shadow:0 2px 10px rgba(124,92,252,0.2); }
+
+  /* ─── CREDITS BANNER ─── */
+  .credits-banner {
+    background:var(--amber-bg); border:1px solid var(--amber-border); border-radius:var(--radius);
+    padding:14px 20px; display:flex; align-items:center; gap:14px; margin-bottom:20px;
+  }
+  .credits-banner .icon { font-size:18px; }
+  .credits-banner .text { flex:1; font-size:13px; color:var(--text-2); }
+  .credits-banner .text strong { font-weight:700; color:var(--amber); }
+  .credits-banner .buy { padding:8px 18px; border-radius:var(--radius-sm); background:var(--amber); color:#fff; font-family:inherit; font-size:12px; font-weight:600; border:none; cursor:pointer; white-space:nowrap; }
+
+  @media(max-width:900px) {
+    .stats-row { grid-template-columns:1fr 1fr; }
+    .job-card { grid-template-columns:1fr; gap:12px; }
+    .ctrl { flex-direction:column; gap:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ctrl">
+  <div class="ctrl-left">
+    <h1>nayld.ai — <span>Jobs Dashboard Redesign</span></h1>
+    <div class="pipe"></div>
+    <div class="badge">Conversion-focused layout</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="sw('empty')"><span class="d" style="background:var(--amber)"></span>Empty State</button>
+    <button class="tab" onclick="sw('one')"><span class="d" style="background:var(--purple)"></span>1 Job</button>
+    <button class="tab" onclick="sw('full')"><span class="d" style="background:var(--green)"></span>3 Jobs (Active)</button>
+  </div>
+</div>
+
+<div class="frame">
+  <div class="chrome">
+    <div class="bar">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="url">nayld.ai/jobs</div>
+    </div>
+
+    <div class="app">
+      <div class="nav">
+        <div class="nav-left"><div class="brand">nayld<em>.ai</em></div></div>
+        <div class="nav-right">
+          <div class="cr-badge"><div class="c">⚡</div><span id="cr">0 credits</span></div>
+          <span>Junaid</span><span style="color:var(--border)">|</span><span>Billing</span>
+        </div>
+      </div>
+
+      <!-- ════════ EMPTY STATE ════════ -->
+      <div class="page active" id="p-empty">
+        <div class="empty">
+          <div class="empty-icon">🎙️</div>
+          <h2>Nail your first interview</h2>
+          <p>Add a job you're targeting, upload your resume, and get a fit score + tailored questions — then practice with an AI mock interview.</p>
+
+          <div class="empty-steps">
+            <div class="empty-step">
+              <div class="step-num">1</div>
+              <div class="step-text">Add a job &<br>your resume</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="empty-step">
+              <div class="step-num">2</div>
+              <div class="step-text">Get fit score<br>& questions</div>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="empty-step">
+              <div class="step-num">3</div>
+              <div class="step-text"><strong style="color:var(--purple)">Practice with<br>AI interview</strong></div>
+            </div>
+          </div>
+
+          <button class="empty-cta">+ Add Your First Job</button>
+          <div class="empty-sub">Free to start · Takes under 2 minutes</div>
+        </div>
+      </div>
+
+      <!-- ════════ 1 JOB STATE ════════ -->
+      <div class="page" id="p-one">
+        <!-- Nudge banner: no interviews done yet -->
+        <div class="nudge-banner">
+          <div class="nudge-icon">🎙️</div>
+          <div class="nudge-text">
+            <strong>You haven't practiced yet — start your first mock interview</strong>
+            <span>You have a fit score and tailored questions ready. Practice answering them with AI feedback.</span>
+          </div>
+          <button class="nudge-btn">Start Interview →</button>
+        </div>
+
+        <div class="page-head">
+          <h2>Your Jobs</h2>
+          <button class="add-btn">+ Add a Job</button>
+        </div>
+
+        <div class="jobs-list">
+          <!-- Job 1: has fit score, no interview yet -->
+          <div class="job-card">
+            <div class="job-card-left">
+              <h3>Senior Backend Engineer</h3>
+              <div class="job-card-meta">
+                <span>Remote</span>
+                <div class="dot"></div>
+                <span>📄 Resume attached</span>
+                <div class="dot"></div>
+                <span>Added Feb 25</span>
+              </div>
+            </div>
+
+            <div class="job-card-middle">
+              <div class="fit-pill">
+                <div>
+                  <div class="score">8/10</div>
+                  <div class="label">Fit Score</div>
+                </div>
+              </div>
+
+              <div class="iv-status">
+                <div class="iv-chip none">🎙️ No interviews</div>
+                <div class="iv-sub">10 questions ready</div>
+              </div>
+            </div>
+
+            <div class="job-card-right">
+              <button class="go-btn primary">Start Interview</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ 3 JOBS (ACTIVE USER) ════════ -->
+      <div class="page" id="p-full">
+
+        <!-- Stats row -->
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">📋 Active Jobs</div>
+            <div class="stat-val">3</div>
+            <div class="stat-sub">Across 2 companies</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🎙️ Interviews Done</div>
+            <div class="stat-val purple">5</div>
+            <div class="stat-sub">Across 2 jobs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">🏆 Best Score</div>
+            <div class="stat-val green">8.6</div>
+            <div class="stat-sub">Senior Backend Engineer</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">⚡ Credits</div>
+            <div class="stat-val">2</div>
+            <div class="stat-sub"><span class="up">Buy more →</span></div>
+          </div>
+        </div>
+
+        <!-- Credits low banner -->
+        <div class="credits-banner">
+          <div class="icon">⚡</div>
+          <div class="text">You have <strong>2 credits</strong> remaining. You've been improving fast — grab more to keep the momentum.</div>
+          <button class="buy">Buy Credits</button>
+        </div>
+
+        <div class="page-head">
+          <h2>Your Jobs</h2>
+          <button class="add-btn">+ Add a Job</button>
+        </div>
+
+        <div class="jobs-list">
+
+          <!-- Job 1: 3 interviews done, best 8.6 -->
+          <div class="job-card">
+            <div class="job-card-left">
+              <h3>Senior Backend Engineer</h3>
+              <div class="job-card-meta">
+                <span>Remote</span>
+                <div class="dot"></div>
+                <span>📄 Resume attached</span>
+                <div class="dot"></div>
+                <span>Added Feb 8</span>
+              </div>
+              <div class="progress-mini" style="margin-top:8px;">
+                <span style="font-size:10px;color:var(--text-muted);width:60px;">3 interviews</span>
+                <span style="font-size:10px;color:var(--text-muted);">6.8</span>
+                <div class="progress-mini-bar" style="width:80px;">
+                  <div class="progress-mini-fill green" style="width:100%"></div>
+                </div>
+                <span style="font-size:10px;font-weight:700;color:var(--green);">8.6</span>
+                <span style="font-size:10px;color:var(--green);font-weight:600;">↑ +1.8</span>
+              </div>
+            </div>
+
+            <div class="job-card-middle">
+              <div class="fit-pill">
+                <div>
+                  <div class="score">8/10</div>
+                  <div class="label">Fit</div>
+                </div>
+              </div>
+
+              <div class="iv-score-inline">
+                <div class="iv-score-num green">8.6</div>
+                <div class="iv-score-label">Best Score</div>
+              </div>
+
+              <div class="iv-status">
+                <div class="iv-chip done">✓ 3 interviews</div>
+                <div class="iv-sub">Last: 2 hours ago</div>
+              </div>
+            </div>
+
+            <div class="job-card-right">
+              <button class="go-btn secondary">View Results</button>
+              <button class="go-btn primary">Retry</button>
+            </div>
+          </div>
+
+          <!-- Job 2: 2 interviews, score 7.4 -->
+          <div class="job-card">
+            <div class="job-card-left">
+              <h3>Senior Software Engineer</h3>
+              <div class="job-card-meta">
+                <span>Jahnel Group</span>
+                <div class="dot"></div>
+                <span>📄 Resume attached</span>
+                <div class="dot"></div>
+                <span>Added Feb 8</span>
+              </div>
+              <div class="progress-mini" style="margin-top:8px;">
+                <span style="font-size:10px;color:var(--text-muted);width:60px;">2 interviews</span>
+                <span style="font-size:10px;color:var(--text-muted);">6.2</span>
+                <div class="progress-mini-bar" style="width:80px;">
+                  <div class="progress-mini-fill green" style="width:100%"></div>
+                </div>
+                <span style="font-size:10px;font-weight:700;color:var(--green);">7.4</span>
+                <span style="font-size:10px;color:var(--green);font-weight:600;">↑ +1.2</span>
+              </div>
+            </div>
+
+            <div class="job-card-middle">
+              <div class="fit-pill amber">
+                <div>
+                  <div class="score">7/10</div>
+                  <div class="label">Fit</div>
+                </div>
+              </div>
+
+              <div class="iv-score-inline">
+                <div class="iv-score-num green">7.4</div>
+                <div class="iv-score-label">Best Score</div>
+              </div>
+
+              <div class="iv-status">
+                <div class="iv-chip done">✓ 2 interviews</div>
+                <div class="iv-sub">Last: yesterday</div>
+              </div>
+            </div>
+
+            <div class="job-card-right">
+              <button class="go-btn secondary">View Results</button>
+              <button class="go-btn primary">Retry</button>
+            </div>
+          </div>
+
+          <!-- Job 3: no interviews yet, has fit score -->
+          <div class="job-card" style="border-left:3px solid var(--purple);">
+            <div class="job-card-left">
+              <h3>Senior Software Engineer (Node/AWS)</h3>
+              <div class="job-card-meta">
+                <span>Jahnel Group</span>
+                <div class="dot"></div>
+                <span>📄 Resume attached</span>
+                <div class="dot"></div>
+                <span>Added Feb 8</span>
+              </div>
+            </div>
+
+            <div class="job-card-middle">
+              <div class="fit-pill amber">
+                <div>
+                  <div class="score">7/10</div>
+                  <div class="label">Fit</div>
+                </div>
+              </div>
+
+              <div class="iv-status">
+                <div class="iv-chip none">🎙️ Not practiced</div>
+                <div class="iv-sub">10 questions ready</div>
+              </div>
+            </div>
+
+            <div class="job-card-right">
+              <button class="go-btn primary">Start Interview</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function sw(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  event.target.closest('.tab').classList.add('active');
+  const cr = document.getElementById('cr');
+  cr.textContent = id === 'empty' ? '0 credits' : id === 'one' ? '0 credits' : '2 credits';
+}
+</script>
+
+</body>
+</html>

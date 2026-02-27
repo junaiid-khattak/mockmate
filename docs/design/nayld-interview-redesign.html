@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nayld.ai — Interview Screen Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #06080f;
+    --bg: #0a0e1a;
+    --bg-card: rgba(14, 20, 36, 0.7);
+    --bg-card-solid: #0e1424;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-active: rgba(255, 255, 255, 0.12);
+    --text: #e8eaf0;
+    --text-dim: rgba(255, 255, 255, 0.5);
+    --text-muted: rgba(255, 255, 255, 0.3);
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34, 211, 238, 0.15);
+    --cyan-glow: rgba(34, 211, 238, 0.25);
+    --cyan-deep: #0891b2;
+    --green: #34d399;
+    --green-dim: rgba(52, 211, 153, 0.15);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.15);
+    --amber: #fbbf24;
+    --purple: #a78bfa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── CONTROL BAR (demo only) ─── */
+  .ctrl {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    background: rgba(6, 8, 15, 0.95); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .ctrl h1 { font-size: 14px; font-weight: 600; color: var(--text-dim); }
+  .ctrl h1 span { color: var(--cyan); }
+  .states { display: flex; gap: 3px; background: rgba(255,255,255,0.03); padding: 3px; border-radius: 10px; border: 1px solid var(--border); }
+  .st-btn { padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 500; border: none; cursor: pointer; background: transparent; color: var(--text-muted); transition: all 0.2s; }
+  .st-btn:hover { color: var(--text-dim); }
+  .st-btn.active { background: var(--cyan-deep); color: #fff; box-shadow: 0 2px 12px rgba(34,211,238,0.25); }
+
+  /* ─── FULL-SCREEN CANVAS ─── */
+  .interview-screen {
+    position: fixed; inset: 0;
+    background: var(--bg-deep);
+    display: none; flex-direction: column;
+    padding-top: 52px;
+  }
+  .interview-screen.active { display: flex; }
+
+  /* Ambient background */
+  .ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 40%, black 20%, transparent 100%);
+  }
+
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(100px);
+    animation: orbFloat 12s ease-in-out infinite;
+  }
+  .orb-1 { width: 500px; height: 500px; background: rgba(34, 211, 238, 0.06); top: -10%; left: 20%; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(167, 139, 250, 0.04); bottom: -10%; right: 10%; animation-delay: -4s; }
+  .orb-3 { width: 300px; height: 300px; background: rgba(34, 211, 238, 0.03); top: 40%; right: 30%; animation-delay: -8s; }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+
+  .scanlines {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+  }
+
+  /* ─── TOP BAR ─── */
+  .top-bar {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 32px 0;
+  }
+
+  .top-left { display: flex; align-items: center; gap: 16px; }
+
+  .session-info h2 { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .session-meta {
+    display: flex; align-items: center; gap: 10px; margin-top: 3px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .session-meta .sep { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+
+  .top-right { display: flex; align-items: center; gap: 12px; }
+
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .live-badge.recording { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .live-badge.recording .pulse {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+    animation: livePulse 1.5s ease-in-out infinite;
+  }
+  .live-badge.connecting { background: rgba(251,191,36,0.1); color: var(--amber); border: 1px solid rgba(251,191,36,0.2); }
+  .live-badge.connecting .pulse {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+    animation: livePulse 1s ease-in-out infinite;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 500; color: var(--text-dim);
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px; letter-spacing: 1px;
+  }
+
+  /* ─── MAIN CONTENT ─── */
+  .main-area {
+    flex: 1; position: relative; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0; padding: 0 32px;
+  }
+
+  /* Avatar + Rings */
+  .avatar-zone {
+    position: relative; width: 200px; height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .avatar-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 1px solid rgba(34, 211, 238, 0.1);
+    animation: ringPulse 3s ease-in-out infinite;
+  }
+  .avatar-ring:nth-child(2) { inset: -16px; border-color: rgba(34, 211, 238, 0.06); animation-delay: -0.5s; animation-duration: 3.5s; }
+  .avatar-ring:nth-child(3) { inset: -32px; border-color: rgba(34, 211, 238, 0.03); animation-delay: -1s; animation-duration: 4s; }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.6; }
+  }
+
+  .avatar-ring.speaking { border-color: rgba(34, 211, 238, 0.25); animation: ringSpeaking 1.2s ease-in-out infinite; }
+  .avatar-ring.speaking:nth-child(2) { border-color: rgba(34, 211, 238, 0.15); animation-delay: -0.2s; }
+  .avatar-ring.speaking:nth-child(3) { border-color: rgba(34, 211, 238, 0.08); animation-delay: -0.4s; }
+
+  @keyframes ringSpeaking {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.08); opacity: 1; }
+  }
+
+  .avatar-ring.user-speaking { border-color: rgba(52, 211, 153, 0.25); animation: ringUser 0.8s ease-in-out infinite; }
+  .avatar-ring.user-speaking:nth-child(2) { border-color: rgba(52, 211, 153, 0.12); animation-delay: -0.15s; }
+  .avatar-ring.user-speaking:nth-child(3) { border-color: rgba(52, 211, 153, 0.06); animation-delay: -0.3s; }
+
+  @keyframes ringUser {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.06); opacity: 1; }
+  }
+
+  .avatar-core {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--bg-card-solid), rgba(14,20,36,0.9));
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 2;
+    box-shadow: 0 0 60px rgba(34, 211, 238, 0.1), inset 0 0 30px rgba(34, 211, 238, 0.05);
+  }
+  .avatar-core.speaking {
+    border-color: rgba(34, 211, 238, 0.4);
+    box-shadow: 0 0 80px rgba(34, 211, 238, 0.2), inset 0 0 30px rgba(34, 211, 238, 0.08);
+  }
+  .avatar-core.user-turn {
+    border-color: rgba(52, 211, 153, 0.3);
+    box-shadow: 0 0 60px rgba(52, 211, 153, 0.1), inset 0 0 30px rgba(52, 211, 153, 0.05);
+  }
+
+  /* Custom AI mark */
+  .ai-mark { width: 52px; height: 52px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .ai-mark svg { width: 52px; height: 52px; }
+  .ai-mark .mark-glow {
+    position: absolute; inset: -8px;
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.25) 0%, transparent 70%);
+    border-radius: 50%; animation: markGlow 1.2s ease-in-out infinite;
+  }
+  @keyframes markGlow {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  /* Mic icon */
+  .mic-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .mic-icon svg { width: 44px; height: 44px; }
+
+  /* Waveform */
+  .waveform { display: flex; align-items: center; justify-content: center; gap: 3px; height: 48px; margin-bottom: 32px; }
+  .wave-bar { width: 3px; border-radius: 2px; background: var(--cyan); transition: height 0.15s ease; opacity: 0.6; }
+  .waveform.active .wave-bar { animation: waveAnim 0.8s ease-in-out infinite; opacity: 1; }
+  .waveform.user-active .wave-bar { background: var(--green); animation: waveAnim 0.6s ease-in-out infinite; opacity: 1; }
+  .waveform.idle .wave-bar { height: 4px !important; opacity: 0.2; animation: none; }
+
+  @keyframes waveAnim {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+  }
+
+  /* Status */
+  .status-zone { text-align: center; margin-bottom: 40px; }
+  .status-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 8px;
+  }
+  .status-label.user { color: var(--green); }
+  .status-label.waiting { color: var(--amber); }
+  .status-label.processing { color: var(--purple); }
+  .status-text { font-size: 18px; font-weight: 500; color: var(--text); letter-spacing: -0.3px; line-height: 1.5; max-width: 500px; margin: 0 auto; }
+  .status-subtext { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ─── BOTTOM CONTROLS ─── */
+  .bottom-bar {
+    position: relative; z-index: 10;
+    padding: 0 32px 28px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+  }
+  .ctrl-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 28px; border-radius: 14px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s; letter-spacing: -0.2px;
+  }
+  .ctrl-btn.mute { background: var(--bg-card); border: 1px solid var(--border); color: var(--text); }
+  .ctrl-btn.mute:hover { border-color: var(--border-active); background: rgba(255,255,255,0.06); }
+  .ctrl-btn.end { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.2); color: var(--red); }
+  .ctrl-btn.end:hover { background: rgba(248,113,113,0.2); }
+  .ctrl-btn .btn-icon { font-size: 18px; line-height: 1; }
+
+  /* Connecting spinner */
+  .connecting-spinner {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 2px solid rgba(34, 211, 238, 0.1); border-top-color: var(--cyan);
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Thinking dots */
+  .thinking-dots { display: flex; gap: 6px; }
+  .thinking-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--purple);
+    animation: thinkBounce 1.2s ease-in-out infinite;
+  }
+  .thinking-dot:nth-child(2) { animation-delay: 0.15s; }
+  .thinking-dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes thinkBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-10px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Demo control bar -->
+<div class="ctrl">
+  <h1>nayld.ai — <span>Interview Screen Redesign</span></h1>
+  <div class="states">
+    <button class="st-btn active" onclick="showState('connecting')">Connecting</button>
+    <button class="st-btn" onclick="showState('ai-speaking')">AI Speaking</button>
+    <button class="st-btn" onclick="showState('user-speaking')">Your Turn</button>
+    <button class="st-btn" onclick="showState('thinking')">AI Thinking</button>
+    <button class="st-btn" onclick="showState('mid-interview')">Mid Interview</button>
+  </div>
+</div>
+
+
+<!-- ═══════ STATE 1: CONNECTING ═══════ -->
+<div class="interview-screen active" id="s-connecting">
+  <div class="ambient">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="session-info">
+        <h2>Senior Engineer at Google</h2>
+        <div class="session-meta">
+          <span>Mock Interview</span><div class="sep"></div><span>Attempt #1</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="live-badge connecting"><div class="pulse"></div>Connecting</div>
+      <div class="timer">00:00</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="avatar-zone">
+      <div class="avatar-ring"></div>
+      <div class="avatar-ring"></div>
+      <div class="avatar-ring"></div>
+      <div class="avatar-core">
+        <div class="connecting-spinner"></div>
+      </div>
+    </div>
+
+    <div class="waveform idle" id="wave-connecting"></div>
+
+    <div class="status-zone">
+      <div class="status-label waiting">Preparing Session</div>
+      <div class="status-text">Setting up your interview environment...</div>
+      <div class="status-subtext">Requesting microphone access</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="ctrl-btn mute"><span class="btn-icon">🎤</span> Mute</button>
+    <button class="ctrl-btn end"><span class="btn-icon">✕</span> End Interview</button>
+  </div>
+</div>
+
+
+<!-- ═══════ STATE 2: AI SPEAKING ═══════ -->
+<div class="interview-screen" id="s-ai-speaking">
+  <div class="ambient">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="session-info">
+        <h2>Senior Engineer at Google</h2>
+        <div class="session-meta">
+          <span>Mock Interview</span><div class="sep"></div><span>Attempt #1</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="live-badge recording"><div class="pulse"></div>Live</div>
+      <div class="timer">02:34</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="avatar-zone">
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-core speaking" id="core-ai-speaking"></div>
+    </div>
+
+    <div class="waveform active" id="wave-ai"></div>
+
+    <div class="status-zone">
+      <div class="status-label">AI Interviewer Speaking</div>
+      <div class="status-text">Listen carefully — the interviewer is asking you a question.</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="ctrl-btn mute"><span class="btn-icon">🎤</span> Mute</button>
+    <button class="ctrl-btn end"><span class="btn-icon">✕</span> End Interview</button>
+  </div>
+</div>
+
+
+<!-- ═══════ STATE 3: USER SPEAKING ═══════ -->
+<div class="interview-screen" id="s-user-speaking">
+  <div class="ambient">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1" style="background:rgba(52,211,153,0.06)"></div>
+    <div class="orb orb-2"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="session-info">
+        <h2>Senior Engineer at Google</h2>
+        <div class="session-meta">
+          <span>Mock Interview</span><div class="sep"></div><span>Attempt #1</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="live-badge recording"><div class="pulse"></div>Live</div>
+      <div class="timer">03:12</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="avatar-zone">
+      <div class="avatar-ring user-speaking"></div>
+      <div class="avatar-ring user-speaking"></div>
+      <div class="avatar-ring user-speaking"></div>
+      <div class="avatar-core user-turn" id="core-user-speaking"></div>
+    </div>
+
+    <div class="waveform user-active" id="wave-user"></div>
+
+    <div class="status-zone">
+      <div class="status-label user">Your Turn — Speaking</div>
+      <div class="status-text">Take your time. The AI interviewer is listening and will follow up when you're done.</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="ctrl-btn mute"><span class="btn-icon">🎤</span> Mute</button>
+    <button class="ctrl-btn end"><span class="btn-icon">✕</span> End Interview</button>
+  </div>
+</div>
+
+
+<!-- ═══════ STATE 4: AI THINKING ═══════ -->
+<div class="interview-screen" id="s-thinking">
+  <div class="ambient">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1" style="background:rgba(167,139,250,0.06)"></div>
+    <div class="orb orb-2"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="session-info">
+        <h2>Senior Engineer at Google</h2>
+        <div class="session-meta">
+          <span>Mock Interview</span><div class="sep"></div><span>Attempt #1</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="live-badge recording"><div class="pulse"></div>Live</div>
+      <div class="timer">05:48</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="avatar-zone">
+      <div class="avatar-ring"></div>
+      <div class="avatar-ring"></div>
+      <div class="avatar-ring"></div>
+      <div class="avatar-core" style="border-color:rgba(167,139,250,0.25); box-shadow: 0 0 60px rgba(167,139,250,0.1), inset 0 0 30px rgba(167,139,250,0.05);">
+        <div class="thinking-dots">
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="waveform idle" id="wave-thinking"></div>
+
+    <div class="status-zone">
+      <div class="status-label processing">Processing Your Answer</div>
+      <div class="status-text">Analyzing your response and preparing a follow-up question...</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="ctrl-btn mute"><span class="btn-icon">🎤</span> Mute</button>
+    <button class="ctrl-btn end"><span class="btn-icon">✕</span> End Interview</button>
+  </div>
+</div>
+
+
+<!-- ═══════ STATE 5: MID INTERVIEW ═══════ -->
+<div class="interview-screen" id="s-mid-interview">
+  <div class="ambient">
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="scanlines"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <div class="session-info">
+        <h2>Senior Engineer at Google</h2>
+        <div class="session-meta">
+          <span>Mock Interview</span><div class="sep"></div><span>Attempt #1</span>
+        </div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="live-badge recording"><div class="pulse"></div>Live</div>
+      <div class="timer">12:45</div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="avatar-zone">
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-ring speaking"></div>
+      <div class="avatar-core speaking" id="core-mid-interview"></div>
+    </div>
+
+    <div class="waveform active" id="wave-mid"></div>
+
+    <div class="status-zone">
+      <div class="status-label">AI Interviewer Speaking</div>
+      <div class="status-text">You mentioned reducing p99 latency from 800ms to 120ms. What specific tradeoffs did you accept?</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="ctrl-btn mute"><span class="btn-icon">🎤</span> Mute</button>
+    <button class="ctrl-btn end"><span class="btn-icon">✕</span> End Interview</button>
+  </div>
+</div>
+
+
+<script>
+// AI Mark SVG
+const aiMarkHTML = `
+  <div class="ai-mark">
+    <div class="mark-glow"></div>
+    <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="26" cy="18" r="8" fill="rgba(34,211,238,0.18)" stroke="rgba(34,211,238,0.45)" stroke-width="1"/>
+      <circle cx="18" cy="30" r="8" fill="rgba(34,211,238,0.12)" stroke="rgba(34,211,238,0.35)" stroke-width="1"/>
+      <circle cx="34" cy="30" r="8" fill="rgba(34,211,238,0.12)" stroke="rgba(34,211,238,0.35)" stroke-width="1"/>
+      <circle cx="26" cy="26" r="5" fill="rgba(34,211,238,0.85)"><animate attributeName="r" values="5;6.5;5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="26" cy="12" r="2" fill="#22d3ee" opacity="0.6"><animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/></circle>
+      <circle cx="14" cy="34" r="2" fill="#22d3ee" opacity="0.4"><animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.8s" repeatCount="indefinite"/></circle>
+      <circle cx="38" cy="34" r="2" fill="#22d3ee" opacity="0.4"><animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.6s" repeatCount="indefinite"/></circle>
+    </svg>
+  </div>`;
+
+// Mic SVG
+const micHTML = `
+  <div class="mic-icon">
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="16" y="8" width="12" height="18" rx="6" fill="rgba(52,211,153,0.2)" stroke="rgba(52,211,153,0.6)" stroke-width="1.5"/>
+      <path d="M12 24c0 6.627 5.373 12 12 12h0c6.627 0 12-5.373 12-12" stroke="rgba(52,211,153,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <line x1="22" y1="36" x2="22" y2="40" stroke="rgba(52,211,153,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="22" cy="17" r="2" fill="#34d399" opacity="0.8"><animate attributeName="opacity" values="0.8;1;0.8" dur="0.8s" repeatCount="indefinite"/></circle>
+    </svg>
+  </div>`;
+
+// Inject SVGs into avatar cores
+['core-ai-speaking', 'core-mid-interview'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = aiMarkHTML;
+});
+document.getElementById('core-user-speaking').innerHTML = micHTML;
+
+// Generate waveform bars
+function genWave(id, count, mode) {
+  const wf = document.getElementById(id);
+  if (!wf) return;
+  for (let i = 0; i < count; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    if (mode === 'idle') {
+      bar.style.height = '4px';
+    } else {
+      bar.style.height = (6 + Math.random() * 36) + 'px';
+      bar.style.animationDelay = (Math.random() * -1.5) + 's';
+      bar.style.animationDuration = (0.4 + Math.random() * 0.8) + 's';
+    }
+    wf.appendChild(bar);
+  }
+}
+genWave('wave-connecting', 40, 'idle');
+genWave('wave-ai', 48, 'active');
+genWave('wave-user', 48, 'active');
+genWave('wave-thinking', 48, 'idle');
+genWave('wave-mid', 48, 'active');
+
+// State switching
+function showState(id) {
+  document.querySelectorAll('.interview-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.st-btn').forEach(b => b.classList.remove('active'));
+  const map = {
+    'connecting': 's-connecting',
+    'ai-speaking': 's-ai-speaking',
+    'user-speaking': 's-user-speaking',
+    'thinking': 's-thinking',
+    'mid-interview': 's-mid-interview',
+  };
+  document.getElementById(map[id]).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
