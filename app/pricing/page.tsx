@@ -9,6 +9,7 @@ import { PricingGrid } from "@/components/pricing/PricingGrid";
 import { FaqSection } from "@/components/pricing/FaqSection";
 import { faqs } from "@/components/pricing/faq-data";
 import { pricingPlans } from "@/lib/pricing-plans";
+import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata: Metadata = {
   title: "Pricing — AI Interview Prep Credits | nayld.ai",
@@ -179,23 +180,7 @@ export default function PricingPage() {
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
         {/* Header */}
-        <header className="border-b border-slate-100 bg-white/80 backdrop-blur-lg sticky top-0 z-50">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <Link href="/" className="text-2xl font-bold gradient-text">
-              nayld.ai
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link href="/signup" className="text-sm font-medium text-slate-600 hover:text-slate-900">
-                Sign Up
-              </Link>
-              <Link href="/login">
-                <Button variant="outline" size="sm">
-                  Log In
-                </Button>
-              </Link>
-            </nav>
-          </div>
-        </header>
+        <PublicHeader />
 
         {/* Hero Section */}
         <section className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
