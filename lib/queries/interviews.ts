@@ -38,6 +38,9 @@ export type InterviewSession = {
   // New multi-attempt fields
   transcript: unknown[] | null;
   recommendations: unknown[] | null;
+  // Sharing
+  is_shared: boolean;
+  share_token: string | null;
   created_at: string;
 };
 
@@ -75,6 +78,8 @@ const INTERVIEW_COLUMNS = `
   performance_updated_at,
   transcript,
   recommendations,
+  is_shared,
+  share_token,
   created_at
 `.trim();
 

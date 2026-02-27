@@ -18,6 +18,7 @@ import { RetryCTACard } from "@/components/jobs/RetryCTACard";
 import { InterviewHistoryCard } from "@/components/jobs/InterviewHistoryCard";
 import { CompareAttemptsTable } from "@/components/jobs/CompareAttemptsTable";
 import { CompareBanner } from "@/components/jobs/CompareBanner";
+import { ShareInterviewButton } from "@/components/jobs/ShareInterviewButton";
 
 type Job = {
   id: string;
@@ -75,6 +76,9 @@ type InterviewSession = {
   // New multi-attempt fields
   transcript: Array<{ speaker: "ai" | "user"; message: string; timestamp?: string }> | null;
   recommendations: Array<{ type: "improve" | "strength" | "refine"; text: string }> | null;
+  // Sharing
+  is_shared: boolean;
+  share_token: string | null;
   created_at: string;
 };
 
@@ -852,42 +856,50 @@ export default function JobBriefPage() {
               {/* Interview Results Hero */}
               {activeInterview.performance_status === "ready" &&
                 activeInterview.performance_overall_score !== null && (
-                  <InterviewResultsHero
-                    attemptNumber={activeInterview.attempt_number}
-                    overallScore={activeInterview.performance_overall_score / 10}
-                    title={
-                      // Use a simple title based on score if no custom data available
-                      activeInterview.performance_overall_score >= 80
-                        ? "Excellent Performance"
-                        : activeInterview.performance_overall_score >= 70
-                          ? "Good Progress"
-                          : activeInterview.performance_overall_score >= 60
-                            ? "Solid Foundation"
-                            : "Room for Growth"
-                    }
-                    summary={generatePerformanceSummary(activeInterview, interviews)}
-                    breakdown={[
-                      {
-                        label: "Question understanding",
-                        score: (activeInterview.question_understanding_score ?? 0) / 10,
-                      },
-                      {
-                        label: "Answer correctness",
-                        score: (activeInterview.answer_correctness_score ?? 0) / 10,
-                      },
-                      {
-                        label: "Reasoning quality",
-                        score: (activeInterview.reasoning_quality_score ?? 0) / 10,
-                      },
-                      {
-                        label: "Communication clarity",
-                        score: (activeInterview.communication_clarity_score ?? 0) / 10,
-                      },
-                    ]}
-                    isBestScore={
-                      activeInterview.id === bestInterview.id && hasMultipleAttempts
-                    }
-                  />
+                  <div className="relative">
+                    <div className="absolute right-0 top-0 z-10 p-4">
+                      <ShareInterviewButton
+                        interviewId={activeInterview.id}
+                        initialIsShared={activeInterview.is_shared ?? false}
+                        initialShareToken={activeInterview.share_token ?? null}
+                      />
+                    </div>
+                    <InterviewResultsHero
+                      attemptNumber={activeInterview.attempt_number}
+                      overallScore={activeInterview.performance_overall_score / 10}
+                      title={
+                        activeInterview.performance_overall_score >= 80
+                          ? "Excellent Performance"
+                          : activeInterview.performance_overall_score >= 70
+                            ? "Good Progress"
+                            : activeInterview.performance_overall_score >= 60
+                              ? "Solid Foundation"
+                              : "Room for Growth"
+                      }
+                      summary={generatePerformanceSummary(activeInterview, interviews)}
+                      breakdown={[
+                        {
+                          label: "Question understanding",
+                          score: (activeInterview.question_understanding_score ?? 0) / 10,
+                        },
+                        {
+                          label: "Answer correctness",
+                          score: (activeInterview.answer_correctness_score ?? 0) / 10,
+                        },
+                        {
+                          label: "Reasoning quality",
+                          score: (activeInterview.reasoning_quality_score ?? 0) / 10,
+                        },
+                        {
+                          label: "Communication clarity",
+                          score: (activeInterview.communication_clarity_score ?? 0) / 10,
+                        },
+                      ]}
+                      isBestScore={
+                        activeInterview.id === bestInterview.id && hasMultipleAttempts
+                      }
+                    />
+                  </div>
                 )}
 
               {/* Detailed Performance Breakdown - All Metrics */}
