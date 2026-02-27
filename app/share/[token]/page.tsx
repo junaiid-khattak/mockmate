@@ -78,6 +78,7 @@ export default async function SharePage({ params }: Props) {
     .from("interview_sessions")
     .select(`
       id,
+      user_id,
       attempt_number,
       duration_seconds,
       created_at,
@@ -103,6 +104,13 @@ export default async function SharePage({ params }: Props) {
     .maybeSingle();
 
   if (!interview) notFound();
+
+  // Fetch candidate name from auth
+  const { data: { user: candidateUser } } = await supabase.auth.admin.getUserById(interview.user_id);
+  const candidateName =
+    candidateUser?.user_metadata?.full_name ??
+    candidateUser?.user_metadata?.name ??
+    null;
 
   // Fetch job details
   const { data: job } = interview.job_id
@@ -260,6 +268,21 @@ export default async function SharePage({ params }: Props) {
 
           {/* Job Info */}
           <div style={{ marginBottom: 32 }}>
+            {candidateName && (
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: "0.5px",
+                  color: accentColor,
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  fontFamily: "monospace",
+                }}
+              >
+                {candidateName}
+              </div>
+            )}
             <h1
               style={{
                 fontSize: 26,
@@ -518,9 +541,74 @@ export default async function SharePage({ params }: Props) {
           </div>
         </SectionCard>
 
-        {/* Performance Breakdown */}
-        <SectionCard>
-          <SectionHeader>Performance Breakdown</SectionHeader>
+        {/* Performance Breakdown — collapsible */}
+        <details
+          style={{
+            background: "rgba(14,20,36,0.7)",
+            backdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 16,
+            marginBottom: 16,
+            overflow: "hidden",
+          }}
+        >
+          <summary
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "20px 28px",
+              cursor: "pointer",
+              listStyle: "none",
+              userSelect: "none",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  flexShrink: 0,
+                }}
+              >
+                📊
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#e8eaf0" }}>Performance Breakdown</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>10 metrics · tap to expand</div>
+              </div>
+            </div>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 8,
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                flexShrink: 0,
+                color: "rgba(255,255,255,0.3)",
+                fontSize: 14,
+              }}
+            >
+              ▾
+            </div>
+          </summary>
+          <div
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.06)",
+              padding: "20px 28px 28px",
+            }}
+          >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {[
               { label: "Question Understanding", score: (interview.question_understanding_score ?? 0) / 10 },
@@ -645,7 +733,8 @@ export default async function SharePage({ params }: Props) {
               </ul>
             </div>
           )}
-        </SectionCard>
+          </div>
+        </details>
 
         {/* CTA */}
         <div

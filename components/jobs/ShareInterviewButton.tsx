@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Link2, Check, Globe, EyeOff } from "lucide-react";
+import { Share2, Link2, Check, Globe, EyeOff, Linkedin } from "lucide-react";
 
 interface Props {
   interviewId: string;
@@ -191,6 +191,60 @@ export function ShareInterviewButton({
                 {copied ? <Check size={12} /> : <Link2 size={12} />}
                 {copied ? "Copied!" : "Copy"}
               </button>
+            </div>
+
+            {/* Social share row */}
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <a
+                href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl ?? "")}&title=${encodeURIComponent("My AI Mock Interview Performance")}&summary=${encodeURIComponent(`I just completed an AI mock interview on nayld.ai. Check out my performance: ${shareUrl}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "8px 0",
+                  borderRadius: 8,
+                  border: "1px solid #e8e8ef",
+                  background: "white",
+                  color: "#0a66c2",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  fontFamily: "inherit",
+                }}
+              >
+                <Linkedin size={13} />
+                LinkedIn
+              </a>
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just completed an AI mock interview on nayld.ai — check out my performance: ${shareUrl}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "8px 0",
+                  borderRadius: 8,
+                  border: "1px solid #e8e8ef",
+                  background: "white",
+                  color: "#111118",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  fontFamily: "inherit",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.743l7.73-8.835L1.254 2.25H8.08l4.259 5.631 5.905-5.631Zm-1.161 17.52h1.833L7.084 4.126H5.117Z" />
+                </svg>
+                X / Twitter
+              </a>
             </div>
 
             <p
