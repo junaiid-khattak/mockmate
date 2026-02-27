@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     siteName: "nayld.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "nayld.ai vs Other AI Interview Tools — Comparison",
+    description:
+      "See how nayld.ai compares to Final Round AI, Interviewing.io, ChatGPT, and other AI interview prep tools.",
+  },
 };
 
 const comparisons = [

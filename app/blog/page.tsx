@@ -28,6 +28,12 @@ export const metadata: Metadata = {
     siteName: "nayld.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog | nayld.ai",
+    description:
+      "Interview preparation guides, AI mock interview tips, and career advice from nayld.ai.",
+  },
 };
 
 export default function BlogIndexPage() {

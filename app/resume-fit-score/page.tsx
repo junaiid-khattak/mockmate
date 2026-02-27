@@ -33,6 +33,12 @@ export const metadata: Metadata = {
     siteName: "nayld.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Resume Fit Score — See How Well You Match Any Job | nayld.ai",
+    description:
+      "Upload your resume and a job posting to get an instant 1-10 fit score with gap analysis. Know your strengths, weak spots, and predicted interview focus areas — free.",
+  },
 };
 
 const testimonials = [

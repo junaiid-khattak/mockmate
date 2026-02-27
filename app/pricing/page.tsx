@@ -32,6 +32,12 @@ export const metadata: Metadata = {
     siteName: "nayld.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pricing — AI Interview Prep Credits | nayld.ai",
+    description:
+      "Free resume analysis and fit scoring. AI mock interview credits from $10. No subscriptions — credits never expire.",
+  },
 };
 
 const freeFeatures = [
@@ -74,6 +80,12 @@ const creditFeatures = [
 
 export default function PricingPage() {
   // Product structured data for each pricing tier
+  const priceValidUntil = new Date(
+    new Date().setFullYear(new Date().getFullYear() + 1)
+  )
+    .toISOString()
+    .split("T")[0];
+
   const productStructuredData = pricingPlans.map((plan) => {
     const priceValue = plan.price.replace("$", "");
     const creditsMatch = plan.features[0].match(/(\d+) interview credit/);
@@ -94,6 +106,7 @@ export default function PricingPage() {
         priceCurrency: "USD",
         availability: "https://schema.org/InStock",
         url: "https://nayld.ai/pricing",
+        priceValidUntil,
       },
     };
   });

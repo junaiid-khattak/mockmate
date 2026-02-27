@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Check, X } from "lucide-react";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "nayld.ai vs Final Round AI — Which AI Interview Prep Tool Is Better?",
@@ -25,6 +26,12 @@ export const metadata: Metadata = {
     url: "https://nayld.ai/compare/vs-final-round-ai",
     siteName: "nayld.ai",
     type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "nayld.ai vs Final Round AI — Which AI Interview Prep Tool Is Better?",
+    description:
+      "Honest comparison of nayld.ai and Final Round AI for AI-powered interview preparation.",
   },
 };
 
@@ -107,9 +114,10 @@ export default function VsFinalRoundPage() {
       {/* Article */}
       <article className="mx-auto max-w-4xl px-6 py-16">
         <div className="mb-8">
-          <Link href="/compare" className="text-sm text-mm-violet hover:underline mb-4 inline-block">
-            ← All Comparisons
-          </Link>
+          <Breadcrumbs
+            items={[{ label: "Compare", href: "/compare" }, { label: "vs Final Round AI" }]}
+            className="mb-6"
+          />
 
           <Badge variant="outline" className="mb-4 text-xs">
             Honest Comparison

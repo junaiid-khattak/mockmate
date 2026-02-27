@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "nayld.ai vs ChatGPT for Interview Prep — Comparison Coming Soon",
@@ -10,6 +11,20 @@ export const metadata: Metadata = {
     "Detailed comparison of nayld.ai and ChatGPT for interview preparation. Compare specialized interview prep AI vs general-purpose AI chat.",
   alternates: {
     canonical: "https://nayld.ai/compare/vs-chatgpt",
+  },
+  openGraph: {
+    title: "nayld.ai vs ChatGPT for Interview Prep — Comparison Coming Soon",
+    description:
+      "Detailed comparison of nayld.ai and ChatGPT for interview preparation. Compare specialized interview prep AI vs general-purpose AI chat.",
+    url: "https://nayld.ai/compare/vs-chatgpt",
+    siteName: "nayld.ai",
+    type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "nayld.ai vs ChatGPT for Interview Prep — Comparison Coming Soon",
+    description:
+      "Detailed comparison of nayld.ai and ChatGPT for interview preparation.",
   },
 };
 
@@ -40,9 +55,10 @@ export default function VsChatGPTPage() {
 
       {/* Content */}
       <article className="mx-auto max-w-4xl px-6 py-16 text-center">
-        <Link href="/compare" className="text-sm text-mm-violet hover:underline mb-4 inline-block">
-          ← All Comparisons
-        </Link>
+        <Breadcrumbs
+          items={[{ label: "Compare", href: "/compare" }, { label: "vs ChatGPT" }]}
+          className="mb-6 text-left"
+        />
 
         <Badge variant="outline" className="mb-4 text-xs">
           Coming Soon

@@ -4,6 +4,14 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.nayld.ai",
+      },
+    ],
+  },
   async redirects() {
     return [
       {

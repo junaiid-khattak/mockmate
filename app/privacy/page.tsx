@@ -5,6 +5,9 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy — nayld.ai",
   description: "How nayld.ai collects, uses, and protects your information.",
+  alternates: {
+    canonical: "https://nayld.ai/privacy",
+  },
 };
 
 export default function PrivacyPolicyPage() {

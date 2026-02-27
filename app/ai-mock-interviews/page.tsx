@@ -46,6 +46,12 @@ export const metadata: Metadata = {
     siteName: "nayld.ai",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Mock Interviews — Practice with a Realistic AI Interviewer | nayld.ai",
+    description:
+      "Run AI-powered mock interviews tailored to your resume and the specific job you're targeting. Adaptive follow-ups, real pressure, and detailed assessments.",
+  },
 };
 
 const testimonials = [

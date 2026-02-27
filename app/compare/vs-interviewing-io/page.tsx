@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "nayld.ai vs Interviewing.io — Comparison Coming Soon",
@@ -10,6 +11,20 @@ export const metadata: Metadata = {
     "Detailed comparison of nayld.ai and Interviewing.io for interview preparation. Compare AI mock interviews vs live human practice interviews.",
   alternates: {
     canonical: "https://nayld.ai/compare/vs-interviewing-io",
+  },
+  openGraph: {
+    title: "nayld.ai vs Interviewing.io — Comparison Coming Soon",
+    description:
+      "Detailed comparison of nayld.ai and Interviewing.io for interview preparation. Compare AI mock interviews vs live human practice interviews.",
+    url: "https://nayld.ai/compare/vs-interviewing-io",
+    siteName: "nayld.ai",
+    type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "nayld.ai vs Interviewing.io — Comparison Coming Soon",
+    description:
+      "Detailed comparison of nayld.ai and Interviewing.io for interview preparation.",
   },
 };
 
@@ -40,9 +55,10 @@ export default function VsInterviewingIoPage() {
 
       {/* Content */}
       <article className="mx-auto max-w-4xl px-6 py-16 text-center">
-        <Link href="/compare" className="text-sm text-mm-violet hover:underline mb-4 inline-block">
-          ← All Comparisons
-        </Link>
+        <Breadcrumbs
+          items={[{ label: "Compare", href: "/compare" }, { label: "vs Interviewing.io" }]}
+          className="mb-6 text-left"
+        />
 
         <Badge variant="outline" className="mb-4 text-xs">
           Coming Soon

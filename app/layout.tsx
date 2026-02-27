@@ -65,23 +65,20 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "nayld.ai",
-    url: "https://nayld.ai",
-    description:
-      "AI-powered interview preparation platform that scores resume-job fit, generates tailored questions, and conducts realistic mock interviews.",
-    sameAs: [],
-  };
-
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to third-party origins so their connections are warm before scripts load */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://js.hs-scripts.com" />
+        <link rel="dns-prefetch" href="https://js.hs-scripts.com" />
+        <link rel="preconnect" href="https://cloud.umami.is" />
+        <link rel="dns-prefetch" href="https://cloud.umami.is" />
+        <link rel="preconnect" href="https://cdn.nayld.ai" />
+        <link rel="dns-prefetch" href="https://cdn.nayld.ai" />
+      </head>
       <body className={inter.variable + " " + outfit.variable + " min-h-screen bg-white text-slate-900 antialiased"}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
         {children}
         <GoogleTracking />
         <HubSpotTracking />

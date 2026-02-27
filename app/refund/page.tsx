@@ -5,6 +5,9 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Refund Policy — nayld.ai",
   description: "Refund and cancellation policy for nayld.ai subscriptions and credits.",
+  alternates: {
+    canonical: "https://nayld.ai/refund",
+  },
 };
 
 export default function RefundPolicyPage() {

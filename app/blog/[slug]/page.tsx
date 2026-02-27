@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getAllPosts, getPostBySlug, getPostSlugs } from "@/lib/blog";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 type Props = {
   params: { slug: string };
@@ -51,6 +52,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
             },
           ]
         : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.seoTitle || post.title,
+      description: post.seoDescription || post.excerpt,
     },
   };
 }
@@ -126,9 +132,10 @@ export default function BlogPostPage({ params }: Props) {
         {/* Article Header */}
         <article className="mx-auto max-w-3xl px-6 py-16">
           <div className="mb-8">
-            <Link href="/blog" className="text-sm text-mm-violet hover:underline mb-4 inline-block">
-              ← Back to Blog
-            </Link>
+            <Breadcrumbs
+              items={[{ label: "Blog", href: "/blog" }, { label: post.title }]}
+              className="mb-6"
+            />
 
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2 mb-4">

@@ -5,6 +5,9 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms and Conditions — nayld.ai",
   description: "Terms governing your use of the nayld.ai service.",
+  alternates: {
+    canonical: "https://nayld.ai/terms",
+  },
 };
 
 export default function TermsPage() {
