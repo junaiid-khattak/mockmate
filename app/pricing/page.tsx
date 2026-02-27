@@ -96,6 +96,7 @@ export default function PricingPage() {
       "@type": "Product",
       name: `${plan.name} Plan - ${credits} Interview Credit${credits !== "1" ? "s" : ""}`,
       description: plan.description,
+      image: "https://nayld.ai/pricing/opengraph-image",
       brand: {
         "@type": "Brand",
         name: "nayld.ai",
@@ -107,6 +108,43 @@ export default function PricingPage() {
         availability: "https://schema.org/InStock",
         url: "https://nayld.ai/pricing",
         priceValidUntil,
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "US",
+          returnPolicyCategory:
+            "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 14,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/FreeReturn",
+          merchantReturnLink: "https://nayld.ai/refund",
+        },
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: "0",
+            currency: "USD",
+          },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            handlingTime: {
+              "@type": "QuantitativeValue",
+              minValue: 0,
+              maxValue: 0,
+              unitCode: "DAY",
+            },
+            transitTime: {
+              "@type": "QuantitativeValue",
+              minValue: 0,
+              maxValue: 0,
+              unitCode: "DAY",
+            },
+          },
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: "US",
+          },
+        },
       },
     };
   });
