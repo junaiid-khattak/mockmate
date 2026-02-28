@@ -6,12 +6,9 @@ import {
   ArrowRight,
   BarChart3,
   Brain,
-  Briefcase,
   CheckCircle2,
   Menu,
   Mic,
-  Play,
-  Search,
   Shield,
   Target,
   TrendingUp,
@@ -29,10 +26,10 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Accordion } from "@/components/ui/accordion";
 import { SectionTitle } from "@/components/landing/section-title";
-import { FeatureCard } from "@/components/landing/feature-card";
-import { FitScorePreview } from "@/components/landing/fit-score-preview";
 import { PricingCard, type Plan } from "@/components/landing/pricing-card";
 import { TestimonialCard } from "@/components/landing/testimonial-card";
+import { InterviewScreenMockup } from "@/components/landing/interview-screen-mockup";
+import { ResultsDashboardMockup } from "@/components/landing/results-dashboard-mockup";
 
 // ---------------------------------------------------------------------------
 // Types & Data
@@ -49,122 +46,109 @@ const navItems: NavItem[] = [
   { label: "Blog", href: "/blog" },
 ];
 
-const painPoints = [
-  {
-    emoji: "\uD83C\uDFAF",
-    before: "Guessing which questions they'll ask",
-    after: "Exact questions tailored to this job + your resume",
-  },
-  {
-    emoji: "\uD83D\uDCC4",
-    before: "Wondering if your resume even fits the role",
-    after: "A clear fit score with gap analysis in seconds",
-  },
-  {
-    emoji: "\uD83E\uDD37",
-    before: "Generic interview prep that covers everything and nothing",
-    after: "Focused prep on your actual weak spots",
-  },
-  {
-    emoji: "\uD83D\uDE36",
-    before: "No real feedback until the rejection email",
-    after: "Honest AI assessment with specific recommendations",
-  },
-];
-
-const steps = [
+const howItWorksSteps = [
   {
     number: "01",
-    title: "Upload Your Resume",
+    title: "Upload your resume & paste the job posting",
     description:
-      "Drop your PDF resume. Our AI parses your skills, experience, and qualifications instantly.",
+      "Free, takes 30 seconds. Drop your PDF and paste the job URL or description — our AI parses everything instantly.",
     icon: Upload,
+    badge: "Free",
+    highlight: false,
   },
   {
     number: "02",
-    title: "Add the Job Posting",
+    title: "Get your free fit score and tailored questions",
     description:
-      "Paste the job URL or description. We analyze every requirement, skill, and qualification listed.",
-    icon: Briefcase,
+      "Instant analysis — see exactly how well you match the role and get questions generated from your specific resume and this job.",
+    icon: BarChart3,
+    badge: "Free",
+    highlight: false,
   },
   {
     number: "03",
-    title: "Get Your Fit Score & Questions",
+    title: "Practice with an AI mock interview",
     description:
-      "Receive a 1\u201310 fit score, gap analysis, and interview questions tailored to where you\u2019re strong and where you need to prepare.",
-    icon: BarChart3,
-  },
-  {
-    number: "04",
-    title: "Practice with Mock Interviews",
-    description:
-      "Run realistic AI-powered mock interviews with follow-up probes, just like the real thing.",
+      "Your AI interviewer adapts in real-time, challenges your weak spots, and gives you a detailed performance assessment scored across 10 metrics.",
     icon: Mic,
-  },
-  {
-    number: "05",
-    title: "Get Your Assessment",
-    description:
-      "Receive a detailed breakdown of weak spots, strengths, and actionable recommendations to nail the real interview.",
-    icon: TrendingUp,
+    badge: "Credits from $10",
+    highlight: true,
   },
 ];
 
-const features = [
+const scoringMetrics = [
   {
-    title: "AI Job Analysis",
-    description:
-      "Our agents dissect every job posting to understand exactly what the hiring team is looking for \u2014 requirements, culture signals, and hidden priorities.",
-    icon: Search,
-    badge: "AI-Powered",
-  },
-  {
-    title: "Resume-Job Fit Score",
-    description:
-      "Get an honest 1\u201310 score showing how well your resume matches the role, plus a breakdown of strong alignment areas and gaps to close.",
-    icon: Target,
-  },
-  {
-    title: "Tailored Question Generation",
-    description:
-      "No generic lists. Every question is generated from the intersection of the job requirements and your specific background.",
+    label: "Question Understanding",
+    description: "Does your answer actually address what was asked?",
     icon: Brain,
   },
   {
-    title: "AI Mock Interviews",
-    description:
-      "Practice with an AI interviewer that adapts in real-time, asks follow-ups, and simulates real interview pressure.",
+    label: "Communication Clarity",
+    description: "How clearly and directly you communicate your points",
     icon: Mic,
   },
   {
-    title: "Weakness Assessment",
-    description:
-      "Know exactly where you\u2019re falling short before the real interview. Get specific, actionable recommendations to turn weaknesses into strengths.",
-    icon: Zap,
+    label: "Reasoning Quality",
+    description: "The strength of your logic and structured thinking",
+    icon: TrendingUp,
   },
+  {
+    label: "Confidence Calibration",
+    description: "Owning your answers without over-claiming",
+    icon: Target,
+  },
+];
+
+const attemptScores = [
+  { label: "Baseline", score: 6.8, delta: null, highlight: false },
+  { label: "Attempt 2", score: 7.4, delta: "+0.6 pts", highlight: false },
+  { label: "Best Score", score: 8.6, delta: "+1.8 pts", highlight: true },
+];
+
+const improvementRows = [
+  { metric: "Question Understanding", scores: [6.2, 7.1, 9.1] },
+  { metric: "Communication Clarity", scores: [5.8, 7.6, 8.5] },
+  { metric: "Reasoning Quality", scores: [7.1, 7.8, 8.7] },
+  { metric: "Confidence Calibration", scores: [7.0, 7.2, 8.4] },
+  { metric: "Overall Score", scores: [6.8, 7.4, 8.6] },
+];
+
+const roles = [
+  "Marketing Manager",
+  "Registered Nurse",
+  "Financial Analyst",
+  "Product Manager",
+  "Operations Director",
+  "Software Engineer",
+  "Sales Executive",
+  "UX Designer",
+  "Project Manager",
+  "Management Consultant",
+  "Data Analyst",
+  "Account Executive",
 ];
 
 const testimonials = [
   {
     quote:
-      "I went from bombing interviews to getting 3 offers in two weeks. The fit score showed me exactly where my resume fell short, and the mock interviews gave me the reps I needed.",
-    name: "Sarah K.",
-    role: "Product Manager",
-    company: "Landed at Stripe",
+      "I work in marketing, not tech — and nayld.ai still nailed every question my Deloitte interviewers asked. The mock interview scored my communication clarity and follow-up depth. I knew exactly what to sharpen.",
+    name: "Rachel M.",
+    role: "Marketing Director",
+    company: "Landed at Deloitte",
   },
   {
     quote:
-      "The tailored questions were scary accurate. My real interviewer asked almost the same things nayld.ai predicted. I felt like I had the answers before walking in.",
-    name: "Marcus T.",
-    role: "Senior Engineer",
-    company: "Landed at Airbnb",
+      "Switching careers felt overwhelming. The fit score showed me my gaps honestly, and after two mock interviews I knew how to frame my background. The AI pushed back on every vague answer — and I was ready for it.",
+    name: "James L.",
+    role: "Corporate Trainer",
+    company: "Career Switcher",
   },
   {
     quote:
-      "As a career switcher, I had no idea what to expect. The weakness assessment and recommendations gave me a clear roadmap. I went from a 4/10 fit score to getting the job.",
-    name: "Priya D.",
-    role: "Data Scientist",
-    company: "Landed at Netflix",
+      "By my third practice session I was scoring 8.6/10. The real interview felt like a formality. Got the offer the same week.",
+    name: "Aisha R.",
+    role: "Software Engineer",
+    company: "Landed at a Series B Startup",
   },
 ];
 
@@ -257,7 +241,7 @@ const faqs = [
     id: "faq-5",
     title: "What types of roles does nayld.ai support?",
     content:
-      "We support engineering, product, design, data science, operations, and more. Our AI agents are trained across industries and seniority levels, from new grad to executive.",
+      "Every role and industry \u2014 from software engineering to nursing, marketing to finance, consulting to operations. If there\u2019s a job posting, nayld.ai can analyze it and run a mock interview for it.",
   },
   {
     id: "faq-6",
@@ -265,7 +249,24 @@ const faqs = [
     content:
       "Yes. Sign up, upload your resume, add a job, and get your fit score and tailored questions at no cost. No credit card required.",
   },
+  {
+    id: "faq-7",
+    title: "What do I get after a mock interview?",
+    content:
+      "After each session you receive a performance score across 10 key metrics \u2014 including question understanding, communication clarity, reasoning quality, and confidence calibration. You also get specific strengths, areas to improve, and a full conversation transcript. Most users run 2\u20133 sessions and track their improvement over time.",
+  },
 ];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function tableScoreColor(s: number) {
+  if (s >= 8) return "text-emerald-600 font-semibold";
+  if (s >= 6) return "text-sky-600 font-semibold";
+  if (s >= 4) return "text-amber-600 font-semibold";
+  return "text-red-500 font-semibold";
+}
 
 // ---------------------------------------------------------------------------
 // Animations
@@ -285,24 +286,6 @@ const fadeInUp = {
     opacity: 1,
     y: 0,
     transition: { duration: 0.5, ease: [0.25, 0.4, 0.25, 1] },
-  },
-};
-
-const slideInLeft = {
-  hidden: { opacity: 0, x: -40 },
-  show: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.4, 0.25, 1] },
-  },
-};
-
-const slideInRight = {
-  hidden: { opacity: 0, x: 40 },
-  show: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.4, 0.25, 1] },
   },
 };
 
@@ -423,6 +406,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
         <div className="mx-auto max-w-6xl px-6 pb-20 pt-16 sm:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* Left: copy */}
             <motion.div
               initial="hidden"
               animate="show"
@@ -432,47 +416,36 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <motion.div variants={fadeInUp}>
                 <Badge className="border-mm-violet/20 bg-mm-violet/[0.06] text-mm-violet">
                   <Users className="mr-1.5 h-3.5 w-3.5" />
-                  Join 2,000+ candidates preparing smarter
+                  Join 2,400+ candidates preparing smarter
                 </Badge>
               </motion.div>
 
               <motion.div variants={fadeInUp} className="space-y-4">
                 <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.5rem]">
-                  Stop guessing.{" "}
-                  <span className="gradient-text">
-                    Nail your next interview.
-                  </span>
+                  Your AI interview coach that{" "}
+                  <span className="gradient-text">actually pushes back.</span>
                 </h1>
                 <p className="max-w-lg text-lg leading-relaxed text-slate-600">
-                  nayld.ai analyzes the job, scores your resume fit, generates
-                  tailored interview questions, and coaches you through mock
-                  interviews &mdash; so you walk in prepared, not anxious.
+                  Practice with an AI interviewer that adapts to your answers,
+                  challenges your weak spots, and scores you on the metrics that
+                  actually matter &mdash; so you walk in ready, not hopeful.
                 </p>
               </motion.div>
 
-              <motion.div
-                variants={fadeInUp}
-                className="flex flex-col gap-3 sm:flex-row sm:items-center"
-              >
+              <motion.div variants={fadeInUp}>
                 <Button
                   size="lg"
                   onClick={onPrimaryCta}
                   className="glow-accent-light group"
                 >
-                  Get Started Free
+                  Start Practicing Free
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Button>
-                <a href="#how-it-works">
-                  <Button variant="outline" size="lg">
-                    <Play className="mr-2 h-4 w-4" />
-                    See How It Works
-                  </Button>
-                </a>
               </motion.div>
 
               <motion.div
                 variants={fadeInUp}
-                className="flex flex-wrap items-center gap-3"
+                className="flex flex-wrap items-center gap-x-3 gap-y-2"
               >
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Shield className="h-4 w-4 text-emerald-500" />
@@ -481,11 +454,17 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <Separator orientation="vertical" className="h-4" />
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Zap className="h-4 w-4 text-amber-500" />
-                  Results in under 2 minutes
+                  Scored on 10 metrics
+                </span>
+                <Separator orientation="vertical" className="h-4" />
+                <span className="flex items-center gap-1.5 text-sm text-slate-500">
+                  <Users className="h-4 w-4 text-mm-violet" />
+                  Used by 2,400+ candidates
                 </span>
               </motion.div>
             </motion.div>
 
+            {/* Right: dual mockup panel */}
             <motion.div
               initial="hidden"
               animate="show"
@@ -493,19 +472,47 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               className="relative"
             >
               <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-2xl" />
-              <FitScorePreview className="relative" />
+              <div className="relative grid grid-cols-[2fr,3fr] items-start gap-3">
+                <InterviewScreenMockup className="opacity-90" />
+                <ResultsDashboardMockup compact />
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* ================================================================ */}
-      {/* PROBLEM / PAIN POINTS                                            */}
+      {/* TRUST BAR / STATS                                               */}
       {/* ================================================================ */}
       <motion.section
         initial="hidden"
         whileInView="show"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true, amount: 0.3 }}
+        variants={staggerContainer}
+        className="border-y border-slate-100 bg-slate-50/60 py-10"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div
+            variants={fadeInUp}
+            className="grid grid-cols-2 gap-6 sm:grid-cols-4"
+          >
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="text-3xl font-bold gradient-text">{stat.value}</div>
+                <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ================================================================ */}
+      {/* THE GAP                                                          */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.15 }}
         variants={staggerContainer}
         className="mx-auto max-w-6xl px-6 py-20"
       >
@@ -517,36 +524,330 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             The Problem
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-            Interview prep is broken
+            Knowing the questions isn&rsquo;t enough
           </h2>
           <p className="text-base text-slate-600">
-            Most candidates waste hours on generic prep and walk into interviews
-            hoping for the best. You deserve better.
+            Most candidates prepare — they just prepare the wrong way.
           </p>
         </motion.div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          {painPoints.map((point, idx) => (
-            <motion.div key={idx} variants={fadeInUp}>
-              <Card className="h-full border-slate-200/80 bg-white p-6 transition hover:shadow-md">
-                <div className="mb-4 text-2xl">{point.emoji}</div>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
+        <motion.div
+          variants={fadeInUp}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+          <div className="grid lg:grid-cols-2">
+            {/* Left: What most people do */}
+            <div className="border-b border-slate-200 p-8 lg:border-b-0 lg:border-r">
+              <p className="mb-5 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                What most people do
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Memorize generic questions from Glassdoor and Reddit",
+                  "Practice with friends who can't give real feedback",
+                  "Guess which parts of their experience will matter",
+                  "Walk in unprepared for the follow-up questions",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
                     <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
-                    <p className="text-sm text-slate-500 line-through decoration-slate-300">
-                      {point.before}
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-3">
+                    <span className="text-sm text-slate-500 line-through decoration-slate-300">
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right: What nayld does differently */}
+            <div className="bg-slate-50/80 p-8">
+              <p className="mb-5 text-sm font-semibold uppercase tracking-wider text-mm-violet">
+                What nayld does differently
+              </p>
+              <ul className="space-y-4">
+                {[
+                  "Generates questions from your actual resume + this specific job",
+                  "An AI interviewer that scores you on real performance metrics",
+                  "Shows you exactly where your fit is strong and where to close gaps",
+                  "Prepares you for follow-ups with adaptive, probing questions",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                    <p className="text-sm font-medium text-slate-800">
-                      {point.after}
-                    </p>
+                    <span className="text-sm font-medium text-slate-800">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          variants={fadeInUp}
+          className="mt-8 rounded-2xl border border-slate-200/80 bg-slate-50 p-8 text-center"
+        >
+          <p className="mb-6 text-base italic text-slate-600">
+            &ldquo;Most candidates feel underprepared — not because they
+            didn&rsquo;t try, but because generic prep doesn&rsquo;t work.
+            nayld.ai changes that.&rdquo;
+          </p>
+          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+            Start Your First Interview
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Button>
+        </motion.div>
+      </motion.section>
+
+      {/* ================================================================ */}
+      {/* INTERVIEW EXPERIENCE                                             */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={staggerContainer}
+        className="bg-slate-50/80 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="The Interview"
+              title="An AI interviewer that feels like the real thing"
+              subtitle="Adaptive questions, real-time follow-ups, and honest feedback — not a quiz, an actual conversation."
+              align="center"
+            />
+          </motion.div>
+
+          {/* 3 state cards */}
+          <div className="mt-14 grid gap-5 lg:grid-cols-3">
+            {(
+              [
+                {
+                  state: "ai" as const,
+                  caption: "AI opens with a tailored question",
+                  sub: "Based on your resume and this specific job",
+                },
+                {
+                  state: "user" as const,
+                  caption: "You answer at your own pace",
+                  sub: "Voice-first — no typing, no scripts",
+                },
+                {
+                  state: "followup" as const,
+                  caption: "AI digs deeper with a follow-up",
+                  sub: "Adapts to exactly what you said",
+                },
+              ] as const
+            ).map(({ state, caption, sub }) => (
+              <motion.div key={state} variants={fadeInUp}>
+                <InterviewScreenMockup state={state} />
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-slate-700">{caption}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{sub}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* 4 metric cards */}
+          <motion.div
+            variants={fadeInUp}
+            className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-4"
+          >
+            {scoringMetrics.map(({ label, description, icon: Icon }) => (
+              <Card
+                key={label}
+                className="border-slate-200/80 bg-white p-5 transition hover:shadow-md"
+              >
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-mm-violet/[0.08]">
+                  <Icon className="h-5 w-5 text-mm-violet" />
+                </div>
+                <p className="text-sm font-semibold text-slate-800">{label}</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  {description}
+                </p>
+              </Card>
+            ))}
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-8 text-center">
+            <Link
+              href="/ai-mock-interviews"
+              className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet transition-colors hover:text-mm-violet/80 group"
+            >
+              Learn more about AI Mock Interviews
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* ================================================================ */}
+      {/* RESULTS DASHBOARD                                                */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.15 }}
+        variants={staggerContainer}
+        className="mx-auto max-w-6xl px-6 py-20"
+      >
+        <motion.div variants={fadeInUp}>
+          <SectionTitle
+            eyebrow="Performance"
+            title="Your results — scored across 10 real metrics"
+            subtitle="Every session ends with a full breakdown of where you stood out and exactly what to improve."
+            align="center"
+          />
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="mt-14 flex justify-center">
+          <div className="w-full max-w-lg">
+            <ResultsDashboardMockup />
+          </div>
+        </motion.div>
+
+        <motion.div
+          variants={fadeInUp}
+          className="mt-10 grid gap-4 text-center sm:grid-cols-3"
+        >
+          {[
+            {
+              icon: "📊",
+              label: "10 scored metrics",
+              sub: "From reasoning quality to confidence calibration",
+            },
+            {
+              icon: "✦",
+              label: "Specific recommendations",
+              sub: "Strengths to lean on and weak spots to address",
+            },
+            {
+              icon: "📝",
+              label: "Full transcript",
+              sub: "Review every question and your exact answers",
+            },
+          ].map(({ icon, label, sub }) => (
+            <div
+              key={label}
+              className="rounded-xl border border-slate-200/80 bg-slate-50 px-6 py-5"
+            >
+              <div className="mb-2 text-2xl">{icon}</div>
+              <p className="text-sm font-semibold text-slate-800">{label}</p>
+              <p className="mt-1 text-xs text-slate-500">{sub}</p>
+            </div>
+          ))}
+        </motion.div>
+      </motion.section>
+
+      {/* ================================================================ */}
+      {/* IMPROVEMENT JOURNEY                                              */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={staggerContainer}
+        className="bg-slate-50/80 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="Progress"
+              title="Track your improvement over time"
+              subtitle="Most users improve 1.5+ points by their second attempt. Every session makes you sharper."
+              align="center"
+            />
+          </motion.div>
+
+          {/* Attempt cards */}
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {attemptScores.map(({ label, score, delta, highlight }) => (
+              <motion.div key={label} variants={fadeInUp}>
+                <div
+                  className={`rounded-2xl border p-6 transition ${
+                    highlight
+                      ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.06] to-mm-blue/[0.04] shadow-sm"
+                      : "border-slate-200/80 bg-white"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        {label}
+                      </p>
+                      <p
+                        className={`mt-1 text-4xl font-bold tracking-tight ${
+                          highlight ? "gradient-text" : "text-slate-800"
+                        }`}
+                      >
+                        {score}
+                        <span className="text-lg font-normal text-slate-400">/10</span>
+                      </p>
+                    </div>
+                    {delta && (
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                        {delta}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        highlight
+                          ? "bg-gradient-to-r from-mm-violet to-mm-blue"
+                          : "bg-slate-300"
+                      }`}
+                      style={{ width: `${score * 10}%` }}
+                    />
                   </div>
                 </div>
-              </Card>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Comparison table */}
+          <motion.div
+            variants={fadeInUp}
+            className="mt-8 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+          >
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Metric
+                  </th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Baseline
+                  </th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Attempt 2
+                  </th>
+                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-mm-violet">
+                    Best
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {improvementRows.map(({ metric, scores }, idx) => (
+                  <tr
+                    key={metric}
+                    className={`border-b border-slate-50 ${idx === improvementRows.length - 1 ? "border-b-0 bg-slate-50/60 font-semibold" : ""}`}
+                  >
+                    <td className="px-6 py-3.5 text-left text-slate-700">
+                      {metric}
+                    </td>
+                    {scores.map((s, i) => (
+                      <td
+                        key={i}
+                        className={`px-5 py-3.5 text-center tabular-nums ${tableScoreColor(s)} ${i === 2 ? "text-mm-violet" : ""}`}
+                      >
+                        {s}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
         </div>
       </motion.section>
 
@@ -559,91 +860,66 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.15 }}
         variants={staggerContainer}
-        className="bg-slate-50/80 py-20"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <motion.div variants={fadeInUp}>
-            <SectionTitle
-              eyebrow="How It Works"
-              title="From resume to ready in 5 steps"
-              subtitle="No scheduling. No waiting. Upload and start preparing in under 2 minutes."
-              align="center"
-            />
-          </motion.div>
-
-          <div className="mt-14 space-y-4">
-            {steps.map((step) => (
-              <motion.div key={step.number} variants={fadeInUp}>
-                <div className="group flex items-start gap-6 rounded-2xl border border-slate-200/80 bg-white p-6 transition-all hover:border-mm-violet/20 hover:shadow-lg">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-mm-violet to-mm-blue text-lg font-bold text-white shadow-sm">
-                    {step.number}
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <step.icon className="h-5 w-5 text-mm-violet" />
-                      <h3 className="text-lg font-semibold text-slate-900">
-                        {step.title}
-                      </h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ================================================================ */}
-      {/* FEATURES                                                         */}
-      {/* ================================================================ */}
-      <motion.section
-        id="features"
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.15 }}
-        variants={staggerContainer}
         className="mx-auto max-w-6xl px-6 py-20"
       >
         <motion.div variants={fadeInUp}>
           <SectionTitle
-            eyebrow="Features"
-            title="Everything you need to prepare with confidence"
-            subtitle="AI agents specifically trained for interview preparation, working together to give you an unfair advantage."
+            eyebrow="How It Works"
+            title="From resume to ready in 3 steps"
+            subtitle="No scheduling. No waiting. Upload and start preparing in under 2 minutes."
             align="center"
           />
         </motion.div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
-          {features.slice(0, 3).map((feature) => (
-            <motion.div key={feature.title} variants={fadeInUp}>
-              <FeatureCard {...feature} />
+        <div className="mt-14 space-y-4">
+          {howItWorksSteps.map((step) => (
+            <motion.div key={step.number} variants={fadeInUp}>
+              <div
+                className={`group flex items-start gap-6 rounded-2xl border p-6 transition-all ${
+                  step.highlight
+                    ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.04] to-mm-blue/[0.03] hover:shadow-lg hover:border-mm-violet/40"
+                    : "border-slate-200/80 bg-white hover:border-mm-violet/20 hover:shadow-lg"
+                }`}
+              >
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-sm ${
+                    step.highlight
+                      ? "bg-gradient-to-br from-mm-violet to-mm-blue"
+                      : "bg-gradient-to-br from-slate-600 to-slate-700"
+                  }`}
+                >
+                  {step.number}
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <step.icon
+                      className={`h-5 w-5 ${step.highlight ? "text-mm-violet" : "text-slate-400"}`}
+                    />
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {step.title}
+                    </h3>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        step.highlight
+                          ? "bg-mm-violet/10 text-mm-violet"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {step.badge}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-slate-600">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          {features.slice(3).map((feature) => (
-            <motion.div key={feature.title} variants={fadeInUp}>
-              <FeatureCard {...feature} />
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div variants={fadeInUp} className="mt-8 text-center">
-          <Link
-            href="/ai-mock-interviews"
-            className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors group"
-          >
-            Learn more about AI Mock Interviews
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-        </motion.div>
       </motion.section>
 
       {/* ================================================================ */}
-      {/* PRODUCT PREVIEW                                                  */}
+      {/* ROLE DIVERSITY                                                   */}
       {/* ================================================================ */}
       <motion.section
         initial="hidden"
@@ -653,60 +929,40 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         className="bg-slate-50/80 py-20"
       >
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <motion.div variants={slideInLeft} className="space-y-6">
-              <Badge variant="outline" className="text-xs">
-                Product Preview
-              </Badge>
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                See exactly where you stand{" "}
-                <span className="gradient-text">before you walk in</span>
-              </h2>
-              <p className="text-base leading-relaxed text-slate-600">
-                Every job you add gets an instant fit analysis. See your score,
-                understand your strengths, identify gaps, and know exactly which
-                questions to expect &mdash; all before the interview starts.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  "Instant 1\u201310 fit score with detailed breakdown",
-                  "Clear view of strong alignment and weak spots",
-                  "Predicted interview focus areas",
-                  "Tailored questions generated from the analysis",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-2.5 text-sm text-slate-700"
-                  >
-                    <CheckCircle2 className="h-[18px] w-[18px] shrink-0 text-emerald-500" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Button onClick={onPrimaryCta} className="glow-accent-light">
-                  Try It With Your Resume
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                <Link
-                  href="/resume-fit-score"
-                  className="text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors flex items-center gap-1 group"
-                >
-                  Learn more about Resume Fit Score
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </div>
-            </motion.div>
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="All Roles"
+              title="Built for every role, not just tech"
+              subtitle="Upload any job posting and nayld.ai will tailor your fit score, questions, and mock interview to that specific role."
+              align="center"
+            />
+          </motion.div>
 
-            <motion.div variants={slideInRight}>
-              <FitScorePreview />
-            </motion.div>
-          </div>
+          <motion.div
+            variants={fadeInUp}
+            className="mt-12 flex flex-wrap justify-center gap-3"
+          >
+            {roles.map((role) => (
+              <span
+                key={role}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-mm-violet/30 hover:text-mm-violet"
+              >
+                {role}
+              </span>
+            ))}
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-10 text-center">
+            <Button onClick={onPrimaryCta} className="glow-accent-light group">
+              Start Practicing Free
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+          </motion.div>
         </div>
       </motion.section>
 
       {/* ================================================================ */}
-      {/* SOCIAL PROOF / RESULTS                                           */}
+      {/* SOCIAL PROOF / TESTIMONIALS                                      */}
       {/* ================================================================ */}
       <motion.section
         id="results"
@@ -719,23 +975,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         <motion.div variants={fadeInUp}>
           <SectionTitle
             eyebrow="Results"
-            title="Candidates don't just feel prepared — they are prepared"
+            title="Candidates don&rsquo;t just feel prepared — they are prepared"
             align="center"
           />
-        </motion.div>
-
-        <motion.div
-          variants={fadeInUp}
-          className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-6 sm:grid-cols-4"
-        >
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold gradient-text">
-                {stat.value}
-              </div>
-              <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
-            </div>
-          ))}
         </motion.div>
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
@@ -759,12 +1001,20 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div variants={fadeInUp} className="text-center">
-            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-8">
+            <p className="mb-8 text-sm font-medium uppercase tracking-wider text-slate-500">
               As Featured On
             </p>
             <div className="flex flex-wrap items-center justify-center gap-8">
-              <a href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283" target="_blank" rel="nofollow"><img width="300" src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"></img></a>
-              {/* Add more featured badges here as needed */}
+              <a
+                href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
+                target="_blank"
+                rel="nofollow"
+              >
+                <img
+                  width="300"
+                  src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                />
+              </a>
             </div>
           </motion.div>
         </div>
@@ -791,7 +1041,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             />
           </motion.div>
 
-          <div className="mt-14 grid gap-5 grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid grid-cols-2 gap-5 lg:grid-cols-4">
             {pricingPlans.map((plan) => (
               <motion.div key={plan.name} variants={fadeInUp}>
                 <PricingCard plan={plan} onCta={onPrimaryCta} />
@@ -810,7 +1060,11 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     Prep tools at no cost
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
-                    Resume analysis, fit scoring, gap analysis, and tailored question generation are completely free. You only pay when you want a live mock interview.
+                    See your fit score and get tailored questions for free. When
+                    you&rsquo;re ready to practice for real, each mock interview
+                    is one credit &mdash; and every credit comes with a full
+                    performance assessment, detailed recommendations, and a
+                    complete transcript.
                   </p>
                   <ul className="space-y-2 text-sm text-slate-700">
                     {[
@@ -840,7 +1094,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <motion.div variants={fadeInUp} className="mt-6 text-center">
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet hover:text-mm-violet/80 transition-colors group"
+              className="inline-flex items-center gap-2 text-sm font-medium text-mm-violet transition-colors hover:text-mm-violet/80 group"
             >
               View full pricing details
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -858,7 +1112,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
         variants={staggerContainer}
-        className="bg-slate-50/80 py-20"
+        className="py-20"
       >
         <div className="mx-auto max-w-3xl px-6">
           <motion.div variants={fadeInUp}>
@@ -892,12 +1146,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
           <div className="relative z-10 mx-auto max-w-2xl space-y-6">
             <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              Ready to nail your next interview?
+              Stop preparing in your head. Start practicing out loud.
             </h2>
             <p className="text-base text-white/80">
-              Stop guessing what they&rsquo;ll ask. Upload your resume, add the
-              job, and get a personalized game plan in under 2 minutes. Free to
-              start.
+              Upload your resume, add the job, and run your first mock
+              interview. Free fit score included &mdash; interview credits start
+              at $10.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button
@@ -905,7 +1159,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 onClick={onPrimaryCta}
                 className="w-full bg-white text-mm-violet shadow-lg hover:bg-white/90 sm:w-auto"
               >
-                Get Started Free
+                Start Practicing Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -925,34 +1179,50 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             {/* Brand Column */}
             <div className="md:col-span-1">
               <a href="/">
-                <NayldLogo className="h-7 w-auto mb-4" />
+                <NayldLogo className="mb-4 h-7 w-auto" />
               </a>
               <p className="text-sm text-slate-600">
-                AI-powered interview preparation platform that scores resume-job fit, generates tailored questions, and conducts realistic mock interviews.
+                AI-powered interview preparation platform that scores
+                resume-job fit, generates tailored questions, and conducts
+                realistic mock interviews.
               </p>
             </div>
 
             {/* Product Column */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Product</h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                Product
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="/resume-fit-score" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/resume-fit-score"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Resume Fit Score
                   </a>
                 </li>
                 <li>
-                  <a href="/ai-mock-interviews" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/ai-mock-interviews"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     AI Mock Interviews
                   </a>
                 </li>
                 <li>
-                  <a href="/pricing" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/pricing"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Pricing
                   </a>
                 </li>
                 <li>
-                  <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="#how-it-works"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     How It Works
                   </a>
                 </li>
@@ -961,20 +1231,31 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
             {/* Resources Column */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Resources</h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                Resources
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="/blog" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/blog"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Blog
                   </a>
                 </li>
                 <li>
-                  <a href="/compare" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/compare"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Compare Tools
                   </a>
                 </li>
                 <li>
-                  <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="#faq"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     FAQ
                   </a>
                 </li>
@@ -983,25 +1264,39 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
             {/* Company Column */}
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Company</h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">
+                Company
+              </h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="mailto:hello@nayld.ai" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="mailto:hello@nayld.ai"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Contact
                   </a>
                 </li>
                 <li>
-                  <a href="/privacy" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/privacy"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Privacy
                   </a>
                 </li>
                 <li>
-                  <a href="/terms" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/terms"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Terms
                   </a>
                 </li>
                 <li>
-                  <a href="/refund" className="text-slate-600 hover:text-slate-900 transition-colors">
+                  <a
+                    href="/refund"
+                    className="text-slate-600 transition-colors hover:text-slate-900"
+                  >
                     Refund Policy
                   </a>
                 </li>
@@ -1010,15 +1305,21 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 sm:flex-row">
             <p className="text-xs text-slate-400">
               &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
             </p>
             <div className="flex gap-4 text-xs text-slate-500">
-              <a href="/login" className="hover:text-slate-900 transition-colors">
+              <a
+                href="/login"
+                className="transition-colors hover:text-slate-900"
+              >
                 Log In
               </a>
-              <a href="/signup" className="hover:text-slate-900 transition-colors">
+              <a
+                href="/signup"
+                className="transition-colors hover:text-slate-900"
+              >
                 Sign Up
               </a>
             </div>
