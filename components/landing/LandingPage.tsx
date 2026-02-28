@@ -601,17 +601,21 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </motion.div>
             </motion.div>
 
-            {/* Right: dual mockup panel */}
+            {/* Right: stacked mockup panels */}
             <motion.div
               initial="hidden"
               animate="show"
               variants={scaleIn}
               className="relative"
             >
-              <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-2xl" />
-              <div className="relative grid grid-cols-[2fr,3fr] items-start gap-3">
-                <InterviewScreenMockup className="opacity-90" />
-                <ResultsDashboardMockup />
+              <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-3xl" />
+              <div className="relative space-y-3">
+                <div className="overflow-hidden rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.06]">
+                  <InterviewScreenMockup />
+                </div>
+                <div className="overflow-hidden rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.06]">
+                  <ResultsDashboardMockup />
+                </div>
               </div>
             </motion.div>
           </div>
@@ -798,8 +802,10 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               ] as const
             ).map(({ state, caption, sub }) => (
               <motion.div key={state} variants={fadeInUp}>
-                <InterviewScreenMockup state={state} />
-                <div className="mt-3 text-center">
+                <div className="overflow-hidden rounded-[20px] shadow-[0_20px_56px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.06]">
+                  <InterviewScreenMockup state={state} />
+                </div>
+                <div className="mt-4 text-center">
                   <p className="text-sm font-semibold text-slate-700">{caption}</p>
                   <p className="mt-0.5 text-xs text-slate-500">{sub}</p>
                 </div>
@@ -907,6 +913,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 padding: 24,
                 fontFamily: "'Instrument Sans', -apple-system, sans-serif",
                 WebkitFontSmoothing: "antialiased",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
               }}
             >
               {/* Header */}
@@ -1076,6 +1083,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 padding: 32,
                 fontFamily: "'Instrument Sans', -apple-system, sans-serif",
                 WebkitFontSmoothing: "antialiased",
+                boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
               }}
             >
               {/* Header */}
