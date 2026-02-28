@@ -7,8 +7,10 @@ import {
   BarChart3,
   Brain,
   CheckCircle2,
+  Clock,
   Menu,
   Mic,
+  Search,
   Shield,
   Target,
   TrendingUp,
@@ -69,13 +71,14 @@ const howItWorksSteps = [
     number: "03",
     title: "Practice with an AI mock interview",
     description:
-      "Your AI interviewer adapts in real-time, challenges your weak spots, and gives you a detailed performance assessment scored across 10 metrics.",
+      "Your AI interviewer adapts in real-time, challenges your weak spots, and scores you across 10 performance metrics — so you walk in knowing exactly where you stand.",
     icon: Mic,
     badge: "Credits from $10",
     highlight: true,
   },
 ];
 
+// 4 metrics shown in the Interview Experience section cards
 const scoringMetrics = [
   {
     label: "Question Understanding",
@@ -99,18 +102,140 @@ const scoringMetrics = [
   },
 ];
 
+// All 10 metrics grouped for the 10 Metrics section
+const allMetrics = [
+  {
+    group: "Knowledge & Accuracy",
+    items: [
+      {
+        label: "Answer Correctness",
+        desc: "Are your answers technically accurate and complete?",
+        why: "Correct answers are the strongest predictor of interview pass outcomes.",
+        Icon: CheckCircle2,
+      },
+      {
+        label: "Reasoning Quality",
+        desc: "Is your thinking process logical and well-structured?",
+        why: "Interviewers evaluate your thinking process, not only final conclusions.",
+        Icon: Brain,
+      },
+      {
+        label: "Question Understanding",
+        desc: "Do you fully understand what's being asked before answering?",
+        why: "Good clarification prevents solving the wrong problem and improves answer precision.",
+        Icon: Search,
+      },
+    ],
+  },
+  {
+    group: "Communication & Delivery",
+    items: [
+      {
+        label: "Communication Clarity",
+        desc: "Are you concise, structured, and easy to follow?",
+        why: "Clear structure helps interviewers quickly trust and score your thinking.",
+        Icon: Mic,
+      },
+      {
+        label: "Behavioral Story Quality",
+        desc: "Do your stories have ownership, actions, and measurable impact?",
+        why: "Behavioral loops are scored on ownership, actions, and measurable impact.",
+        Icon: Users,
+      },
+      {
+        label: "Confidence Calibration",
+        desc: "Do you project balanced confidence without over- or underclaiming?",
+        why: "Balanced confidence signals judgment; overconfidence reduces trust.",
+        Icon: Shield,
+      },
+    ],
+  },
+  {
+    group: "Interview Strategy",
+    items: [
+      {
+        label: "Role Alignment Coverage",
+        desc: "Are you mapping your experience to what this role needs?",
+        why: "You need to demonstrate the exact skills this role values, not generic competence.",
+        Icon: Target,
+      },
+      {
+        label: "Depth Under Follow-ups",
+        desc: "Can you maintain quality when the interviewer pushes deeper?",
+        why: "Strong candidates maintain quality when the interviewer increases pressure.",
+        Icon: TrendingUp,
+      },
+      {
+        label: "Time Management",
+        desc: "Are you delivering enough signal within the time limit?",
+        why: "Interview success depends on delivering enough signal within time limits.",
+        Icon: Clock,
+      },
+      {
+        label: "Recovery Ability",
+        desc: "How do you handle questions outside your comfort zone?",
+        why: "How you recover from misses often matters more than the initial miss itself.",
+        Icon: Zap,
+      },
+    ],
+  },
+];
+
+// Full results dashboard data (all 10 metrics in 3 groups)
+const metricGroupsData = [
+  {
+    label: "Knowledge & Accuracy",
+    metrics: [
+      { label: "Answer Correctness", score: 95 },
+      { label: "Reasoning Quality", score: 85 },
+      { label: "Question Understanding", score: 60 },
+    ],
+  },
+  {
+    label: "Communication & Delivery",
+    metrics: [
+      { label: "Communication Clarity", score: 75 },
+      { label: "Behavioral Story Quality", score: 60 },
+      { label: "Confidence Calibration", score: 80 },
+    ],
+  },
+  {
+    label: "Interview Strategy",
+    metrics: [
+      { label: "Recovery Ability", score: 95 },
+      { label: "Time Management", score: 75 },
+      { label: "Depth Under Follow-ups", score: 70 },
+      { label: "Role Alignment Coverage", score: 50 },
+    ],
+  },
+];
+
+const dashboardStrengths = [
+  "Strong technical knowledge through detailed explanations of event-driven architecture",
+  "Clear reasoning when discussing system design and scaling strategies",
+  "Smooth recovery when handling questions outside direct experience",
+];
+
+const dashboardGrowthAreas = [
+  "Improve question understanding — paraphrase before answering",
+  "Enhance behavioral storytelling with STAR-formatted narratives",
+  "Explicitly link experience to job description terms and requirements",
+];
+
+// Improvement Journey
 const attemptScores = [
-  { label: "Baseline", score: 6.8, delta: null, highlight: false },
-  { label: "Attempt 2", score: 7.4, delta: "+0.6 pts", highlight: false },
-  { label: "Best Score", score: 8.6, delta: "+1.8 pts", highlight: true },
+  { label: "Attempt 1", score: 6.2, delta: null, highlight: false },
+  { label: "Attempt 2", score: 7.1, delta: "+0.9", highlight: false },
+  { label: "Attempt 3", score: 8.2, delta: "+2.0", highlight: true },
 ];
 
 const improvementRows = [
-  { metric: "Question Understanding", scores: [6.2, 7.1, 9.1] },
-  { metric: "Communication Clarity", scores: [5.8, 7.6, 8.5] },
-  { metric: "Reasoning Quality", scores: [7.1, 7.8, 8.7] },
-  { metric: "Confidence Calibration", scores: [7.0, 7.2, 8.4] },
-  { metric: "Overall Score", scores: [6.8, 7.4, 8.6] },
+  { metric: "Answer Correctness", scores: [85, 90, 95], scale100: true },
+  { metric: "Reasoning Quality", scores: [70, 78, 85], scale100: true },
+  { metric: "Communication Clarity", scores: [60, 68, 75], scale100: true },
+  { metric: "Behavioral Story Quality", scores: [40, 52, 60], scale100: true },
+  { metric: "Role Alignment", scores: [35, 42, 50], scale100: true },
+  { metric: "Overall", scores: [6.2, 7.1, 8.2], scale100: false },
 ];
 
 const roles = [
@@ -131,21 +256,21 @@ const roles = [
 const testimonials = [
   {
     quote:
-      "I work in marketing, not tech — and nayld.ai still nailed every question my Deloitte interviewers asked. The mock interview scored my communication clarity and follow-up depth. I knew exactly what to sharpen.",
+      "I was interviewing for a marketing director role and had no idea what they'd ask specifically. nayld scored my resume, showed me my gaps, and the mock interview caught that I kept giving vague answers. After two practice rounds, I walked in with concrete metrics for every answer.",
     name: "Rachel M.",
     role: "Marketing Director",
     company: "Landed at Deloitte",
   },
   {
     quote:
-      "Switching careers felt overwhelming. The fit score showed me my gaps honestly, and after two mock interviews I knew how to frame my background. The AI pushed back on every vague answer — and I was ready for it.",
+      "Switching from teaching to corporate training, I didn't know what to expect. The AI interviewer asked follow-ups I wasn't prepared for — which is exactly what happened in my real interview, except this time I was ready.",
     name: "James L.",
     role: "Corporate Trainer",
     company: "Career Switcher",
   },
   {
     quote:
-      "By my third practice session I was scoring 8.6/10. The real interview felt like a formality. Got the offer the same week.",
+      "The mock interviews on nayld are the closest thing to a real interview I've found. It doesn't just ask you questions — it challenges your answers and shows you exactly where to improve.",
     name: "Aisha R.",
     role: "Software Engineer",
     company: "Landed at a Series B Startup",
@@ -241,7 +366,7 @@ const faqs = [
     id: "faq-5",
     title: "What types of roles does nayld.ai support?",
     content:
-      "Every role and industry \u2014 from software engineering to nursing, marketing to finance, consulting to operations. If there\u2019s a job posting, nayld.ai can analyze it and run a mock interview for it.",
+      "Every role and industry \u2014 from software engineering to nursing, marketing to finance, consulting to operations. Our AI adapts to any job description.",
   },
   {
     id: "faq-6",
@@ -253,7 +378,7 @@ const faqs = [
     id: "faq-7",
     title: "What do I get after a mock interview?",
     content:
-      "After each session you receive a performance score across 10 key metrics \u2014 including question understanding, communication clarity, reasoning quality, and confidence calibration. You also get specific strengths, areas to improve, and a full conversation transcript. Most users run 2\u20133 sessions and track their improvement over time.",
+      "A detailed assessment across 10 metrics: Answer Correctness, Reasoning Quality, Communication Clarity, Behavioral Story Quality, Role Alignment Coverage, and 5 more. Each metric includes evidence from your answers, a next action, and an explanation of why it matters. Plus overall strengths, growth areas, next steps, and a full transcript.",
   },
 ];
 
@@ -261,11 +386,25 @@ const faqs = [
 // Helpers
 // ---------------------------------------------------------------------------
 
-function tableScoreColor(s: number) {
+// For individual metrics (0–100 scale)
+function tableScoreColor100(s: number) {
+  if (s >= 80) return "text-emerald-600 font-semibold";
+  if (s >= 60) return "text-amber-600 font-semibold";
+  return "text-red-500 font-semibold";
+}
+
+// For Overall score (/10 scale)
+function tableScoreColor10(s: number) {
   if (s >= 8) return "text-emerald-600 font-semibold";
   if (s >= 6) return "text-sky-600 font-semibold";
-  if (s >= 4) return "text-amber-600 font-semibold";
-  return "text-red-500 font-semibold";
+  return "text-amber-600 font-semibold";
+}
+
+// For dark-background inline mockup (0–100)
+function darkScoreColor(s: number) {
+  if (s >= 80) return "#34d399";
+  if (s >= 60) return "#fbbf24";
+  return "#f87171";
 }
 
 // ---------------------------------------------------------------------------
@@ -330,10 +469,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
           <div className="flex items-center gap-3">
             <a href="/login">
-              <Button
-                variant="ghost"
-                className="hidden text-sm md:inline-flex"
-              >
+              <Button variant="ghost" className="hidden text-sm md:inline-flex">
                 Log In
               </Button>
             </a>
@@ -351,7 +487,6 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           </div>
         </div>
 
-        {/* Mobile menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -426,21 +561,23 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   <span className="gradient-text">actually pushes back.</span>
                 </h1>
                 <p className="max-w-lg text-lg leading-relaxed text-slate-600">
-                  Practice with an AI interviewer that adapts to your answers,
-                  challenges your weak spots, and scores you on the metrics that
-                  actually matter &mdash; so you walk in ready, not hopeful.
+                  Practice with an AI interviewer that adapts in real-time,
+                  challenges your weak spots, and scores you across 10
+                  performance metrics &mdash; so you walk in knowing exactly
+                  where you stand.
                 </p>
               </motion.div>
 
-              <motion.div variants={fadeInUp}>
-                <Button
-                  size="lg"
-                  onClick={onPrimaryCta}
-                  className="glow-accent-light group"
-                >
+              <motion.div variants={fadeInUp} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button size="lg" onClick={onPrimaryCta} className="glow-accent-light group">
                   Start Practicing Free
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Button>
+                <a href="#how-it-works">
+                  <Button variant="outline" size="lg">
+                    See How It Works
+                  </Button>
+                </a>
               </motion.div>
 
               <motion.div
@@ -448,13 +585,13 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 className="flex flex-wrap items-center gap-x-3 gap-y-2"
               >
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                  <Shield className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   No credit card required
                 </span>
                 <Separator orientation="vertical" className="h-4" />
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Zap className="h-4 w-4 text-amber-500" />
-                  Scored on 10 metrics
+                  10 performance metrics
                 </span>
                 <Separator orientation="vertical" className="h-4" />
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
@@ -474,7 +611,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-2xl" />
               <div className="relative grid grid-cols-[2fr,3fr] items-start gap-3">
                 <InterviewScreenMockup className="opacity-90" />
-                <ResultsDashboardMockup compact />
+                <ResultsDashboardMockup />
               </div>
             </motion.div>
           </div>
@@ -543,10 +680,10 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </p>
               <ul className="space-y-4">
                 {[
-                  "Memorize generic questions from Glassdoor and Reddit",
-                  "Practice with friends who can't give real feedback",
-                  "Guess which parts of their experience will matter",
-                  "Walk in unprepared for the follow-up questions",
+                  "Read questions from a list, then rehearse alone in silence",
+                  "Practice with friends who can't give honest feedback",
+                  "Feel ready — then freeze when the interviewer pushes deeper",
+                  "Get rejected without knowing what cost them the offer",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
@@ -563,16 +700,37 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <p className="mb-5 text-sm font-semibold uppercase tracking-wider text-mm-violet">
                 What nayld does differently
               </p>
-              <ul className="space-y-4">
+              <ul className="space-y-5">
                 {[
-                  "Generates questions from your actual resume + this specific job",
-                  "An AI interviewer that scores you on real performance metrics",
-                  "Shows you exactly where your fit is strong and where to close gaps",
-                  "Prepares you for follow-ups with adaptive, probing questions",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3">
+                  {
+                    text: "AI asks follow-ups and challenges your answers",
+                    metric: "Depth Under Follow-ups",
+                  },
+                  {
+                    text: "Practice speaking out loud — not just reading",
+                    metric: "Communication Clarity",
+                  },
+                  {
+                    text: "Learn if you're actually answering the right question",
+                    metric: "Question Understanding",
+                  },
+                  {
+                    text: "See if you're mapping your experience to the role",
+                    metric: "Role Alignment Coverage",
+                  },
+                  {
+                    text: "Know if your confidence is calibrated or overblown",
+                    metric: "Confidence Calibration",
+                  },
+                ].map(({ text, metric }) => (
+                  <li key={metric} className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-                    <span className="text-sm font-medium text-slate-800">{item}</span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{text}</p>
+                      <span className="mt-1.5 inline-block rounded-full bg-mm-violet/[0.08] px-2.5 py-0.5 text-xs font-semibold text-mm-violet">
+                        {metric}
+                      </span>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -584,10 +742,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           variants={fadeInUp}
           className="mt-8 rounded-2xl border border-slate-200/80 bg-slate-50 p-8 text-center"
         >
-          <p className="mb-6 text-base italic text-slate-600">
-            &ldquo;Most candidates feel underprepared — not because they
-            didn&rsquo;t try, but because generic prep doesn&rsquo;t work.
-            nayld.ai changes that.&rdquo;
+          <p className="mb-6 text-base text-slate-600">
+            The fit score and questions are free.{" "}
+            <span className="font-semibold text-slate-800">
+              The real transformation happens when you practice out loud
+            </span>{" "}
+            — and see where your 10 metrics fall.
           </p>
           <Button onClick={onPrimaryCta} className="glow-accent-light group">
             Start Your First Interview
@@ -681,61 +841,405 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       </motion.section>
 
       {/* ================================================================ */}
-      {/* RESULTS DASHBOARD                                                */}
+      {/* THE 10 METRICS                                                   */}
       {/* ================================================================ */}
       <motion.section
+        id="features"
         initial="hidden"
         whileInView="show"
-        viewport={{ once: true, amount: 0.15 }}
+        viewport={{ once: true, amount: 0.08 }}
         variants={staggerContainer}
         className="mx-auto max-w-6xl px-6 py-20"
       >
         <motion.div variants={fadeInUp}>
           <SectionTitle
-            eyebrow="Performance"
-            title="Your results — scored across 10 real metrics"
-            subtitle="Every session ends with a full breakdown of where you stood out and exactly what to improve."
+            eyebrow="10 Metrics"
+            title="Scored across 10 metrics that real interviewers care about"
+            subtitle="Every mock interview gives you a diagnostic breakdown that shows exactly where you're strong — and what's costing you offers."
             align="center"
           />
         </motion.div>
 
-        <motion.div variants={fadeInUp} className="mt-14 flex justify-center">
-          <div className="w-full max-w-lg">
-            <ResultsDashboardMockup />
+        {/* 3-column grouped grid */}
+        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+          {allMetrics.map(({ group, items }) => (
+            <motion.div key={group} variants={fadeInUp}>
+              <div className="mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-700">{group}</h3>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+              <div className="space-y-3">
+                {items.map(({ label, desc, why, Icon }) => (
+                  <Card
+                    key={label}
+                    className="border-slate-200/80 bg-white p-4 transition hover:shadow-md"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mm-violet/[0.07]">
+                        <Icon className="h-4 w-4 text-mm-violet" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">{label}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{desc}</p>
+                        <p className="mt-2 text-xs italic leading-relaxed text-slate-400">
+                          &ldquo;{why}&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Expanded metric card mockup — Recovery Ability */}
+        <motion.div variants={fadeInUp} className="mt-10">
+          <p className="mb-4 text-center text-sm font-medium text-slate-500">
+            Example metric card from your results:
+          </p>
+          <div className="mx-auto max-w-xl">
+            <div
+              style={{
+                background: "#0e1424",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 16,
+                padding: 24,
+                fontFamily: "'Instrument Sans', -apple-system, sans-serif",
+                WebkitFontSmoothing: "antialiased",
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#e8eaf0" }}>
+                  Recovery Ability
+                </span>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: "#34d399",
+                    }}
+                  >
+                    95
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "monospace",
+                      fontSize: 11,
+                      color: "rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    /100
+                  </span>
+                </div>
+              </div>
+              {/* Bar */}
+              <div
+                style={{
+                  height: 4,
+                  borderRadius: 2,
+                  background: "rgba(255,255,255,0.05)",
+                  overflow: "hidden",
+                  marginBottom: 20,
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: "95%",
+                    background: "#34d399",
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
+              {/* Evidence */}
+              <div style={{ marginBottom: 14 }}>
+                <p
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: "#34d399",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    marginBottom: 6,
+                  }}
+                >
+                  📝 Evidence
+                </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.55,
+                  }}
+                >
+                  &ldquo;Candidate smoothly redirected when lacking direct experience and provided alternative relevant examples.&rdquo;
+                </p>
+              </div>
+              {/* Next Action */}
+              <div style={{ marginBottom: 14 }}>
+                <p
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: "#22d3ee",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    marginBottom: 6,
+                  }}
+                >
+                  🎯 Next Action
+                </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.55,
+                  }}
+                >
+                  &ldquo;Continue developing strategies to recover gracefully from challenging or unfamiliar questions.&rdquo;
+                </p>
+              </div>
+              {/* Why It Matters */}
+              <div>
+                <p
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: "#fbbf24",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    marginBottom: 6,
+                  }}
+                >
+                  💡 Why This Matters
+                </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.55,
+                  }}
+                >
+                  &ldquo;How you recover from misses often matters more than the initial miss itself.&rdquo;
+                </p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        <motion.div
-          variants={fadeInUp}
-          className="mt-10 grid gap-4 text-center sm:grid-cols-3"
-        >
-          {[
-            {
-              icon: "📊",
-              label: "10 scored metrics",
-              sub: "From reasoning quality to confidence calibration",
-            },
-            {
-              icon: "✦",
-              label: "Specific recommendations",
-              sub: "Strengths to lean on and weak spots to address",
-            },
-            {
-              icon: "📝",
-              label: "Full transcript",
-              sub: "Review every question and your exact answers",
-            },
-          ].map(({ icon, label, sub }) => (
-            <div
-              key={label}
-              className="rounded-xl border border-slate-200/80 bg-slate-50 px-6 py-5"
-            >
-              <div className="mb-2 text-2xl">{icon}</div>
-              <p className="text-sm font-semibold text-slate-800">{label}</p>
-              <p className="mt-1 text-xs text-slate-500">{sub}</p>
-            </div>
-          ))}
+        <motion.div variants={fadeInUp} className="mt-10 text-center">
+          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+            See your 10 metrics — Start a mock interview
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Button>
         </motion.div>
+      </motion.section>
+
+      {/* ================================================================ */}
+      {/* RESULTS DASHBOARD                                                */}
+      {/* ================================================================ */}
+      <motion.section
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.08 }}
+        variants={staggerContainer}
+        className="bg-slate-50/80 py-20"
+      >
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="Performance"
+              title="A complete post-interview breakdown — not just a score"
+              subtitle="After every interview: 10 scored metrics with evidence, specific strengths and growth areas, actionable next steps, and a full transcript."
+              align="center"
+            />
+          </motion.div>
+
+          {/* Full 10-metric dark mockup */}
+          <motion.div variants={fadeInUp} className="mt-14">
+            <div
+              style={{
+                background: "#0e1424",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 24,
+                padding: 32,
+                fontFamily: "'Instrument Sans', -apple-system, sans-serif",
+                WebkitFontSmoothing: "antialiased",
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 24,
+                  fontFamily: "monospace",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.3)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "#34d399",
+                    boxShadow: "0 0 6px #34d399",
+                  }}
+                />
+                Interview Complete
+              </div>
+
+              {/* Score + label */}
+              <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 28 }}>
+                <div style={{ position: "relative", width: 88, height: 88, flexShrink: 0 }}>
+                  <svg
+                    style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}
+                    viewBox="0 0 160 160"
+                  >
+                    <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                    <circle
+                      cx="80" cy="80" r="70" fill="none" stroke="#34d399" strokeWidth="8"
+                      strokeLinecap="round" strokeDasharray="440"
+                      strokeDashoffset={Math.round(440 * (1 - 8.2 / 10))}
+                    />
+                  </svg>
+                  <div
+                    style={{
+                      position: "absolute", inset: 0, display: "flex",
+                      flexDirection: "column", alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 20, fontWeight: 700, color: "#34d399", lineHeight: 1, letterSpacing: "-1px" }}>
+                      8.2
+                    </span>
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>/10</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#e8eaf0", marginBottom: 6 }}>Strong Performance</div>
+                  <div
+                    style={{
+                      display: "inline-flex", alignItems: "center",
+                      background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)",
+                      borderRadius: 100, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "#34d399",
+                    }}
+                  >
+                    Top 28% of candidates
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 metric groups */}
+              <div className="grid gap-6 md:grid-cols-3" style={{ marginBottom: 28 }}>
+                {metricGroupsData.map(({ label, metrics }) => (
+                  <div key={label}>
+                    <p
+                      style={{
+                        fontSize: 10, fontWeight: 600, textTransform: "uppercase",
+                        letterSpacing: "0.8px", color: "rgba(255,255,255,0.25)", marginBottom: 10,
+                      }}
+                    >
+                      {label}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {metrics.map(({ label: mLabel, score }) => {
+                        const c = darkScoreColor(score);
+                        return (
+                          <div key={mLabel} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.45)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {mLabel}
+                            </div>
+                            <div style={{ width: 60, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.05)", overflow: "hidden", flexShrink: 0 }}>
+                              <div style={{ height: "100%", width: `${score}%`, background: c, borderRadius: 2 }} />
+                            </div>
+                            <div style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: c, width: 24, textAlign: "right", flexShrink: 0 }}>
+                              {score}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }} />
+
+              {/* Strengths + Growth Areas */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#34d399", marginBottom: 10 }}>
+                    ✦ Strengths
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {dashboardStrengths.map((s) => (
+                      <div
+                        key={s}
+                        style={{
+                          display: "flex", alignItems: "flex-start", gap: 8,
+                          background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)",
+                          borderRadius: 8, padding: "8px 10px",
+                        }}
+                      >
+                        <span style={{ color: "#34d399", fontSize: 11, flexShrink: 0 }}>✓</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#fbbf24", marginBottom: 10 }}>
+                    ⚡ Growth Areas
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {dashboardGrowthAreas.map((g) => (
+                      <div
+                        key={g}
+                        style={{
+                          display: "flex", alignItems: "flex-start", gap: 8,
+                          background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.12)",
+                          borderRadius: 8, padding: "8px 10px",
+                        }}
+                      >
+                        <span style={{ color: "#fbbf24", fontSize: 11, flexShrink: 0 }}>→</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>{g}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div variants={fadeInUp} className="mt-8 text-center">
+            <p className="mb-6 text-base text-slate-600">
+              This is the feedback a{" "}
+              <span className="font-semibold text-slate-800">$200/hr career coach</span> would
+              give — and you&rsquo;re getting it for $10.
+            </p>
+            <Button onClick={onPrimaryCta} className="glow-accent-light group">
+              Start Your First Mock Interview
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Button>
+          </motion.div>
+        </div>
       </motion.section>
 
       {/* ================================================================ */}
@@ -746,109 +1250,118 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
         variants={staggerContainer}
-        className="bg-slate-50/80 py-20"
+        className="mx-auto max-w-6xl px-6 py-20"
       >
-        <div className="mx-auto max-w-6xl px-6">
-          <motion.div variants={fadeInUp}>
-            <SectionTitle
-              eyebrow="Progress"
-              title="Track your improvement over time"
-              subtitle="Most users improve 1.5+ points by their second attempt. Every session makes you sharper."
-              align="center"
-            />
-          </motion.div>
+        <motion.div variants={fadeInUp}>
+          <SectionTitle
+            eyebrow="Progress"
+            title="Watch yourself get better with every attempt"
+            subtitle="Each interview adapts based on where you scored lowest. Every weak spot becomes a growth area with a clear next action."
+            align="center"
+          />
+        </motion.div>
 
-          {/* Attempt cards */}
-          <div className="mt-14 grid gap-5 md:grid-cols-3">
-            {attemptScores.map(({ label, score, delta, highlight }) => (
-              <motion.div key={label} variants={fadeInUp}>
-                <div
-                  className={`rounded-2xl border p-6 transition ${
-                    highlight
-                      ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.06] to-mm-blue/[0.04] shadow-sm"
-                      : "border-slate-200/80 bg-white"
+        {/* Attempt cards */}
+        <div className="mt-14 grid gap-5 md:grid-cols-3">
+          {attemptScores.map(({ label, score, delta, highlight }) => (
+            <motion.div key={label} variants={fadeInUp}>
+              <div
+                className={`rounded-2xl border p-6 transition ${
+                  highlight
+                    ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.06] to-mm-blue/[0.04] shadow-sm"
+                    : "border-slate-200/80 bg-white"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                      {label}
+                    </p>
+                    <p
+                      className={`mt-1 text-4xl font-bold tracking-tight ${
+                        highlight ? "gradient-text" : "text-slate-800"
+                      }`}
+                    >
+                      {score}
+                      <span className="text-lg font-normal text-slate-400">/10</span>
+                    </p>
+                  </div>
+                  {delta && (
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
+                      +{delta} pts
+                    </span>
+                  )}
+                </div>
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      highlight
+                        ? "bg-gradient-to-r from-mm-violet to-mm-blue"
+                        : "bg-slate-300"
+                    }`}
+                    style={{ width: `${score * 10}%` }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Comparison table */}
+        <motion.div
+          variants={fadeInUp}
+          className="mt-8 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Metric
+                </th>
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Attempt 1
+                </th>
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Attempt 2
+                </th>
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-mm-violet">
+                  Attempt 3
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {improvementRows.map(({ metric, scores, scale100 }, idx) => (
+                <tr
+                  key={metric}
+                  className={`border-b border-slate-50 ${
+                    idx === improvementRows.length - 1
+                      ? "border-b-0 bg-slate-50/60 font-semibold"
+                      : ""
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        {label}
-                      </p>
-                      <p
-                        className={`mt-1 text-4xl font-bold tracking-tight ${
-                          highlight ? "gradient-text" : "text-slate-800"
-                        }`}
-                      >
-                        {score}
-                        <span className="text-lg font-normal text-slate-400">/10</span>
-                      </p>
-                    </div>
-                    {delta && (
-                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-600">
-                        {delta}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        highlight
-                          ? "bg-gradient-to-r from-mm-violet to-mm-blue"
-                          : "bg-slate-300"
-                      }`}
-                      style={{ width: `${score * 10}%` }}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Comparison table */}
-          <motion.div
-            variants={fadeInUp}
-            className="mt-8 overflow-x-auto rounded-2xl border border-slate-200/80 bg-white shadow-sm"
-          >
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Metric
-                  </th>
-                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Baseline
-                  </th>
-                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Attempt 2
-                  </th>
-                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-mm-violet">
-                    Best
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {improvementRows.map(({ metric, scores }, idx) => (
-                  <tr
-                    key={metric}
-                    className={`border-b border-slate-50 ${idx === improvementRows.length - 1 ? "border-b-0 bg-slate-50/60 font-semibold" : ""}`}
-                  >
-                    <td className="px-6 py-3.5 text-left text-slate-700">
-                      {metric}
+                  <td className="px-6 py-3.5 text-left text-slate-700">{metric}</td>
+                  {scores.map((s, i) => (
+                    <td
+                      key={i}
+                      className={`px-5 py-3.5 text-center tabular-nums ${
+                        scale100 ? tableScoreColor100(s) : tableScoreColor10(s)
+                      } ${i === 2 ? "!text-mm-violet" : ""}`}
+                    >
+                      {s}
                     </td>
-                    {scores.map((s, i) => (
-                      <td
-                        key={i}
-                        className={`px-5 py-3.5 text-center tabular-nums ${tableScoreColor(s)} ${i === 2 ? "text-mm-violet" : ""}`}
-                      >
-                        {s}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+
+        <motion.div variants={fadeInUp} className="mt-8 text-center">
+          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+            Start Improving
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Button>
+        </motion.div>
       </motion.section>
 
       {/* ================================================================ */}
@@ -860,61 +1373,59 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.15 }}
         variants={staggerContainer}
-        className="mx-auto max-w-6xl px-6 py-20"
+        className="bg-slate-50/80 py-20"
       >
-        <motion.div variants={fadeInUp}>
-          <SectionTitle
-            eyebrow="How It Works"
-            title="From resume to ready in 3 steps"
-            subtitle="No scheduling. No waiting. Upload and start preparing in under 2 minutes."
-            align="center"
-          />
-        </motion.div>
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="How It Works"
+              title="From resume to ready in 3 steps"
+              subtitle="No scheduling. No waiting. Upload and start preparing in under 2 minutes."
+              align="center"
+            />
+          </motion.div>
 
-        <div className="mt-14 space-y-4">
-          {howItWorksSteps.map((step) => (
-            <motion.div key={step.number} variants={fadeInUp}>
-              <div
-                className={`group flex items-start gap-6 rounded-2xl border p-6 transition-all ${
-                  step.highlight
-                    ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.04] to-mm-blue/[0.03] hover:shadow-lg hover:border-mm-violet/40"
-                    : "border-slate-200/80 bg-white hover:border-mm-violet/20 hover:shadow-lg"
-                }`}
-              >
+          <div className="mt-14 space-y-4">
+            {howItWorksSteps.map((step) => (
+              <motion.div key={step.number} variants={fadeInUp}>
                 <div
-                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-sm ${
+                  className={`group flex items-start gap-6 rounded-2xl border p-6 transition-all ${
                     step.highlight
-                      ? "bg-gradient-to-br from-mm-violet to-mm-blue"
-                      : "bg-gradient-to-br from-slate-600 to-slate-700"
+                      ? "border-mm-violet/25 bg-gradient-to-br from-mm-violet/[0.04] to-mm-blue/[0.03] hover:border-mm-violet/40 hover:shadow-lg"
+                      : "border-slate-200/80 bg-white hover:border-mm-violet/20 hover:shadow-lg"
                   }`}
                 >
-                  {step.number}
-                </div>
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <step.icon
-                      className={`h-5 w-5 ${step.highlight ? "text-mm-violet" : "text-slate-400"}`}
-                    />
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {step.title}
-                    </h3>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        step.highlight
-                          ? "bg-mm-violet/10 text-mm-violet"
-                          : "bg-emerald-50 text-emerald-700"
-                      }`}
-                    >
-                      {step.badge}
-                    </span>
+                  <div
+                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-sm ${
+                      step.highlight
+                        ? "bg-gradient-to-br from-mm-violet to-mm-blue"
+                        : "bg-gradient-to-br from-slate-600 to-slate-700"
+                    }`}
+                  >
+                    {step.number}
                   </div>
-                  <p className="text-sm leading-relaxed text-slate-600">
-                    {step.description}
-                  </p>
+                  <div className="flex-1 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <step.icon
+                        className={`h-5 w-5 ${step.highlight ? "text-mm-violet" : "text-slate-400"}`}
+                      />
+                      <h3 className="text-lg font-semibold text-slate-900">{step.title}</h3>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          step.highlight
+                            ? "bg-mm-violet/10 text-mm-violet"
+                            : "bg-emerald-50 text-emerald-700"
+                        }`}
+                      >
+                        {step.badge}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-slate-600">{step.description}</p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.section>
 
@@ -926,39 +1437,37 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
         variants={staggerContainer}
-        className="bg-slate-50/80 py-20"
+        className="mx-auto max-w-6xl px-6 py-20"
       >
-        <div className="mx-auto max-w-6xl px-6">
-          <motion.div variants={fadeInUp}>
-            <SectionTitle
-              eyebrow="All Roles"
-              title="Built for every role, not just tech"
-              subtitle="Upload any job posting and nayld.ai will tailor your fit score, questions, and mock interview to that specific role."
-              align="center"
-            />
-          </motion.div>
+        <motion.div variants={fadeInUp}>
+          <SectionTitle
+            eyebrow="All Roles"
+            title="Built for every role, not just tech"
+            subtitle="Whether you're interviewing for a hospital, a bank, a startup, or a Fortune 500 — our AI adapts to any role, any industry, any seniority level."
+            align="center"
+          />
+        </motion.div>
 
-          <motion.div
-            variants={fadeInUp}
-            className="mt-12 flex flex-wrap justify-center gap-3"
-          >
-            {roles.map((role) => (
-              <span
-                key={role}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-mm-violet/30 hover:text-mm-violet"
-              >
-                {role}
-              </span>
-            ))}
-          </motion.div>
+        <motion.div
+          variants={fadeInUp}
+          className="mt-12 flex flex-wrap justify-center gap-3"
+        >
+          {roles.map((role) => (
+            <span
+              key={role}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-mm-violet/30 hover:text-mm-violet"
+            >
+              {role}
+            </span>
+          ))}
+        </motion.div>
 
-          <motion.div variants={fadeInUp} className="mt-10 text-center">
-            <Button onClick={onPrimaryCta} className="glow-accent-light group">
-              Start Practicing Free
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Button>
-          </motion.div>
-        </div>
+        <motion.div variants={fadeInUp} className="mt-10 text-center">
+          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+            Start Practicing Free
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </Button>
+        </motion.div>
       </motion.section>
 
       {/* ================================================================ */}
@@ -970,22 +1479,24 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
         variants={staggerContainer}
-        className="mx-auto max-w-6xl px-6 py-20"
+        className="bg-slate-50/80 py-20"
       >
-        <motion.div variants={fadeInUp}>
-          <SectionTitle
-            eyebrow="Results"
-            title="Candidates don&rsquo;t just feel prepared — they are prepared"
-            align="center"
-          />
-        </motion.div>
+        <div className="mx-auto max-w-6xl px-6">
+          <motion.div variants={fadeInUp}>
+            <SectionTitle
+              eyebrow="Results"
+              title="Candidates don't just feel prepared — they are prepared"
+              align="center"
+            />
+          </motion.div>
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial, idx) => (
-            <motion.div key={idx} variants={fadeInUp}>
-              <TestimonialCard testimonial={testimonial} />
-            </motion.div>
-          ))}
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {testimonials.map((testimonial, idx) => (
+              <motion.div key={idx} variants={fadeInUp}>
+                <TestimonialCard testimonial={testimonial} />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.section>
 
@@ -1062,9 +1573,11 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   <p className="text-sm leading-relaxed text-slate-600">
                     See your fit score and get tailored questions for free. When
                     you&rsquo;re ready to practice for real, each mock interview
-                    is one credit &mdash; and every credit comes with a full
-                    performance assessment, detailed recommendations, and a
-                    complete transcript.
+                    is one credit &mdash; and every credit comes with{" "}
+                    <span className="font-semibold text-slate-800">
+                      10 scored metrics, specific evidence and next actions,
+                      strengths and growth areas, and a full transcript.
+                    </span>
                   </p>
                   <ul className="space-y-2 text-sm text-slate-700">
                     {[
@@ -1080,11 +1593,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     ))}
                   </ul>
                 </div>
-                <Button
-                  type="button"
-                  onClick={onPrimaryCta}
-                  className="shrink-0"
-                >
+                <Button type="button" onClick={onPrimaryCta} className="shrink-0">
                   Get Started Free
                 </Button>
               </div>
@@ -1149,9 +1658,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               Stop preparing in your head. Start practicing out loud.
             </h2>
             <p className="text-base text-white/80">
-              Upload your resume, add the job, and run your first mock
-              interview. Free fit score included &mdash; interview credits start
-              at $10.
+              Upload your resume, add the job, and get scored across 10 metrics
+              in your first mock interview. Free fit score included &mdash;
+              interview credits start at $10.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button
@@ -1176,7 +1685,6 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       <footer className="border-t border-slate-100 bg-white py-12">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-8 md:grid-cols-4">
-            {/* Brand Column */}
             <div className="md:col-span-1">
               <a href="/">
                 <NayldLogo className="mb-4 h-7 w-auto" />
@@ -1184,144 +1692,71 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <p className="text-sm text-slate-600">
                 AI-powered interview preparation platform that scores
                 resume-job fit, generates tailored questions, and conducts
-                realistic mock interviews.
+                realistic mock interviews scored across 10 performance metrics.
               </p>
             </div>
 
-            {/* Product Column */}
             <div>
-              <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                Product
-              </h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">Product</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="/resume-fit-score"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Resume Fit Score
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/ai-mock-interviews"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    AI Mock Interviews
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/pricing"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#how-it-works"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    How It Works
-                  </a>
-                </li>
+                {[
+                  { label: "Resume Fit Score", href: "/resume-fit-score" },
+                  { label: "AI Mock Interviews", href: "/ai-mock-interviews" },
+                  { label: "Pricing", href: "/pricing" },
+                  { label: "How It Works", href: "#how-it-works" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <a href={href} className="text-slate-600 transition-colors hover:text-slate-900">
+                      {label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Resources Column */}
             <div>
-              <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                Resources
-              </h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">Resources</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="/blog"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/compare"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Compare Tools
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#faq"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    FAQ
-                  </a>
-                </li>
+                {[
+                  { label: "Blog", href: "/blog" },
+                  { label: "Compare Tools", href: "/compare" },
+                  { label: "FAQ", href: "#faq" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <a href={href} className="text-slate-600 transition-colors hover:text-slate-900">
+                      {label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Company Column */}
             <div>
-              <h3 className="mb-3 text-sm font-semibold text-slate-900">
-                Company
-              </h3>
+              <h3 className="mb-3 text-sm font-semibold text-slate-900">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="mailto:hello@nayld.ai"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/privacy"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/terms"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Terms
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="/refund"
-                    className="text-slate-600 transition-colors hover:text-slate-900"
-                  >
-                    Refund Policy
-                  </a>
-                </li>
+                {[
+                  { label: "Contact", href: "mailto:hello@nayld.ai" },
+                  { label: "Privacy", href: "/privacy" },
+                  { label: "Terms", href: "/terms" },
+                  { label: "Refund Policy", href: "/refund" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
+                    <a href={href} className="text-slate-600 transition-colors hover:text-slate-900">
+                      {label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
-          {/* Bottom Bar */}
           <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-8 sm:flex-row">
             <p className="text-xs text-slate-400">
               &copy; {new Date().getFullYear()} nayld.ai. All rights reserved.
             </p>
             <div className="flex gap-4 text-xs text-slate-500">
-              <a
-                href="/login"
-                className="transition-colors hover:text-slate-900"
-              >
-                Log In
-              </a>
-              <a
-                href="/signup"
-                className="transition-colors hover:text-slate-900"
-              >
-                Sign Up
-              </a>
+              <a href="/login" className="transition-colors hover:text-slate-900">Log In</a>
+              <a href="/signup" className="transition-colors hover:text-slate-900">Sign Up</a>
             </div>
           </div>
         </div>

@@ -3,23 +3,23 @@ interface Props {
   compact?: boolean;
 }
 
+// Scores are 0–100
 const metrics = [
-  { label: "Question Understanding", score: 9.1 },
-  { label: "Communication Clarity", score: 8.5 },
-  { label: "Reasoning Quality", score: 8.7 },
-  { label: "Follow-up Depth", score: 7.8 },
-  { label: "Confidence Calibration", score: 8.4 },
+  { label: "Answer Correctness", score: 95 },
+  { label: "Reasoning Quality", score: 85 },
+  { label: "Communication Clarity", score: 75 },
+  { label: "Behavioral Story Quality", score: 60 },
+  { label: "Role Alignment Coverage", score: 50 },
 ];
 
 function scoreColor(s: number) {
-  if (s >= 8) return "#34d399";
-  if (s >= 6) return "#22d3ee";
-  if (s >= 4) return "#fbbf24";
+  if (s >= 80) return "#34d399";
+  if (s >= 60) return "#fbbf24";
   return "#f87171";
 }
 
 export function ResultsDashboardMockup({ className = "", compact = false }: Props) {
-  const overallScore = 8.6;
+  const overallScore = 8.2;
   // circumference ≈ 2π×70 ≈ 440
   const circumference = 440;
   const offset = Math.round(circumference * (1 - overallScore / 10));
@@ -150,7 +150,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
               marginBottom: 4,
             }}
           >
-            Excellent Performance
+            Strong Performance
           </div>
           <div
             style={{
@@ -166,13 +166,13 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
               color: accentColor,
             }}
           >
-            Top 15% of candidates
+            Top 28% of candidates
           </div>
         </div>
       </div>
 
       {/* Metric bars */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: compact ? 0 : 16 }}>
         {displayMetrics.map(({ label, score }) => {
           const c = scoreColor(score);
           return (
@@ -202,7 +202,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 <div
                   style={{
                     height: "100%",
-                    width: `${(score / 10) * 100}%`,
+                    width: `${score}%`,
                     borderRadius: 2,
                     background: c,
                   }}
@@ -226,43 +226,25 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
         })}
       </div>
 
-      {/* Recommendation snippets */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {/* Recommendation snippet */}
+      {!compact && (
         <div
           style={{
             display: "flex",
             alignItems: "flex-start",
             gap: 8,
-            background: "rgba(52,211,153,0.06)",
-            border: "1px solid rgba(52,211,153,0.15)",
+            background: "rgba(251,191,36,0.06)",
+            border: "1px solid rgba(251,191,36,0.15)",
             borderRadius: 8,
             padding: "8px 10px",
           }}
         >
-          <span style={{ color: "#34d399", fontSize: 12, flexShrink: 0 }}>✦</span>
+          <span style={{ color: "#fbbf24", fontSize: 12, flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
-            Strong use of specific metrics and quantified outcomes throughout
+            Use STAR method to structure behavioral stories with clear Situation, Task, Action, and Result.
           </span>
         </div>
-        {!compact && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 8,
-              background: "rgba(251,191,36,0.06)",
-              border: "1px solid rgba(251,191,36,0.15)",
-              borderRadius: 8,
-              padding: "8px 10px",
-            }}
-          >
-            <span style={{ color: "#fbbf24", fontSize: 12, flexShrink: 0 }}>⏳</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
-              Follow-up depth can be improved — try the STAR method more consistently
-            </span>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
