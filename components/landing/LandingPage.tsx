@@ -292,7 +292,7 @@ const pricingPlans: Plan[] = [
     features: [
       "1 interview credit",
       "Full AI mock interview session",
-      "Detailed performance assessment",
+      "Shareable performance assessment with 10 scored metrics",
       "Credits never expire",
     ],
     cta: "Get Started",
@@ -379,6 +379,12 @@ const faqs = [
     title: "What do I get after a mock interview?",
     content:
       "A detailed assessment across 10 metrics: Answer Correctness, Reasoning Quality, Communication Clarity, Behavioral Story Quality, Role Alignment Coverage, and 5 more. Each metric includes evidence from your answers, a next action, and an explanation of why it matters. Plus overall strengths, growth areas, next steps, and a full transcript.",
+  },
+  {
+    id: "faq-8",
+    title: "Can I share my results?",
+    content:
+      "Yes. Every completed mock interview generates a shareable public link you can send to anyone — mentors, coaches, or recruiters on LinkedIn. The link shows your full performance assessment: all 10 scored metrics, your strengths, and your growth areas. You control when to share and with whom.",
   },
 ];
 
@@ -1240,7 +1246,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             <p className="mb-6 text-base text-slate-600">
               This is the feedback a{" "}
               <span className="font-semibold text-slate-800">$200/hr career coach</span> would
-              give — and you&rsquo;re getting it for $10.
+              give — and you&rsquo;re getting it for $10. Share your verified assessment with
+              mentors, coaches, or your LinkedIn network &mdash; show them exactly where you stand.
             </p>
             <Button onClick={onPrimaryCta} className="glow-accent-light group">
               Start Your First Mock Interview
@@ -1365,6 +1372,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         </motion.div>
 
         <motion.div variants={fadeInUp} className="mt-8 text-center">
+          <p className="mb-5 text-sm text-slate-500">
+            Share your progress with mentors and recruiters who want to see how far you&rsquo;ve come.
+          </p>
           <Button onClick={onPrimaryCta} className="glow-accent-light group">
             Start Improving
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
