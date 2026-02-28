@@ -105,12 +105,15 @@ export default async function SharePage({ params }: Props) {
 
   if (!interview) notFound();
 
-  // Fetch candidate name from auth
-  const { data: { user: candidateUser } } = await supabase.auth.admin.getUserById(interview.user_id);
-  const candidateName =
-    candidateUser?.user_metadata?.full_name ??
-    candidateUser?.user_metadata?.name ??
-    null;
+  // Fetch candidate name from profiles table
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("id", interview.user_id)
+    .maybeSingle();
+  const candidateName = profile
+    ? [profile.first_name, profile.last_name].filter(Boolean).join(" ") || null
+    : null;
 
   // Fetch job details
   const { data: job } = interview.job_id
