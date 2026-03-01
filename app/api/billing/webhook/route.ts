@@ -91,7 +91,7 @@ async function grantCreditsForCheckoutSession(
       .maybeSingle();
 
     if (signup) {
-      const commissionRate = (signup.affiliates as { commission_rate: number }).commission_rate;
+      const commissionRate = (signup.affiliates as unknown as { commission_rate: number }).commission_rate;
       const purchaseAmount = (session.amount_total ?? 0) / 100;
       const commissionAmount = parseFloat((purchaseAmount * commissionRate / 100).toFixed(2));
 
