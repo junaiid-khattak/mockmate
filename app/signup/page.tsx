@@ -29,10 +29,15 @@ export default function Page() {
     setServerError(undefined);
 
     try {
+      const referralCode = localStorage.getItem("nayld_referral_code") ?? undefined;
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          referralCode,
+          landingPage: window.location.pathname,
+        }),
       });
 
       const data = await response.json().catch(() => ({}));
