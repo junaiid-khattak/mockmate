@@ -1739,6 +1739,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   { label: "Blog", href: "/blog" },
                   { label: "Compare Tools", href: "/compare" },
                   { label: "FAQ", href: "#faq" },
+                  { label: "Become an Affiliate", href: "https://affiliate.nayld.ai/apply" },
                 ].map(({ label, href }) => (
                   <li key={label}>
                     <a href={href} className="text-slate-600 transition-colors hover:text-slate-900">

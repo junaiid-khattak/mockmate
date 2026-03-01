@@ -82,6 +82,41 @@ async function grantCreditsForCheckoutSession(
     credits,
   });
 
+  // Record referral conversion if this user was referred by an affiliate
+  try {
+    const { data: signup } = await supabase
+      .from("referral_signups")
+      .select("id, affiliate_id, affiliates!inner(commission_rate)")
+      .eq("referred_user_id", userId)
+      .maybeSingle();
+
+    if (signup) {
+      const commissionRate = (signup.affiliates as { commission_rate: number }).commission_rate;
+      const purchaseAmount = (session.amount_total ?? 0) / 100;
+      const commissionAmount = parseFloat((purchaseAmount * commissionRate / 100).toFixed(2));
+
+      await supabase.from("referral_conversions").insert({
+        affiliate_id: signup.affiliate_id,
+        referred_user_id: userId,
+        referral_signup_id: signup.id,
+        credit_pack: packId,
+        purchase_amount: purchaseAmount,
+        stripe_payment_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount,
+        commission_status: "pending",
+      });
+
+      await (supabase.rpc as Function)("increment_affiliate_conversion_stats", {
+        p_affiliate_id: signup.affiliate_id,
+        p_purchase_amount: purchaseAmount,
+        p_commission_amount: commissionAmount,
+      });
+    }
+  } catch {
+    console.warn("Referral conversion tracking failed for session", session.id);
+  }
+
   return NextResponse.json({ ok: true });
 }
 

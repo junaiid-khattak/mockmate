@@ -9,6 +9,9 @@ type SignupPayload = {
   lastName: string;
   email: string;
   password: string;
+  // Optional referral attribution (from localStorage cookie set by ReferralTracker)
+  referralCode?: string;
+  landingPage?: string;
 };
 
 export async function POST(request: Request) {
@@ -84,6 +87,42 @@ export async function POST(request: Request) {
 
   if (profileError) {
     return NextResponse.json({ ok: false, error: "Failed to initialize profile" }, { status: 500 });
+  }
+
+  // Referral attribution: record which affiliate referred this signup
+  const refCode = String(payload.referralCode ?? "").toUpperCase().trim();
+  if (refCode) {
+    try {
+      const { data: affiliate } = await service
+        .from("affiliates")
+        .select("id")
+        .eq("referral_code", refCode)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (affiliate) {
+        // Insert referral_signup (ignore if user already attributed to another affiliate)
+        await service
+          .from("referral_signups")
+          .upsert(
+            {
+              affiliate_id: affiliate.id,
+              referred_user_id: data.user.id,
+              referral_code_used: refCode,
+              landing_page: payload.landingPage ?? null,
+            },
+            { onConflict: "referred_user_id", ignoreDuplicates: true }
+          );
+
+        // Atomically increment total_signups
+        await (service.rpc as Function)("increment_affiliate_signups", {
+          p_affiliate_id: affiliate.id,
+        });
+      }
+    } catch {
+      // Non-fatal: referral attribution failure shouldn't block signup
+      console.warn("Referral attribution failed for code:", refCode);
+    }
   }
 
   return NextResponse.json({
