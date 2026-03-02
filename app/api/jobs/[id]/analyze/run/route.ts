@@ -129,7 +129,9 @@ export async function POST(
   }
 
   try {
-    const sqs = new SQSClient({});
+    const regionMatch = queueUrl.match(/sqs\.([^.]+)\.amazonaws\.com/);
+    const region = regionMatch?.[1] ?? process.env.AWS_REGION ?? "us-east-1";
+    const sqs = new SQSClient({ region });
     await sqs.send(
       new SendMessageCommand({
         QueueUrl: queueUrl,

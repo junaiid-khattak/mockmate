@@ -38,6 +38,7 @@ type Job = {
   questions: unknown[] | null;
   questions_status: "pending" | "ready" | "failed" | null;
   questions_error: string | null;
+  analysis_run_id: string | null;
   interview_date: string | null;
   created_at: string;
   updated_at: string;
@@ -100,6 +101,7 @@ export default function JobBriefPage() {
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+  const [resumeExtractionStatus, setResumeExtractionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -144,11 +146,16 @@ export default function JobBriefPage() {
       j.fit_score_status === "pending" || j.questions_status === "pending";
 
     const poll = async () => {
-      const updated = await fetchJob();
-      if (cancelled || !updated) return;
-      setJob(updated);
-      if (needsPolling(updated)) {
-        pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
+      try {
+        const updated = await fetchJob();
+        if (cancelled || !updated) return;
+        setJob(updated);
+        if (needsPolling(updated)) {
+          pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
+        }
+      } catch {
+        // Transient fetch error — retry after the interval
+        if (!cancelled) pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
       }
     };
 
@@ -181,19 +188,27 @@ export default function JobBriefPage() {
       }
       setJob(jd);
 
-      // Fetch resume filename if linked
+      // Fetch resume filename + extraction status if linked
+      let resumeExtracted = false;
       if (jd.resume_id) {
         const resumeRes = await fetch(`/api/files/${jd.resume_id}`);
         const resumeBody = await resumeRes.json().catch(() => ({}));
         if (resumeBody?.ok) {
           setResumeFilename(resumeBody.filename ?? null);
+          setResumeExtractionStatus(resumeBody.extractedTextStatus ?? null);
+          resumeExtracted = resumeBody.extractedTextStatus === "successful";
         }
       }
 
       setLoading(false);
 
-      // Auto-trigger analysis if resume attached but analysis never started
-      if (jd.resume_id && jd.fit_score_status == null) {
+      // Auto-trigger analysis when:
+      //  • a resume is attached, AND
+      //  • no analysis has been started yet (analysis_run_id is null), AND
+      //  • the resume is already extracted (extraction worker won't re-fire for it)
+      // When extraction is still in progress we skip — the extraction Lambda
+      // will send the SQS message itself once it finishes.
+      if (jd.resume_id && !jd.analysis_run_id && resumeExtracted) {
         try {
           const runRes = await fetch(`/api/jobs/${jobId}/analyze/run`, {
             method: "POST",
@@ -675,6 +690,23 @@ export default function JobBriefPage() {
             );
           })()}
         </div>
+
+        {/* Resume parse error — shown when the attached resume could not be extracted */}
+        {job.resume_id && resumeExtractionStatus === "failed" && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+            <p className="text-sm font-semibold text-red-800">We couldn't read your resume.</p>
+            <p className="mt-1 text-sm text-red-700">
+              The file may be corrupted, password-protected, or an unsupported format. Please upload a new{" "}
+              <strong>PDF or DOCX</strong> file, then re-link it to this job.
+            </p>
+            <a
+              href="/resumes"
+              className="mt-3 inline-block rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50"
+            >
+              Manage resumes →
+            </a>
+          </div>
+        )}
 
         {/* Urgency banner — shown when interview date is upcoming and no interviews done yet */}
         {job.interview_date && interviews.length === 0 && (

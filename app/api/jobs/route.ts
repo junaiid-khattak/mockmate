@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
 
   // Validate optional resume_id
   let resumeId: string | null = null;
+  let resumeAlreadyExtracted = false;
   if (body.resume_id != null) {
     if (typeof body.resume_id !== "string" || !body.resume_id.trim()) {
       return NextResponse.json({ ok: false, error: "Invalid resume_id." }, { status: 400 });
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     const { data: resume, error: resumeErr } = await supabase
       .from("resumes")
-      .select("id")
+      .select("id, extracted_text_status")
       .eq("id", resumeId)
       .eq("user_id", data.user.id)
       .maybeSingle();
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
     if (!resume) {
       return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
     }
+    resumeAlreadyExtracted = resume.extracted_text_status === "successful";
   }
 
   const { data: jd, error } = await supabase
@@ -86,11 +88,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unable to create job.", details: error.message }, { status: 500 });
   }
 
-  // Auto-trigger analysis when a resume is attached
-  if (resumeId && jd) {
+  // Trigger job analysis via SQS. The wizard guarantees extraction is complete
+  // before the user reaches this step, so resumeAlreadyExtracted is always true
+  // in the normal flow. Guard is kept for safety (e.g. direct API calls).
+  if (jd) {
     const queueUrl = process.env.SQS_QUEUE_URL;
-    if (queueUrl) {
+    if (!queueUrl) {
+      console.error("[jobs/POST] SQS_QUEUE_URL is not set — analysis will not run for job", jd.id);
+    } else if (!resumeAlreadyExtracted) {
+      console.warn("[jobs/POST] Resume not yet extracted for job", jd.id, "— skipping SQS");
+    } else {
       const analysisRunId = randomUUID();
+
       const { error: updateErr } = await supabase
         .from("jobs")
         .update({
@@ -101,9 +110,15 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", jd.id);
 
-      if (!updateErr) {
+      if (updateErr) {
+        console.error("[jobs/POST] Failed to stamp analysis_run_id on job", jd.id, updateErr.message);
+      } else {
+        // Derive region from the queue URL (https://sqs.{region}.amazonaws.com/...)
+        const regionMatch = queueUrl.match(/sqs\.([^.]+)\.amazonaws\.com/);
+        const region = regionMatch?.[1] ?? process.env.AWS_REGION ?? "us-east-1";
+
         try {
-          const sqs = new SQSClient({});
+          const sqs = new SQSClient({ region });
           await sqs.send(
             new SendMessageCommand({
               QueueUrl: queueUrl,
@@ -116,8 +131,9 @@ export async function POST(request: NextRequest) {
               }),
             }),
           );
+          console.log("[jobs/POST] SQS sent for job", jd.id, "run", analysisRunId);
         } catch (sqsErr) {
-          console.error("SQS send failed:", sqsErr);
+          console.error("[jobs/POST] SQS send failed for job", jd.id, sqsErr);
         }
       }
     }
