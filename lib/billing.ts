@@ -1,6 +1,6 @@
 export const BILLING_PROVIDER = "stripe";
 
-export type CreditPackId = "starter" | "standard" | "pro" | "power";
+export type CreditPackId = "intro" | "starter" | "standard" | "pro" | "power";
 
 export type CreditPack = {
   id: CreditPackId;
@@ -10,9 +10,19 @@ export type CreditPack = {
   perCreditCents: number;
   savingsPercent: number;
   recommended?: boolean;
+  introOffer?: boolean;
 };
 
 export const CREDIT_PACKS: CreditPack[] = [
+  {
+    id: "intro",
+    name: "First Interview",
+    credits: 1,
+    priceCents: 500,
+    perCreditCents: 500,
+    savingsPercent: 0,
+    introOffer: true,
+  },
   {
     id: "starter",
     name: "Starter",

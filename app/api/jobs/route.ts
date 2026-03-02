@@ -7,7 +7,7 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 const MIN_CONTENT_LENGTH = 50;
 
 const JD_COLUMNS =
-  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
+  "id, title, company, content, source_url, resume_id, interview_date, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
 const JD_LIST_COLUMNS =
   "id, title, company, source_url, resume_id, fit_score, fit_score_status, questions_status, created_at, updated_at";
 
@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
   const title = typeof body.title === "string" ? body.title.trim() || null : null;
   const company = typeof body.company === "string" ? body.company.trim() || null : null;
   const sourceUrl = typeof body.source_url === "string" ? body.source_url.trim() || null : null;
+  const interviewDate = typeof body.interview_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.interview_date.trim())
+    ? body.interview_date.trim()
+    : null;
 
   // Validate optional resume_id
   let resumeId: string | null = null;
@@ -71,6 +74,7 @@ export async function POST(request: NextRequest) {
       content,
       source_url: sourceUrl,
       resume_id: resumeId,
+      interview_date: interviewDate,
       // If a resume is attached at creation, mark fit for scoring
       fit_score_status: resumeId ? "pending" : null,
     })

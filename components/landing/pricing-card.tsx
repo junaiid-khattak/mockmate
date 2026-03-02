@@ -12,6 +12,7 @@ export type Plan = {
   cta: string;
   highlighted?: boolean;
   popular?: boolean;
+  note?: string;
 };
 
 type Props = {
@@ -41,6 +42,12 @@ export function PricingCard({ plan, onCta }: Props) {
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300">{plan.description}</p>
         <div className="text-3xl font-semibold text-slate-900 dark:text-white">{plan.price}</div>
+        {plan.note && (
+          <div className="flex items-start gap-2 rounded-lg border border-[#7c5cfc] bg-[#7c5cfc] px-3 py-2 shadow-[0_2px_8px_rgba(124,92,252,0.35)]">
+            <span className="mt-0.5 shrink-0 text-sm">✨</span>
+            <p className="text-xs font-semibold leading-snug text-white">{plan.note}</p>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="mt-auto space-y-4">
         <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-200">

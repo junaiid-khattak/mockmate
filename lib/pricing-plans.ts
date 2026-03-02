@@ -12,6 +12,7 @@ export const pricingPlans: Plan[] = [
       "Credits never expire",
     ],
     cta: "Get Started",
+    note: "First interview? Get 50% off — try it for $5 with our intro offer.",
   },
   {
     name: "Standard",

@@ -14,7 +14,7 @@ import { PublicHeader } from "@/components/PublicHeader";
 export const metadata: Metadata = {
   title: "Pricing — AI Interview Prep Credits | nayld.ai",
   description:
-    "Free resume analysis and fit scoring. AI mock interview credits from $10. No subscriptions — credits never expire.",
+    "Free resume analysis and fit scoring. Try your first AI mock interview for $5. Credits never expire — no subscriptions.",
   keywords: [
     "AI mock interview pricing",
     "AI interview prep cost",
@@ -251,6 +251,24 @@ export default function PricingPage() {
               subtitle="Each AI mock interview session costs one credit. Buy credits when you need them — they never expire."
               align="center"
             />
+
+            {/* Intro offer callout */}
+            <div className="mb-8 mx-auto max-w-2xl rounded-2xl border-2 border-[rgba(124,92,252,0.3)] bg-gradient-to-br from-[rgba(124,92,252,0.06)] to-white p-6 text-center shadow-[0_4px_24px_rgba(124,92,252,0.1)]">
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[rgba(124,92,252,0.1)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#7c5cfc]">
+                Launch offer
+              </div>
+              <h3 className="mt-2 text-xl font-bold text-slate-900">Try your first mock interview for $5</h3>
+              <p className="mt-2 text-sm text-slate-600">
+                Not sure yet? Get your first full AI mock interview — including the 10-metric breakdown and personalized feedback — for half price.
+              </p>
+              <Link href="/signup">
+                <Button className="mt-4 gap-2 bg-[#7c5cfc] hover:bg-[#6341e0]">
+                  Get started for $5
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <p className="mt-2 text-xs text-slate-400">One per account · Credits never expire</p>
+            </div>
 
             <PricingGrid />
 

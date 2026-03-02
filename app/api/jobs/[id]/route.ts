@@ -4,7 +4,7 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 const MIN_CONTENT_LENGTH = 50;
 
 const JD_COLUMNS =
-  "id, title, company, content, source_url, resume_id, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
+  "id, title, company, content, source_url, resume_id, interview_date, fit_score, fit_score_status, fit_score_version, fit_score_error, fit_score_updated_at, fit_strong_alignment, fit_weak_spots, fit_areas_to_probe, analysis_run_id, analysis_requested_at, questions, questions_status, questions_version, questions_error, questions_updated_at, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // GET /api/jobs/:id  –  Read a single job
@@ -87,6 +87,12 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
 
   if ("source_url" in body) {
     updates.source_url = typeof body.source_url === "string" ? body.source_url.trim() || null : null;
+  }
+
+  if ("interview_date" in body) {
+    updates.interview_date = typeof body.interview_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.interview_date.trim())
+      ? body.interview_date.trim()
+      : null;
   }
 
   // resume_id: set, change, or clear (null)

@@ -19,6 +19,8 @@ import { InterviewHistoryCard } from "@/components/jobs/InterviewHistoryCard";
 import { CompareAttemptsTable } from "@/components/jobs/CompareAttemptsTable";
 import { CompareBanner } from "@/components/jobs/CompareBanner";
 import { ShareInterviewButton } from "@/components/jobs/ShareInterviewButton";
+import { PreviewResultsTeaser } from "@/components/jobs/PreviewResultsTeaser";
+import { UrgencyBanner } from "@/components/jobs/UrgencyBanner";
 
 type Job = {
   id: string;
@@ -36,6 +38,7 @@ type Job = {
   questions: unknown[] | null;
   questions_status: "pending" | "ready" | "failed" | null;
   questions_error: string | null;
+  interview_date: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -651,19 +654,65 @@ export default function JobBriefPage() {
           </div>
 
           {/* Fit Score Badge - inline on the right */}
-          {job.fit_score != null && job.fit_score_status === "ready" && (
-            <div className="flex items-center gap-3.5 rounded-xl border border-green-200 bg-green-50 px-5 py-3">
-              <div className="text-4xl font-extrabold leading-none tracking-tighter text-green-600">
-                {job.fit_score}
-                <sub className="text-base font-medium text-gray-500">/10</sub>
+          {job.fit_score != null && job.fit_score_status === "ready" && (() => {
+            const score = job.fit_score!;
+            const isStrong = score >= 8;
+            const isModerate = score >= 6.5 && score < 8;
+            const label = isStrong ? "Strong Match" : isModerate ? "Moderate Match" : "Weak Match";
+            const colorClass = isStrong ? "text-green-600" : isModerate ? "text-amber-600" : "text-amber-600";
+            const borderClass = isStrong ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50";
+            return (
+              <div className={`flex items-center gap-3.5 rounded-xl border px-5 py-3 ${borderClass}`}>
+                <div className={`text-4xl font-extrabold leading-none tracking-tighter ${colorClass}`}>
+                  {score}
+                  <sub className="text-base font-medium text-gray-500">/10</sub>
+                </div>
+                <div>
+                  <div className={`text-sm font-semibold ${colorClass}`}>{label}</div>
+                  <div className="text-xs text-gray-500">Resume-to-job alignment</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-semibold text-green-600">Strong Match</div>
-                <div className="text-xs text-gray-500">Resume-to-job alignment</div>
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
+
+        {/* Urgency banner — shown when interview date is upcoming and no interviews done yet */}
+        {job.interview_date && interviews.length === 0 && (
+          <UrgencyBanner
+            interviewDate={job.interview_date}
+            company={job.company}
+            title={job.title}
+            onStartInterview={handleStartInterview}
+            isStarting={startingInterview}
+            disabled={!job.resume_id}
+          />
+        )}
+
+        {/* Fit Score Conversion Strip — shown when score is ready and user hasn't interviewed yet */}
+        {job.fit_score != null && job.fit_score_status === "ready" && interviews.length === 0 && (
+          <div className="mb-6 flex flex-col gap-3 rounded-xl border border-[rgba(124,92,252,0.2)] bg-gradient-to-r from-[rgba(124,92,252,0.05)] to-[rgba(124,92,252,0.02)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm font-semibold text-[#111118]">
+                You scored <span className="text-[#7c5cfc]">{job.fit_score}/10</span> for this role.
+                {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
+                  <> Your biggest gaps are in{" "}
+                    <span className="font-bold">
+                      {job.fit_weak_spots.slice(0, 2).join(" and ")}
+                    </span>.</>
+                )}
+              </p>
+              <p className="text-xs text-[#6b6b80]">A mock interview will probe exactly these gaps and show you how to close them.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleStartInterview}
+              disabled={startingInterview || !job.resume_id}
+              className="shrink-0 rounded-lg bg-[#7c5cfc] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(124,92,252,0.2)] transition hover:bg-[#6341e0] disabled:opacity-50"
+            >
+              {startingInterview ? "Starting..." : "Start interview now →"}
+            </button>
+          </div>
+        )}
 
         {/* Two-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
@@ -821,6 +870,15 @@ export default function JobBriefPage() {
               {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
             </button>
           </div>
+        )}
+
+        {/* Preview teaser — shown before first interview when fit score is ready */}
+        {interviews.length === 0 && job.fit_score_status === "ready" && (
+          <PreviewResultsTeaser
+            onStartInterview={handleStartInterview}
+            isStarting={startingInterview}
+            disabled={!job.resume_id}
+          />
         )}
 
         {/* Post-Interview Results */}
@@ -1082,37 +1140,67 @@ export default function JobBriefPage() {
                   "Purchase credits to continue with this interview."}
               </p>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {CREDIT_PACKS.map((pack) => (
+              <div className="mt-5 flex flex-col gap-3">
+                {/* Intro offer — shown first, full width */}
+                {CREDIT_PACKS.filter((p) => p.introOffer).map((pack) => (
                   <button
                     key={pack.id}
                     type="button"
                     disabled={paywallCheckingOut !== null}
                     onClick={() => handlePaywallBuy(pack.id)}
-                    className={cn(
-                      "flex flex-col items-center rounded-xl border px-4 py-3 text-center transition",
-                      pack.recommended
-                        ? "border-mm-violet/50 bg-mm-violet/[0.03] hover:bg-mm-violet/[0.06]"
-                        : "border-slate-200 hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]",
-                    )}
+                    className="flex items-center justify-between rounded-xl border-2 border-mm-violet bg-[rgba(124,92,252,0.04)] px-5 py-3.5 text-left transition hover:bg-[rgba(124,92,252,0.08)]"
                   >
-                    <p className="text-sm font-semibold text-slate-900">{pack.name}</p>
-                    <p className="text-lg font-bold text-slate-900">
-                      ${(pack.priceCents / 100).toFixed(0)}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {pack.credits} credit{pack.credits !== 1 ? "s" : ""}
-                    </p>
-                    {pack.savingsPercent > 0 && (
-                      <p className="text-xs font-medium text-emerald-600">
-                        Save {pack.savingsPercent}%
-                      </p>
-                    )}
-                    {paywallCheckingOut === pack.id && (
-                      <span className="mt-1 text-xs text-mm-violet">Redirecting...</span>
-                    )}
+                    <div>
+                      <div className="mb-0.5 text-xs font-bold uppercase tracking-wider text-mm-violet">Launch offer</div>
+                      <p className="text-sm font-semibold text-slate-900">{pack.name} — 1 interview credit</p>
+                      <p className="text-xs text-slate-500">Full session + 10-metric breakdown</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-extrabold text-slate-900">${(pack.priceCents / 100).toFixed(0)}</p>
+                      {paywallCheckingOut === pack.id && (
+                        <span className="text-xs text-mm-violet">Redirecting...</span>
+                      )}
+                    </div>
                   </button>
                 ))}
+                {/* Regular packs */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {CREDIT_PACKS.filter((p) => !p.introOffer).map((pack) => (
+                    <button
+                      key={pack.id}
+                      type="button"
+                      disabled={paywallCheckingOut !== null}
+                      onClick={() => handlePaywallBuy(pack.id)}
+                      className={cn(
+                        "flex flex-col items-center rounded-xl border px-4 py-3 text-center transition",
+                        pack.recommended
+                          ? "border-mm-violet/50 bg-mm-violet/[0.03] hover:bg-mm-violet/[0.06]"
+                          : "border-slate-200 hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]",
+                      )}
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{pack.name}</p>
+                      <p className="text-lg font-bold text-slate-900">
+                        ${(pack.priceCents / 100).toFixed(0)}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {pack.credits} credit{pack.credits !== 1 ? "s" : ""}
+                      </p>
+                      {pack.id === "starter" && (
+                        <p className="mt-1 text-[10px] font-medium text-[#7c5cfc]">
+                          50% off your first — use intro offer above
+                        </p>
+                      )}
+                      {pack.savingsPercent > 0 && (
+                        <p className="text-xs font-medium text-emerald-600">
+                          Save {pack.savingsPercent}%
+                        </p>
+                      )}
+                      {paywallCheckingOut === pack.id && (
+                        <span className="mt-1 text-xs text-mm-violet">Redirecting...</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {paywallPurchaseMessage && (
@@ -1167,6 +1255,8 @@ export default function JobBriefPage() {
                 creditCount={creditBalance ?? 0}
                 disabled={!job.resume_id}
                 isStarting={startingInterview}
+                fitScore={job.fit_score}
+                weakSpots={job.fit_weak_spots}
               />
             )}
 

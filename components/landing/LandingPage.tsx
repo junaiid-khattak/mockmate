@@ -62,18 +62,18 @@ const howItWorksSteps = [
     number: "02",
     title: "Get your free fit score and tailored questions",
     description:
-      "Instant analysis — see exactly how well you match the role and get questions generated from your specific resume and this job.",
+      "Instant analysis — see exactly how well you match the role and get questions generated from your specific resume and this job. Now you know the diagnosis. The next step is the treatment.",
     icon: BarChart3,
     badge: "Free",
     highlight: false,
   },
   {
     number: "03",
-    title: "Practice with an AI mock interview",
+    title: "Close the gaps with a live AI mock interview",
     description:
-      "Your AI interviewer adapts in real-time, challenges your weak spots, and scores you across 10 performance metrics — so you walk in knowing exactly where you stand.",
+      "Your AI interviewer targets your weak spots in real-time, challenges you with follow-ups, and scores you across 10 metrics — so you walk in knowing exactly where you stand. The diagnosis without the practice is just anxiety.",
     icon: Mic,
-    badge: "Credits from $10",
+    badge: "From $5",
     highlight: true,
   },
 ];
@@ -296,6 +296,7 @@ const pricingPlans: Plan[] = [
       "Credits never expire",
     ],
     cta: "Get Started",
+    note: "First interview? Get 50% off — try it for $5 with our intro offer.",
   },
   {
     name: "Standard",

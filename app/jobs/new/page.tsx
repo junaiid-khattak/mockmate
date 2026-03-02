@@ -27,6 +27,7 @@ export default function NewJobPage() {
   const [company, setCompany] = useState("");
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [interviewDate, setInterviewDate] = useState("");
 
   // Step 2: Resume
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -150,6 +151,7 @@ export default function NewJobPage() {
             content: content.trim(),
             source_url: sourceUrl.trim() || undefined,
             resume_id: selectedResumeId,
+            interview_date: interviewDate.trim() || undefined,
           }),
         }),
         minDelay,
@@ -261,6 +263,21 @@ export default function NewJobPage() {
                   placeholder="https://..."
                   className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="interviewDate" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  When is your interview? <span className="text-xs text-slate-400">(optional)</span>
+                </label>
+                <input
+                  id="interviewDate"
+                  type="date"
+                  value={interviewDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setInterviewDate(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
+                />
+                <p className="mt-1 text-xs text-slate-400">We&apos;ll remind you to practice before your real interview.</p>
               </div>
             </div>
 
