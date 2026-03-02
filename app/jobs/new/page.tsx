@@ -231,12 +231,16 @@ export default function NewJobPage() {
       <Header firstName={firstName} onLogout={handleLogout} backHref="/jobs" backLabel="Jobs" />
 
       <div className="mx-auto max-w-xl px-6 py-10">
-        {/* ── Progress bar ── */}
+        {/* ── Progress indicator ── */}
         {step < 3 && (
           <div className="mb-8">
             <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-              <span className={step >= 1 ? "text-mm-violet" : ""}>Resume</span>
-              <span className={step >= 2 ? "text-mm-violet" : ""}>Job details</span>
+              <span className={step >= 1 ? "text-mm-violet font-semibold" : ""}>
+                Step 1 of 2: Upload Resume
+              </span>
+              <span className={step >= 2 ? "text-mm-violet font-semibold" : ""}>
+                Step 2 of 2: Job Details
+              </span>
             </div>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
               <div
@@ -256,7 +260,7 @@ export default function NewJobPage() {
             <p className="mt-2 text-center text-sm text-slate-500">
               {isProcessing
                 ? "Extracting your experience and background."
-                : "We\u2019ll compare your background against the job description."}
+                : "Your resume is the starting point. We\u2019ll analyze it against the job to find your blind spots."}
             </p>
 
             {/* Processing animation */}
@@ -276,7 +280,7 @@ export default function NewJobPage() {
             {extractionState === "success" && (
               <div className="mt-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
                 <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
-                <p className="text-sm text-green-800">Resume read successfully.</p>
+                <p className="text-sm font-medium text-green-800">Resume uploaded. Let&apos;s see how you match up →</p>
               </div>
             )}
 
@@ -401,7 +405,7 @@ export default function NewJobPage() {
               disabled={!canContinueFromStep1}
               className="mt-8 w-full rounded-lg bg-mm-violet px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Continue
+              See My Fit Score →
             </button>
           </div>
         )}
@@ -478,8 +482,7 @@ export default function NewJobPage() {
 
               <div>
                 <label htmlFor="interviewDate" className="mb-1.5 block text-sm font-medium text-slate-700">
-                  When is your interview?{" "}
-                  <span className="text-xs text-slate-400">(optional)</span>
+                  When is your interview?
                 </label>
                 <input
                   id="interviewDate"
@@ -490,7 +493,7 @@ export default function NewJobPage() {
                   className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 focus:border-mm-violet focus:outline-none focus:ring-2 focus:ring-mm-violet/20"
                 />
                 <p className="mt-1 text-xs text-slate-400">
-                  We&apos;ll remind you to practice before your real interview.
+                  We&apos;ll create a personalized practice timeline so you&apos;re ready by interview day.
                 </p>
               </div>
             </div>
@@ -509,7 +512,7 @@ export default function NewJobPage() {
                 disabled={!step2Valid}
                 className="flex-1 rounded-lg bg-mm-violet px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Create job
+                Analyze My Fit →
               </button>
             </div>
           </div>

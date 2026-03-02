@@ -36,8 +36,11 @@ export function PreviewResultsTeaser({ onStartInterview, isStarting, disabled }:
             Your Assessment Preview
           </h3>
         </div>
-        <p className="mt-1 text-sm text-[#6b6b80]">
-          Here&apos;s what your 10-metric breakdown looks like after your first interview:
+        <p className="mt-1 text-sm font-semibold text-[#111118]">
+          How would you actually score?
+        </p>
+        <p className="mt-0.5 text-xs text-[#6b6b80]">
+          Most candidates overestimate their readiness. See your real 10-metric breakdown.
         </p>
       </div>
 
@@ -57,9 +60,9 @@ export function PreviewResultsTeaser({ onStartInterview, isStarting, disabled }:
             type="button"
             onClick={onStartInterview}
             disabled={isStarting || disabled}
-            className="rounded-lg bg-[#7c5cfc] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(124,92,252,0.25)] transition hover:bg-[#6341e0] disabled:opacity-50"
+            className="pointer-events-auto rounded-lg bg-[#7c5cfc] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(124,92,252,0.25)] transition hover:bg-[#6341e0] disabled:opacity-50"
           >
-            {isStarting ? "Starting..." : "Start interview →"}
+            {isStarting ? "Starting..." : "Find out →"}
           </button>
         </div>
 

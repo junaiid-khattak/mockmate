@@ -20,7 +20,6 @@ import { CompareAttemptsTable } from "@/components/jobs/CompareAttemptsTable";
 import { CompareBanner } from "@/components/jobs/CompareBanner";
 import { ShareInterviewButton } from "@/components/jobs/ShareInterviewButton";
 import { PreviewResultsTeaser } from "@/components/jobs/PreviewResultsTeaser";
-import { UrgencyBanner } from "@/components/jobs/UrgencyBanner";
 
 type Job = {
   id: string;
@@ -673,8 +672,12 @@ export default function JobBriefPage() {
             const score = job.fit_score!;
             const isStrong = score >= 8;
             const isModerate = score >= 6.5 && score < 8;
-            const label = isStrong ? "Strong Match" : isModerate ? "Moderate Match" : "Weak Match";
-            const colorClass = isStrong ? "text-green-600" : isModerate ? "text-amber-600" : "text-amber-600";
+            const label = isStrong
+              ? "Strong fit — but gaps remain"
+              : isModerate
+                ? "Moderate fit — key gaps to close"
+                : "Weak fit — significant gaps found";
+            const colorClass = isStrong ? "text-green-600" : "text-amber-600";
             const borderClass = isStrong ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50";
             return (
               <div className={`flex items-center gap-3.5 rounded-xl border px-5 py-3 ${borderClass}`}>
@@ -708,82 +711,57 @@ export default function JobBriefPage() {
           </div>
         )}
 
-        {/* Urgency banner — shown when interview date is upcoming and no interviews done yet */}
-        {job.interview_date && interviews.length === 0 && (
-          <UrgencyBanner
-            interviewDate={job.interview_date}
-            company={job.company}
-            title={job.title}
-            onStartInterview={handleStartInterview}
-            isStarting={startingInterview}
-            disabled={!job.resume_id}
-          />
-        )}
-
-        {/* Fit Score Conversion Strip — shown when score is ready and user hasn't interviewed yet */}
-        {job.fit_score != null && job.fit_score_status === "ready" && interviews.length === 0 && (
-          <div className="mb-6 flex flex-col gap-3 rounded-xl border border-[rgba(124,92,252,0.2)] bg-gradient-to-r from-[rgba(124,92,252,0.05)] to-[rgba(124,92,252,0.02)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold text-[#111118]">
-                You scored <span className="text-[#7c5cfc]">{job.fit_score}/10</span> for this role.
-                {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
-                  <> Your biggest gaps are in{" "}
-                    <span className="font-bold">
-                      {job.fit_weak_spots.slice(0, 2).join(" and ")}
-                    </span>.</>
-                )}
-              </p>
-              <p className="text-xs text-[#6b6b80]">A mock interview will probe exactly these gaps and show you how to close them.</p>
+        {/* Combined gap + urgency banner — shown when fit score is ready and no interviews done */}
+        {job.fit_score != null && job.fit_score_status === "ready" && interviews.length === 0 && (() => {
+          const daysUntil = job.interview_date
+            ? Math.ceil((new Date(job.interview_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            : null;
+          const showUrgency = daysUntil !== null && daysUntil >= 0 && daysUntil <= 14;
+          const urgencyColor = showUrgency && daysUntil! <= 3 ? "text-red-600" : "text-amber-600";
+          return (
+            <div className="mb-6 rounded-xl border border-[rgba(124,92,252,0.2)] bg-gradient-to-r from-[rgba(124,92,252,0.05)] to-[rgba(124,92,252,0.02)] px-5 py-4">
+              {showUrgency && (
+                <p className={`mb-2 text-xs font-semibold ${urgencyColor}`}>
+                  ⏱ Your interview is in {daysUntil === 0 ? "less than a day" : `${daysUntil} day${daysUntil !== 1 ? "s" : ""}`}
+                  {job.company ? ` at ${job.company}` : ""} — start practicing now.
+                </p>
+              )}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-1.5">
+                  <p className="text-sm font-semibold text-[#111118]">
+                    You scored <span className="text-[#7c5cfc]">{job.fit_score}/10</span> for this role.
+                    {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
+                      <> Your biggest gaps: <span className="font-bold">{job.fit_weak_spots.slice(0, 2).join(" and ")}</span>.</>
+                    )}
+                  </p>
+                  <p className="text-xs text-[#6b6b80]">A mock interview will probe exactly these gaps and show you how to close them.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleStartInterview}
+                  disabled={startingInterview || !job.resume_id}
+                  className="shrink-0 rounded-lg bg-[#7c5cfc] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(124,92,252,0.2)] transition hover:bg-[#6341e0] disabled:opacity-50"
+                >
+                  {startingInterview ? "Starting..." : "Practice Now →"}
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={handleStartInterview}
-              disabled={startingInterview || !job.resume_id}
-              className="shrink-0 rounded-lg bg-[#7c5cfc] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_10px_rgba(124,92,252,0.2)] transition hover:bg-[#6341e0] disabled:opacity-50"
-            >
-              {startingInterview ? "Starting..." : "Start interview now →"}
-            </button>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Two-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
           {/* Main Column */}
           <div className="flex flex-col gap-4">
 
-        {/* Strong Alignment — only when data exists */}
-        {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
-          <CollapsibleCard
-            title="Strong Alignment"
-            icon="✓"
-            color="green"
-            count={`${job.fit_strong_alignment.length} matches`}
-            defaultOpen={false}
-          >
-            <div className="flex flex-col">
-              {job.fit_strong_alignment.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
-                >
-                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600">
-                    <span className="text-[10px]">✓</span>
-                  </div>
-                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
-                </div>
-              ))}
-            </div>
-          </CollapsibleCard>
-        )}
-
-        {/* Weak Spots — only when data exists */}
+        {/* Weak Spots — shown first, expanded by default */}
         {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
           <CollapsibleCard
             title="Weak Spots"
             icon="△"
             color="amber"
             count={`${job.fit_weak_spots.length} gaps`}
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <div className="flex flex-col">
               {job.fit_weak_spots.map((item, i) => (
@@ -801,14 +779,14 @@ export default function JobBriefPage() {
           </CollapsibleCard>
         )}
 
-        {/* Areas Likely to Be Probed — only when data exists */}
+        {/* Areas Likely to Be Probed — expanded by default */}
         {job.fit_areas_to_probe && job.fit_areas_to_probe.length > 0 && (
           <CollapsibleCard
             title="Areas Likely to Be Probed"
             icon="?"
             color="blue"
             count={`${job.fit_areas_to_probe.length} areas`}
-            defaultOpen={false}
+            defaultOpen={true}
           >
             <div className="flex flex-col">
               {job.fit_areas_to_probe.map((item, i) => (
@@ -818,6 +796,31 @@ export default function JobBriefPage() {
                 >
                   <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
                     <span className="text-[10px]">?</span>
+                  </div>
+                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+          </CollapsibleCard>
+        )}
+
+        {/* Strong Alignment — collapsed by default */}
+        {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
+          <CollapsibleCard
+            title="Strong Alignment"
+            icon="✓"
+            color="green"
+            count={`${job.fit_strong_alignment.length} matches`}
+            defaultOpen={false}
+          >
+            <div className="flex flex-col">
+              {job.fit_strong_alignment.map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                >
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600">
+                    <span className="text-[10px]">✓</span>
                   </div>
                   <span className="text-sm leading-relaxed text-gray-700">{item}</span>
                 </div>
@@ -854,7 +857,20 @@ export default function JobBriefPage() {
                 ))}
             </div>
 
-            {job.questions.length > 3 && !showAllQuestions && (
+            {/* Before first interview: gate remaining questions behind an interview CTA */}
+            {job.questions.length > 3 && interviews.length === 0 && (
+              <button
+                type="button"
+                onClick={handleStartInterview}
+                disabled={startingInterview || !job.resume_id}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-[rgba(124,92,252,0.04)] py-3 text-sm font-semibold text-[#7c5cfc] transition-colors hover:bg-[rgba(124,92,252,0.08)] disabled:opacity-50"
+              >
+                + {job.questions.length - 3} more personalized questions — practice answering them with AI feedback →
+              </button>
+            )}
+
+            {/* After first interview: normal show more / fewer toggle */}
+            {job.questions.length > 3 && interviews.length > 0 && !showAllQuestions && (
               <button
                 type="button"
                 onClick={() => setShowAllQuestions(true)}
@@ -864,7 +880,7 @@ export default function JobBriefPage() {
               </button>
             )}
 
-            {showAllQuestions && job.questions.length > 3 && (
+            {showAllQuestions && job.questions.length > 3 && interviews.length > 0 && (
               <button
                 type="button"
                 onClick={() => setShowAllQuestions(false)}
@@ -1335,21 +1351,29 @@ export default function JobBriefPage() {
         icon="🎙️"
         text={
           interviews.length === 0
-            ? "Ready to practice?"
+            ? (() => {
+                if (job.interview_date) {
+                  const d = Math.ceil((new Date(job.interview_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                  if (d >= 0 && d <= 14) return `${d} day${d !== 1 ? "s" : ""} until your interview`;
+                }
+                return "Close your gaps before interview day";
+              })()
             : interviews.length === 1
               ? `Score: ${((interviews[0].performance_overall_score ?? 0) / 10).toFixed(1)}/10 —`
               : `Best: ${(Math.max(...interviews.map((i) => i.performance_overall_score ?? 0)) / 10).toFixed(1)}/10 —`
         }
         subtext={
           interviews.length === 0
-            ? "· Uses 1 credit"
+            ? creditBalance && creditBalance > 0
+              ? `${creditBalance} credit${creditBalance !== 1 ? "s" : ""} available`
+              : "· From $5"
             : interviews.length === 1
               ? "Retry to improve"
               : "Keep improving"
         }
         buttonLabel={
           interviews.length === 0
-            ? "Start Mock Interview"
+            ? "Practice Now →"
             : interviews.length === 1
               ? "Retry Interview"
               : `Start Interview #${interviews.length + 1}`

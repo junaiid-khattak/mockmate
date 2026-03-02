@@ -12,8 +12,6 @@ interface InterviewCTACardProps {
 
 export function InterviewCTACard({
   onStartInterview,
-  hasCredits,
-  creditCount,
   disabled = false,
   isStarting = false,
   fitScore,
@@ -21,6 +19,10 @@ export function InterviewCTACard({
 }: InterviewCTACardProps) {
   const hasContext = fitScore != null && weakSpots && weakSpots.length > 0;
   const topWeakSpots = weakSpots?.slice(0, 2) ?? [];
+  const gapText =
+    topWeakSpots.length >= 2
+      ? `${topWeakSpots[0]} and ${topWeakSpots[1]}`
+      : topWeakSpots[0] ?? "your weak areas";
 
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-purple-600 bg-white shadow-[0_4px_24px_rgba(124,92,252,0.2)]">
@@ -35,7 +37,7 @@ export function InterviewCTACard({
           </div>
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-purple-600">
-              AI Mock Interview
+              AI MOCK INTERVIEW
             </div>
             <div className="text-xs text-gray-500">Personalized to this job</div>
           </div>
@@ -43,59 +45,36 @@ export function InterviewCTACard({
 
         {/* Headline */}
         <h3 className="mb-2 text-xl font-extrabold leading-tight tracking-tight text-gray-900">
-          {hasContext
-            ? "Your mock interview will target your gaps"
-            : "Practice these questions with real-time AI feedback"}
+          Close your gaps before interview day
         </h3>
 
         {/* Description */}
         <p className="mb-6 text-sm leading-relaxed text-gray-500">
           {hasContext
-            ? `You scored ${fitScore}/10. Your AI interviewer will probe exactly your weak areas and show you how to close the gap before your real interview.`
-            : "Our AI interviewer adapts in real-time, asks follow-ups, and gives you a detailed performance breakdown."}
+            ? `Your AI interviewer will push on ${gapText} — the exact areas where you'd lose points in a real interview.`
+            : "Your AI interviewer adapts in real-time, asks follow-ups, and gives you a detailed performance breakdown."}
         </p>
 
         {/* Features */}
         <div className="mb-6 flex flex-col gap-2">
-          {hasContext ? (
-            <>
-              {topWeakSpots.map((spot, i) => (
-                <div key={i} className="flex items-center gap-2.5 text-sm text-gray-700">
-                  <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-[10px] text-amber-600">
-                    ↑
-                  </div>
-                  <span className="line-clamp-1">{spot}</span>
-                </div>
-              ))}
-              <div className="flex items-center gap-2.5 text-sm text-gray-700">
-                <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
-                  ✓
-                </div>
-                <span>10-metric performance breakdown</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2.5 text-sm text-gray-700">
-                <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
-                  ✓
-                </div>
-                <span>Adaptive follow-up probes</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-sm text-gray-700">
-                <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
-                  ✓
-                </div>
-                <span>Targets your weak spots</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-sm text-gray-700">
-                <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
-                  ✓
-                </div>
-                <span>Detailed performance assessment</span>
-              </div>
-            </>
-          )}
+          <div className="flex items-center gap-2.5 text-sm text-gray-700">
+            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
+              ✓
+            </div>
+            <span>Adaptive follow-ups that dig into your weak spots</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-sm text-gray-700">
+            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
+              ✓
+            </div>
+            <span>Scored across 10 metrics real interviewers use</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-sm text-gray-700">
+            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-[10px] text-green-600">
+              ✓
+            </div>
+            <span>Full transcript + specific next actions</span>
+          </div>
         </div>
 
         {/* CTA Button */}
@@ -103,17 +82,16 @@ export function InterviewCTACard({
           type="button"
           onClick={onStartInterview}
           disabled={disabled || isStarting}
-          className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 px-6 py-4 text-base font-bold tracking-tight text-white shadow-[0_4px_24px_rgba(124,92,252,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(124,92,252,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="flex w-full items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 px-6 py-4 text-base font-bold tracking-tight text-white shadow-[0_4px_24px_rgba(124,92,252,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_28px_rgba(124,92,252,0.35),inset_0_1px_0_rgba(255,255,255,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          <span className="text-lg">✨</span>
-          <span>{isStarting ? "Starting..." : "Start Mock Interview"}</span>
+          {isStarting ? "Starting..." : "Start Practicing →"}
         </button>
 
         {/* Price line */}
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-gray-500">
-          <span>Uses 1 credit</span>
+          <span>1 credit</span>
           <div className="h-1 w-1 rounded-full bg-gray-300" />
-          <span>From $5</span>
+          <span>$5 for first interview</span>
         </div>
 
         {/* Social proof */}
