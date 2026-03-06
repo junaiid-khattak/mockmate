@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { createRouteHandlerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
 function sanitizeNextPath(nextPath: string | null) {
@@ -31,6 +31,20 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(new URL(`/login?error=${errorParam}`, baseUrl));
     applyCookies(response);
     return response;
+  }
+
+  // Upsert profile for OAuth sign-ins (e.g. Google). ignoreDuplicates ensures
+  // existing email-signup profiles are never overwritten.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user && user.app_metadata?.provider !== "email") {
+    const service = createServiceRoleSupabaseClient();
+    const meta = user.user_metadata ?? {};
+    const firstName = meta.given_name ?? meta.name?.split(" ")[0] ?? "";
+    const lastName = meta.family_name ?? meta.name?.split(" ").slice(1).join(" ") ?? "";
+    await service.from("profiles").upsert(
+      { id: user.id, first_name: firstName, last_name: lastName, avatar_url: meta.avatar_url ?? null, target_roles: [] },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
   }
 
   const response = NextResponse.redirect(new URL(nextPath, baseUrl));

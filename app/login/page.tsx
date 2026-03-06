@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LoginForm } from "@/components/login/LoginForm";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { NayldLogo } from "@/components/NayldLogo";
 
@@ -51,6 +52,15 @@ export default function Page() {
 
         <Card className="w-full border-slate-200/80 bg-white/90 shadow-xl backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/80">
           <CardContent className="space-y-6 p-6 sm:p-8">
+            <GoogleButton />
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-xs text-slate-500 dark:text-slate-400">
+                <span className="bg-white px-2 dark:bg-slate-900">or continue with email</span>
+              </div>
+            </div>
             <LoginForm onSubmit={handleSubmit} isSubmitting={isSubmitting} serverError={serverError} />
             <div className="flex items-center justify-between text-sm">
               <div />
