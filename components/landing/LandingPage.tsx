@@ -1545,6 +1545,18 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
                 />
               </a>
+              <a
+                href="https://www.saashub.com/nayldai?utm_source=badge&utm_campaign=badge&utm_content=nayldai&badge_variant=color&badge_kind=approved"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"
+                  alt="nayld.ai listed on SaaSHub"
+                  style={{ maxWidth: 150 }}
+                />
+              </a>
             </div>
           </motion.div>
         </div>
