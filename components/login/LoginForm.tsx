@@ -43,7 +43,7 @@ export function LoginForm({ onSubmit, isSubmitting = false, serverError }: Login
 
   return (
     <div className="space-y-6">
-      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+      <form id="login-form" className="space-y-4" onSubmit={handleSubmit} noValidate>
         <Field
           id="email"
           label="Email"

@@ -59,7 +59,7 @@ export function SignupForm({ onSubmit, isSubmitting = false, serverError }: Sign
   };
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+    <form id="signup-form" className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           id="firstName"
