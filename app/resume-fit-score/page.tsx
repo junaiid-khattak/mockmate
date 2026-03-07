@@ -67,10 +67,10 @@ const testimonials = [
 ];
 
 const stats = [
-  { value: "10,000+", label: "Resumes Analyzed" },
-  { value: "95%", label: "Users Felt More Prepared" },
-  { value: "2,400+", label: "Candidates Preparing" },
-  { value: "8.4/10", label: "Average Fit Score" },
+  { value: "1–10", label: "Fit Score Scale", sub: "With full gap breakdown" },
+  { value: "Every Industry", label: "Tech to healthcare" },
+  { value: "Free", label: "Fit Score & Questions", sub: "No credit card required" },
+  { value: "Instant", label: "Analysis", sub: "Results in under 60 seconds" },
 ];
 
 export default function ResumeFitScorePage() {

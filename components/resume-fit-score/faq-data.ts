@@ -7,7 +7,7 @@ export const faqs = [
   {
     question: "How accurate is the AI fit analysis?",
     answer:
-      "Our AI analyzes your resume against job requirements using advanced language models trained on thousands of job postings and successful candidate profiles. It examines not just keyword matches, but deep alignment factors like experience level, skill relevance, qualifications, and even cultural fit signals. Users report 95% accuracy in predicting their interview experience and areas of focus.",
+      "Our AI analyzes your resume against job requirements using advanced language models. It examines not just keyword matches, but deep alignment factors like experience level, skill relevance, qualifications, and cultural fit signals — giving you a realistic picture of where you stand and what the interviewer will focus on.",
   },
   {
     question: "What types of roles does it support?",

@@ -29,7 +29,6 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion } from "@/components/ui/accordion";
 import { SectionTitle } from "@/components/landing/section-title";
 import { PricingCard, type Plan } from "@/components/landing/pricing-card";
-import { TestimonialCard } from "@/components/landing/testimonial-card";
 import { InterviewScreenMockup } from "@/components/landing/interview-screen-mockup";
 import { ResultsDashboardMockup } from "@/components/landing/results-dashboard-mockup";
 
@@ -253,35 +252,11 @@ const roles = [
   "Account Executive",
 ];
 
-const testimonials = [
-  {
-    quote:
-      "I was interviewing for a marketing director role and had no idea what they'd ask specifically. nayld scored my resume, showed me my gaps, and the mock interview caught that I kept giving vague answers. After two practice rounds, I walked in with concrete metrics for every answer.",
-    name: "Rachel M.",
-    role: "Marketing Director",
-    company: "Landed at Deloitte",
-  },
-  {
-    quote:
-      "Switching from teaching to corporate training, I didn't know what to expect. The AI interviewer asked follow-ups I wasn't prepared for — which is exactly what happened in my real interview, except this time I was ready.",
-    name: "James L.",
-    role: "Corporate Trainer",
-    company: "Career Switcher",
-  },
-  {
-    quote:
-      "The mock interviews on nayld are the closest thing to a real interview I've found. It doesn't just ask you questions — it challenges your answers and shows you exactly where to improve.",
-    name: "Aisha R.",
-    role: "Software Engineer",
-    company: "Landed at a Series B Startup",
-  },
-];
-
 const stats = [
-  { value: "10,000+", label: "Questions Generated" },
-  { value: "95%", label: "Users Felt More Prepared" },
-  { value: "2,400+", label: "Candidates Preparing" },
-  { value: "8.4/10", label: "Average Satisfaction" },
+  { value: "10", label: "Performance Metrics", sub: "Scored every session" },
+  { value: "Every Industry", label: "Tech to healthcare" },
+  { value: "From $5", label: "Per Interview", sub: "Credits never expire" },
+  { value: "Free", label: "Fit Score & Questions", sub: "No credit card required" },
 ];
 
 const pricingPlans: Plan[] = [
@@ -555,13 +530,6 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               variants={staggerContainer}
               className="space-y-8"
             >
-              <motion.div variants={fadeInUp}>
-                <Badge className="border-mm-violet/20 bg-mm-violet/[0.06] text-mm-violet">
-                  <Users className="mr-1.5 h-3.5 w-3.5" />
-                  Join 2,400+ candidates preparing smarter
-                </Badge>
-              </motion.div>
-
               <motion.div variants={fadeInUp} className="space-y-4">
                 <h1 className="text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.5rem]">
                   Your AI interview coach that{" "}
@@ -599,11 +567,6 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <span className="flex items-center gap-1.5 text-sm text-slate-500">
                   <Zap className="h-4 w-4 text-amber-500" />
                   10 performance metrics
-                </span>
-                <Separator orientation="vertical" className="h-4" />
-                <span className="flex items-center gap-1.5 text-sm text-slate-500">
-                  <Users className="h-4 w-4 text-mm-violet" />
-                  Used by 2,400+ candidates
                 </span>
               </motion.div>
             </motion.div>
@@ -648,6 +611,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <div key={stat.label} className="text-center">
                 <div className="text-3xl font-bold gradient-text">{stat.value}</div>
                 <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
+                {"sub" in stat && stat.sub && (
+                  <div className="mt-0.5 text-xs text-slate-400">{stat.sub}</div>
+                )}
               </div>
             ))}
           </motion.div>
@@ -1490,71 +1456,51 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
       </motion.section>
 
       {/* ================================================================ */}
-      {/* SOCIAL PROOF / TESTIMONIALS                                      */}
-      {/* ================================================================ */}
-      <motion.section
-        id="results"
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={staggerContainer}
-        className="bg-slate-50/80 py-20"
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <motion.div variants={fadeInUp}>
-            <SectionTitle
-              eyebrow="Results"
-              title="Candidates don't just feel prepared — they are prepared"
-              align="center"
-            />
-          </motion.div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {testimonials.map((testimonial, idx) => (
-              <motion.div key={idx} variants={fadeInUp}>
-                <TestimonialCard testimonial={testimonial} />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ================================================================ */}
-      {/* FEATURED IN                                                      */}
+      {/* LISTED ON                                                        */}
       {/* ================================================================ */}
       <motion.section
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
         variants={staggerContainer}
-        className="py-16"
+        className="bg-white py-20 border-y border-slate-100"
       >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div variants={fadeInUp} className="text-center">
-            <p className="mb-8 text-sm font-medium uppercase tracking-wider text-slate-500">
-              As Featured On
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#7c5cfc]">
+              Recognition
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-8">
+            <h2 className="mb-3 text-2xl font-bold text-[#111118]">
+              Featured On
+            </h2>
+            <p className="mb-12 text-sm text-slate-500">
+              Recognized by leading AI and SaaS directories
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-12">
               <a
                 href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
                 target="_blank"
                 rel="nofollow"
+                className="opacity-80 transition-opacity hover:opacity-100"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  width="300"
+                  width="280"
                   src="https://media.theresanaiforthat.com/featured-on-taaft.png?width=600"
+                  alt="Featured on There's An AI For That"
                 />
               </a>
               <a
                 href="https://www.saashub.com/nayldai?utm_source=badge&utm_campaign=badge&utm_content=nayldai&badge_variant=color&badge_kind=approved"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="opacity-80 transition-opacity hover:opacity-100"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="https://cdn-b.saashub.com/img/badges/approved-color.png?v=1"
-                  alt="nayld.ai listed on SaaSHub"
-                  style={{ maxWidth: 150 }}
+                  alt="nayld.ai featured on SaaSHub"
+                  style={{ width: 160 }}
                 />
               </a>
             </div>

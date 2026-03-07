@@ -94,18 +94,18 @@ export function InterviewCTACard({
           <span>$5 for first interview</span>
         </div>
 
-        {/* Social proof */}
+        {/* Feature facts */}
         <div className="mt-5 flex flex-col gap-2.5 border-t border-gray-200 pt-5">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <span className="text-sm">📊</span>
             <span>
-              <span className="font-bold text-green-600">95%</span> of users felt more prepared
+              Scored across <span className="font-bold text-green-600">10 performance metrics</span>
             </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <span className="text-sm">🎯</span>
             <span>
-              <span className="font-bold text-green-600">10,000+</span> questions practiced
+              Questions tailored to <span className="font-bold text-green-600">your resume & this job</span>
             </span>
           </div>
         </div>

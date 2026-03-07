@@ -80,10 +80,10 @@ const testimonials = [
 ];
 
 const stats = [
-  { value: "10,000+", label: "Mock Interviews Completed" },
-  { value: "95%", label: "Users Felt More Prepared" },
-  { value: "2,400+", label: "Candidates Preparing" },
-  { value: "8.4/10", label: "Average Satisfaction" },
+  { value: "10", label: "Performance Metrics", sub: "Scored every session" },
+  { value: "Every Industry", label: "Tech to healthcare" },
+  { value: "From $5", label: "Per Interview", sub: "Credits never expire" },
+  { value: "30–45 min", label: "Per Session", sub: "Voice-based, AI-adapted" },
 ];
 
 const targetAudiences = [
