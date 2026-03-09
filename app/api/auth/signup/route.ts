@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import { isValidEmail } from "@/lib/utils";
+import { resolveGeo } from "@/lib/geo";
 
 type SignupPayload = {
   firstName: string;
@@ -74,6 +75,8 @@ export async function POST(request: Request) {
 
   const service = await createServiceRoleSupabaseClient();
 
+  const geo = await resolveGeo(request);
+
   const { error: profileError } = await service.from("profiles").upsert(
     {
       id: data.user.id,
@@ -81,6 +84,12 @@ export async function POST(request: Request) {
       last_name: lastName,
       avatar_url: null,
       target_roles: [],
+      ...(geo && {
+        country_code: geo.country_code,
+        country_name: geo.country_name,
+        city: geo.city,
+        region: geo.region,
+      }),
     },
     { onConflict: "id" }
   );
