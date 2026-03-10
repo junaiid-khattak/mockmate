@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { createRouteHandlerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 
 
 const MIN_CONTENT_LENGTH = 50;
@@ -139,7 +139,34 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.json({ ok: true, job: jd }, { status: 201 });
+  // Grant 1 free credit on first job creation (idempotent — grant_key prevents double grants)
+  let freeCreditGranted = false;
+  try {
+    const { count: jobCount } = await supabase
+      .from("jobs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", data.user.id);
+
+    if (jobCount === 1) {
+      const service = createServiceRoleSupabaseClient();
+      const { error: grantError } = await service.rpc("grant_interview_credits", {
+        p_user_id: data.user.id,
+        p_grant_key: `first_job_${data.user.id}`,
+        p_source: "manual_adjustment",
+        p_credits: 1,
+        p_provider: "system",
+        p_metadata: { reason: "first_job_free_credit" },
+        p_expires_at: null,
+      });
+      if (!grantError) freeCreditGranted = true;
+      else console.warn("[jobs/POST] First-job credit grant failed:", grantError.message);
+    }
+  } catch (err) {
+    // Non-fatal — never block job creation over a credit grant
+    console.warn("[jobs/POST] First-job credit grant exception:", err);
+  }
+
+  const response = NextResponse.json({ ok: true, job: jd, free_credit_granted: freeCreditGranted }, { status: 201 });
   applyCookies(response);
   return response;
 }
