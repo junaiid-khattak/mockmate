@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           region: geo.region,
         }),
       },
-      { onConflict: "id", ignoreDuplicates: true },
+      { onConflict: "id" },
     );
   }
 
