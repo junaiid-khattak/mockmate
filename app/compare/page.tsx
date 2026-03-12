@@ -55,14 +55,14 @@ const comparisons = [
     competitor: "Interviewing.io",
     icon: Zap,
     description: "Live human practice interviews vs AI-powered mock interviews tailored to your resume",
-    available: false,
+    available: true,
   },
   {
     slug: "vs-chatgpt",
     competitor: "ChatGPT for Interview Prep",
     icon: MessageSquare,
     description: "Generic AI chat vs specialized interview prep with fit scoring and structured assessments",
-    available: false,
+    available: true,
   }
 ];
 
