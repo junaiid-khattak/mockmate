@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerSupabaseClient, createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import { resolveGeo } from "@/lib/geo";
+import { getUserAvatarUrl, getUserNameParts } from "@/lib/auth/user-name";
 
 function sanitizeNextPath(nextPath: string | null) {
   if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
@@ -39,16 +40,14 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (user && user.app_metadata?.provider !== "email") {
     const service = createServiceRoleSupabaseClient();
-    const meta = user.user_metadata ?? {};
-    const firstName = meta.given_name ?? meta.name?.split(" ")[0] ?? "";
-    const lastName = meta.family_name ?? meta.name?.split(" ").slice(1).join(" ") ?? "";
+    const { firstName, lastName } = getUserNameParts(user);
     const geo = await resolveGeo(request);
     await service.from("profiles").upsert(
       {
         id: user.id,
         first_name: firstName,
         last_name: lastName,
-        avatar_url: meta.avatar_url ?? null,
+        avatar_url: getUserAvatarUrl(user),
         target_roles: [],
         ...(geo && {
           country_code: geo.country_code,

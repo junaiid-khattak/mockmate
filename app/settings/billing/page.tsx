@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { CREDIT_PACKS } from "@/lib/billing";
+import { getUserDisplayFirstName } from "@/lib/auth/user-name";
 
 type BillingGrant = {
   id: string;
@@ -111,9 +112,7 @@ function BillingPage() {
         return;
       }
 
-      const fallback = data.user.email?.split("@")[0] ?? "";
-      const metaName = data.user.user_metadata?.first_name as string | undefined;
-      setFirstName(metaName ?? fallback);
+      setFirstName(getUserDisplayFirstName(data.user));
       setCheckingAuth(false);
 
       await loadSummary();

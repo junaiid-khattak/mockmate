@@ -20,6 +20,7 @@ import { CompareAttemptsTable } from "@/components/jobs/CompareAttemptsTable";
 import { CompareBanner } from "@/components/jobs/CompareBanner";
 import { ShareInterviewButton } from "@/components/jobs/ShareInterviewButton";
 import { PreviewResultsTeaser } from "@/components/jobs/PreviewResultsTeaser";
+import { getUserDisplayFirstName } from "@/lib/auth/user-name";
 
 type Job = {
   id: string;
@@ -165,9 +166,7 @@ export default function JobBriefPage() {
         return;
       }
 
-      const fallback = data.user.email?.split("@")[0] ?? "";
-      const metaName = data.user.user_metadata?.first_name as string | undefined;
-      setFirstName(metaName ?? fallback);
+      setFirstName(getUserDisplayFirstName(data.user));
       setCheckingAuth(false);
 
       // Fetch credit balance for header

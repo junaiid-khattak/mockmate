@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Header } from "@/components/jobs/Header";
 import { Sparkles, CheckCircle } from "lucide-react";
+import { getUserDisplayFirstName } from "@/lib/auth/user-name";
 
 type Resume = { id: string; original_filename: string | null; created_at: string };
 type ExtractionState = "idle" | "checking" | "processing" | "success" | "failed";
@@ -52,9 +53,7 @@ export default function NewJobPage() {
         router.replace("/login");
         return;
       }
-      const fallback = data.user.email?.split("@")[0] ?? "";
-      const metaName = data.user.user_metadata?.first_name as string | undefined;
-      setFirstName(metaName ?? fallback);
+      setFirstName(getUserDisplayFirstName(data.user));
       setCheckingAuth(false);
     };
     init();

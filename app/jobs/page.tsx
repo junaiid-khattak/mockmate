@@ -16,6 +16,7 @@ import {
   type DashboardJob,
 } from "@/lib/queries/dashboard";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { getUserDisplayFirstName } from "@/lib/auth/user-name";
 
 function SkeletonCards() {
   return (
@@ -53,9 +54,7 @@ export default function JobsLibraryPage() {
         return;
       }
 
-      const fallback = data.user.email?.split("@")[0] ?? "";
-      const metaName = data.user.user_metadata?.first_name as string | undefined;
-      setFirstName(metaName ?? fallback);
+      setFirstName(getUserDisplayFirstName(data.user));
       setCheckingAuth(false);
 
       // Fetch credit balance (non-blocking)
