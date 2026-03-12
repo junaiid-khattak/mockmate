@@ -44,6 +44,13 @@ const comparisons = [
     available: true,
   },
   {
+    slug: "vs-huru-ai",
+    competitor: "Huru AI",
+    icon: MessageSquare,
+    description: "Compare nayld.ai vs Huru AI for interview preparation. See differences in resume-job fit scoring, tailored mock interviews, pricing, feedback, and who each tool is best for.",
+    available: true,
+  },
+  {
     slug: "vs-interviewing-io",
     competitor: "Interviewing.io",
     icon: Zap,
@@ -56,7 +63,7 @@ const comparisons = [
     icon: MessageSquare,
     description: "Generic AI chat vs specialized interview prep with fit scoring and structured assessments",
     available: false,
-  },
+  }
 ];
 
 export default function ComparePage() {
@@ -89,9 +96,8 @@ export default function ComparePage() {
             return (
               <Card
                 key={comparison.slug}
-                className={`border-slate-200 ${
-                  comparison.available ? "hover:border-mm-violet/20 transition-colors" : "opacity-75"
-                }`}
+                className={`border-slate-200 ${comparison.available ? "hover:border-mm-violet/20 transition-colors" : "opacity-75"
+                  }`}
               >
                 <CardHeader>
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-mm-violet to-purple-600">
