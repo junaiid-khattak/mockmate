@@ -44,7 +44,6 @@ export default function NewJobPage() {
 
   // Step 3: Creating
   const [createError, setCreateError] = useState<string | null>(null);
-  const [freeCreditModal, setFreeCreditModal] = useState<{ jobId: string } | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -213,11 +212,7 @@ export default function NewJobPage() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.ok) throw new Error(body?.error ?? "Unable to create job.");
 
-      if (body.free_credit_granted) {
-        setFreeCreditModal({ jobId: body.job.id });
-      } else {
-        router.replace(`/jobs/${body.job.id}`);
-      }
+      router.replace(`/jobs/${body.job.id}`);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Something went wrong.");
       setStep(2);
@@ -523,7 +518,7 @@ export default function NewJobPage() {
         )}
 
         {/* ── Step 3: Generating brief ── */}
-        {step === 3 && !freeCreditModal && (
+        {step === 3 && (
           <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
             <div className="relative mb-6">
               <div className="h-16 w-16 animate-spin rounded-full border-2 border-slate-100 border-t-mm-violet" />
@@ -539,48 +534,6 @@ export default function NewJobPage() {
         )}
       </div>
 
-      {/* ── Free credit congratulatory modal ── */}
-      {freeCreditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
-            {/* Purple top bar */}
-            <div className="h-1.5 w-full bg-gradient-to-r from-mm-violet to-purple-400" />
-
-            <div className="px-8 pb-8 pt-7 text-center">
-              {/* Icon */}
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-mm-violet to-purple-500 shadow-[0_8px_24px_rgba(124,92,252,0.35)]">
-                <span className="text-3xl">🎉</span>
-              </div>
-
-              {/* Headline */}
-              <h2 className="text-[22px] font-extrabold tracking-tight text-slate-900">
-                You just earned a free interview!
-              </h2>
-
-              {/* Body */}
-              <p className="mt-3 text-sm leading-relaxed text-slate-500">
-                We&apos;re giving you <span className="font-semibold text-slate-700">1 free mock interview credit</span> for adding your first job. Use it to practice before the real thing — it&apos;s on us.
-              </p>
-
-              {/* Credit pill */}
-              <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-[rgba(124,92,252,0.2)] bg-[rgba(124,92,252,0.06)] px-4 py-2">
-                <span className="text-base">⚡</span>
-                <span className="text-sm font-bold text-[#7c5cfc]">1 interview credit added</span>
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={() => router.replace(`/jobs/${freeCreditModal.jobId}`)}
-                className="mt-7 w-full rounded-xl bg-gradient-to-br from-mm-violet to-purple-600 px-6 py-3.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(124,92,252,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(124,92,252,0.4)]"
-              >
-                View My Interview Brief →
-              </button>
-
-              <p className="mt-3 text-xs text-slate-400">Credit is already in your account. No strings attached.</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

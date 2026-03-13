@@ -1,3 +1,10 @@
+import {
+  getActiveSubscription,
+  hasSessionsRemaining,
+  type CreditSource,
+  type SubscriptionRow,
+} from "@/lib/subscription";
+
 type RpcResult = {
   data: unknown;
   error: { message?: string } | null;
@@ -5,7 +12,11 @@ type RpcResult = {
 
 type PaywallSupabaseClient = {
   rpc: (
-    fn: "get_interview_credit_balance" | "consume_interview_credit",
+    fn:
+      | "get_interview_credit_balance"
+      | "consume_interview_credit"
+      | "get_active_subscription"
+      | "increment_subscription_sessions_used",
     args: Record<string, unknown>,
   ) => PromiseLike<RpcResult>;
 };
@@ -191,5 +202,81 @@ export async function consumeInterviewCredit(
     code: "invalid_request",
     message: "Unable to consume interview credit.",
     balanceAfter: row.balanceAfter,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// V2 Paywall — Subscription Waterfall
+// ---------------------------------------------------------------------------
+
+export type EnhancedPaywallDecision =
+  | {
+      ok: true;
+      creditSource: CreditSource;
+      subscriptionId?: string;
+      availableCredits: number;
+    }
+  | {
+      ok: false;
+      code: "payment_required" | "verification_failed";
+      message: string;
+      has_subscription: boolean;
+      subscription_expired: boolean;
+      sessions_exhausted: boolean;
+      renewal_date: string | null;
+      legacy_credits: number;
+    };
+
+export async function verifyInterviewPaywallV2(
+  supabase: PaywallSupabaseClient,
+  userId: string,
+): Promise<EnhancedPaywallDecision> {
+  // Step 1: Check subscription
+  const sub = await getActiveSubscription(supabase, userId);
+
+  if (sub && hasSessionsRemaining(sub)) {
+    return {
+      ok: true,
+      creditSource: "subscription",
+      subscriptionId: sub.id,
+      availableCredits: sub.sessions_limit - sub.sessions_used,
+    };
+  }
+
+  // Step 2: Check legacy credit balance
+  const balanceResult = await getInterviewCreditBalance(supabase, userId);
+  if (!balanceResult.ok) {
+    return {
+      ok: false,
+      code: "verification_failed",
+      message: balanceResult.message,
+      has_subscription: !!sub,
+      subscription_expired: false,
+      sessions_exhausted: !!sub,
+      renewal_date: sub?.current_period_end ?? null,
+      legacy_credits: 0,
+    };
+  }
+
+  if (balanceResult.balance >= 1) {
+    return {
+      ok: true,
+      creditSource: "legacy_credit",
+      availableCredits: balanceResult.balance,
+    };
+  }
+
+  // Step 3: Neither available — return 402 with context
+  return {
+    ok: false,
+    code: "payment_required",
+    message: sub
+      ? "You've used all your interviews this billing period."
+      : PAYMENT_REQUIRED_MESSAGE,
+    has_subscription: !!sub,
+    subscription_expired: false,
+    sessions_exhausted: !!sub && sub.sessions_used >= sub.sessions_limit,
+    renewal_date: sub?.current_period_end ?? null,
+    legacy_credits: balanceResult.balance,
   };
 }

@@ -6,6 +6,12 @@ import {
   consumeInterviewCredit,
   verifyInterviewPaywall,
 } from "@/lib/interview-paywall";
+import {
+  getActiveSubscription,
+  incrementSubscriptionSession,
+  hasSessionsRemaining,
+  type CreditSource,
+} from "@/lib/subscription";
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
@@ -21,10 +27,11 @@ type LaunchCodeRow = {
   voice: string | null;
   model: string | null;
   dashboard_return_url: string | null;
+  credit_source: CreditSource;
 };
 
 const LAUNCH_SELECT_COLUMNS =
-  "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url";
+  "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url, credit_source";
 
 function isNoRowsError(error: {
   code?: string;
@@ -113,52 +120,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const paywallDecision = await verifyInterviewPaywall(
-      supabase,
-      data.user_id,
-    );
-    if (!paywallDecision.ok) {
-      if (paywallDecision.code === "verification_failed") {
-        return NextResponse.json(
-          { ok: false, error: "Unable to verify interview credit balance." },
-          { status: 500 },
-        );
-      }
+    // Branch consumption based on credit_source set at interview start
+    const creditSource = (data as LaunchCodeRow).credit_source ?? "legacy_credit";
 
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "payment_required",
-          message: paywallDecision.message,
-        },
-        { status: 402 },
-      );
-    }
-
-    const consumeDecision = await consumeInterviewCredit(
-      supabase,
-      data.user_id,
-      data.interview_id,
-      "interview_start",
-    );
-
-    if (!consumeDecision.ok) {
-      if (consumeDecision.code === "payment_required") {
+    if (creditSource === "subscription") {
+      // Subscription path: re-verify subscription and increment session count
+      const sub = await getActiveSubscription(supabase, data.user_id);
+      if (!sub || !hasSessionsRemaining(sub)) {
         return NextResponse.json(
           {
             ok: false,
             error: "payment_required",
-            message: consumeDecision.message,
+            message: "Subscription session no longer available.",
           },
           { status: 402 },
         );
       }
 
-      if (consumeDecision.code !== "interview_already_consumed") {
+      const incrementResult = await incrementSubscriptionSession(
+        supabase,
+        sub.id,
+        data.interview_id,
+      );
+
+      if (!incrementResult.ok) {
         return NextResponse.json(
-          { ok: false, error: "Unable to consume interview credit." },
-          { status: 500 },
+          {
+            ok: false,
+            error: "payment_required",
+            message: "Unable to consume subscription session.",
+          },
+          { status: 402 },
         );
+      }
+    } else {
+      // Legacy credit / free signup path: use existing credit consumption
+      const paywallDecision = await verifyInterviewPaywall(
+        supabase,
+        data.user_id,
+      );
+      if (!paywallDecision.ok) {
+        if (paywallDecision.code === "verification_failed") {
+          return NextResponse.json(
+            { ok: false, error: "Unable to verify interview credit balance." },
+            { status: 500 },
+          );
+        }
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "payment_required",
+            message: paywallDecision.message,
+          },
+          { status: 402 },
+        );
+      }
+
+      const consumeDecision = await consumeInterviewCredit(
+        supabase,
+        data.user_id,
+        data.interview_id,
+        "interview_start",
+      );
+
+      if (!consumeDecision.ok) {
+        if (consumeDecision.code === "payment_required") {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "payment_required",
+              message: consumeDecision.message,
+            },
+            { status: 402 },
+          );
+        }
+
+        if (consumeDecision.code !== "interview_already_consumed") {
+          return NextResponse.json(
+            { ok: false, error: "Unable to consume interview credit." },
+            { status: 500 },
+          );
+        }
       }
     }
 

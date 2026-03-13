@@ -4,8 +4,13 @@ import {
   createServiceRoleSupabaseClient,
 } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
-import { isCreditPackId, getStripePriceId } from "@/lib/billing";
 import { getAppUrl } from "@/lib/supabase/app-url";
+import {
+  getActiveSubscription,
+  getSubscriptionPriceId,
+  isSubscriptionPlanId,
+  getSubscriptionPlan,
+} from "@/lib/subscription";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -20,20 +25,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Parse plan_id from request body
   const body = await request.json().catch(() => ({}));
-  const packId = body?.pack_id;
+  const planId = body?.plan_id;
 
-  if (!isCreditPackId(packId)) {
+  if (!isSubscriptionPlanId(planId)) {
     return NextResponse.json(
-      { ok: false, error: "Invalid credit pack." },
+      { ok: false, error: "Invalid subscription plan." },
       { status: 400 },
+    );
+  }
+
+  const plan = getSubscriptionPlan(planId)!;
+
+  // Check for existing active subscription (free plan is allowed to upgrade)
+  const existingSub = await getActiveSubscription(supabase, user.id);
+  if (existingSub && existingSub.plan !== "free") {
+    return NextResponse.json(
+      { ok: false, error: "You already have an active subscription." },
+      { status: 409 },
     );
   }
 
   const stripe = getStripe();
   const serviceSupabase = createServiceRoleSupabaseClient();
 
-  // Get or create Stripe customer
+  // Get or create Stripe customer (same pattern as checkout/route.ts)
   let stripeCustomerId: string;
 
   const { data: existing } = await serviceSupabase
@@ -57,28 +74,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Create Checkout Session
+  // Create Checkout Session in subscription mode
   const appUrl = getAppUrl(request);
-  const priceId = getStripePriceId(packId);
+  const priceId = getSubscriptionPriceId(planId);
 
   const session = await stripe.checkout.sessions.create({
-    mode: "payment",
     customer: stripeCustomerId,
+    mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
-    metadata: {
-      supabase_user_id: user.id,
-      pack_id: packId,
+    subscription_data: {
+      metadata: {
+        supabase_user_id: user.id,
+        plan: planId,
+        sessions_limit: String(plan.sessions),
+      },
     },
-    success_url: `${appUrl}/settings/billing?checkout=success`,
-    cancel_url: `${appUrl}/settings/billing?checkout=cancelled`,
+    success_url: `${appUrl}/settings/billing?subscription=success`,
+    cancel_url: `${appUrl}/settings/billing?subscription=cancelled`,
+    allow_promotion_codes: true,
+    payment_method_types: ["card"],
   });
 
   const response = NextResponse.json({
     ok: true,
     checkout_url: session.url,
   });
-  response.headers.set("Deprecation", "true");
-  response.headers.set("Sunset", "Fri, 13 Jun 2026 00:00:00 GMT");
   applyCookies(response);
   return response;
 }

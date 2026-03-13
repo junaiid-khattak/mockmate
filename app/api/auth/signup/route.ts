@@ -98,6 +98,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Failed to initialize profile" }, { status: 500 });
   }
 
+  // Create free subscription for new users (idempotent — RPC checks for existing sub)
+  try {
+    await service.rpc("create_free_subscription", {
+      p_user_id: data.user.id,
+    });
+  } catch {
+    console.warn("Free subscription creation failed for user:", data.user.id);
+  }
+
   // Referral attribution: record which affiliate referred this signup
   const refCode = String(payload.referralCode ?? "").toUpperCase().trim();
   if (refCode) {

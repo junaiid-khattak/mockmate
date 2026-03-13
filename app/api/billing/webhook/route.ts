@@ -8,6 +8,62 @@ export const dynamic = "force-dynamic";
 
 type SupabaseServiceClient = ReturnType<typeof createServiceRoleSupabaseClient>;
 
+async function handleSubscriptionCheckout(
+  supabase: SupabaseServiceClient,
+  stripe: ReturnType<typeof getStripe>,
+  session: Stripe.Checkout.Session,
+): Promise<NextResponse> {
+  const subscriptionId =
+    typeof session.subscription === "string"
+      ? session.subscription
+      : session.subscription?.id;
+
+  if (!subscriptionId) {
+    console.error("Subscription checkout missing subscription ID", session.id);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  // Get user_id from session metadata or subscription metadata
+  const userId = session.metadata?.supabase_user_id;
+  if (!userId) {
+    console.error("Subscription checkout missing supabase_user_id", session.id);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+  const customerId =
+    typeof session.customer === "string"
+      ? session.customer
+      : session.customer?.id ?? "";
+
+  // Cancel any existing free subscription before creating paid one
+  await supabase.rpc("cancel_free_subscription", { p_user_id: userId });
+
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      stripe_subscription_id: subscriptionId,
+      stripe_customer_id: customerId,
+      plan: stripeSub.metadata?.plan ?? "pro_monthly",
+      status: "active",
+      current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+      sessions_limit: Number(stripeSub.metadata?.sessions_limit) || 4,
+      sessions_used: 0,
+      cancel_at_period_end: stripeSub.cancel_at_period_end,
+    },
+    { onConflict: "stripe_subscription_id" },
+  );
+
+  if (error) {
+    console.error("Failed to create subscription row", subscriptionId, error);
+    return NextResponse.json({ error: "Subscription creation failed" }, { status: 500 });
+  }
+
+  console.log("Subscription created", { subscriptionId, userId });
+  return NextResponse.json({ ok: true });
+}
+
 async function grantCreditsForCheckoutSession(
   supabase: SupabaseServiceClient,
   session: Stripe.Checkout.Session,
@@ -151,10 +207,16 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceRoleSupabaseClient();
 
-  // Handle synchronous payments (card, link)
+  // Handle synchronous payments (card, link) and subscription checkouts
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
+    // Subscription checkout — create subscription row
+    if (session.mode === "subscription") {
+      return handleSubscriptionCheckout(supabase, stripe, session);
+    }
+
+    // Credit pack payment checkout
     if (session.payment_status === "paid") {
       return grantCreditsForCheckoutSession(supabase, session);
     }
@@ -177,6 +239,103 @@ export async function POST(request: NextRequest) {
       userId: session.metadata?.supabase_user_id,
       packId: session.metadata?.pack_id,
     });
+    return NextResponse.json({ ok: true });
+  }
+
+  // ---------------------------------------------------------------
+  // Subscription lifecycle events
+  // ---------------------------------------------------------------
+
+  if (event.type === "invoice.paid") {
+    const invoice = event.data.object as Stripe.Invoice;
+    // Skip initial creation — already handled by checkout.session.completed
+    if (invoice.billing_reason === "subscription_create") {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+
+    const stripeSubId =
+      typeof invoice.subscription === "string"
+        ? invoice.subscription
+        : invoice.subscription?.id;
+
+    if (!stripeSubId) {
+      return NextResponse.json({ ok: true, skipped: true });
+    }
+
+    const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({
+        status: "active",
+        sessions_used: 0,
+        current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", stripeSubId);
+
+    if (error) {
+      console.error("invoice.paid: failed to reset subscription", stripeSubId, error);
+      return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    }
+
+    console.log("Subscription renewed, sessions reset", { stripeSubId });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice;
+    const stripeSubId =
+      typeof invoice.subscription === "string"
+        ? invoice.subscription
+        : invoice.subscription?.id;
+
+    if (stripeSubId) {
+      await supabase
+        .from("subscriptions")
+        .update({ status: "past_due", updated_at: new Date().toISOString() })
+        .eq("stripe_subscription_id", stripeSubId);
+
+      console.log("Subscription marked past_due", { stripeSubId });
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (event.type === "customer.subscription.updated") {
+    const subscription = event.data.object as Stripe.Subscription;
+
+    await supabase
+      .from("subscriptions")
+      .update({
+        status: subscription.status,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", subscription.id);
+
+    console.log("Subscription updated", {
+      stripeSubId: subscription.id,
+      status: subscription.status,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+
+    await supabase
+      .from("subscriptions")
+      .update({
+        status: "canceled",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", subscription.id);
+
+    console.log("Subscription canceled", { stripeSubId: subscription.id });
     return NextResponse.json({ ok: true });
   }
 

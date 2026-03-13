@@ -58,6 +58,15 @@ export async function GET(request: NextRequest) {
       },
       { onConflict: "id" },
     );
+
+    // Create free subscription for new users (idempotent — RPC checks for existing sub)
+    try {
+      await service.rpc("create_free_subscription", {
+        p_user_id: user.id,
+      });
+    } catch {
+      console.warn("Free subscription creation failed for user:", user.id);
+    }
   }
 
   const response = NextResponse.redirect(new URL(nextPath, baseUrl));

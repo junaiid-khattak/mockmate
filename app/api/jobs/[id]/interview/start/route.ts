@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
-import { verifyInterviewPaywall } from "@/lib/interview-paywall";
+import { verifyInterviewPaywallV2 } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
 
 const MIN_DURATION_SECONDS = 1800;
@@ -140,7 +140,7 @@ export async function POST(
     );
   }
 
-  const paywallDecision = await verifyInterviewPaywall(supabase, user.id);
+  const paywallDecision = await verifyInterviewPaywallV2(supabase, user.id);
   if (!paywallDecision.ok) {
     if (paywallDecision.code === "verification_failed") {
       return NextResponse.json(
@@ -154,6 +154,11 @@ export async function POST(
         ok: false,
         error: "payment_required",
         message: paywallDecision.message,
+        has_subscription: paywallDecision.has_subscription,
+        subscription_expired: paywallDecision.subscription_expired,
+        sessions_exhausted: paywallDecision.sessions_exhausted,
+        renewal_date: paywallDecision.renewal_date,
+        legacy_credits: paywallDecision.legacy_credits,
       },
       { status: 402 },
     );
@@ -182,6 +187,7 @@ export async function POST(
       dashboard_return_url: dashboardReturnUrl.toString(),
       expires_at: expiresAtIso,
       used_at: null,
+      credit_source: paywallDecision.creditSource,
     });
 
   if (launchCodeErr) {
