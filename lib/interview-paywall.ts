@@ -16,7 +16,9 @@ type PaywallSupabaseClient = {
       | "get_interview_credit_balance"
       | "consume_interview_credit"
       | "get_active_subscription"
-      | "increment_subscription_sessions_used",
+      | "increment_subscription_sessions_used"
+      | "create_free_subscription"
+      | "cancel_free_subscription",
     args: Record<string, unknown>,
   ) => PromiseLike<RpcResult>;
 };
