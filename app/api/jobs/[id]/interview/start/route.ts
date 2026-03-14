@@ -1,6 +1,9 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import {
+  createRouteHandlerSupabaseClient,
+  createServiceRoleSupabaseClient,
+} from "@/lib/supabase/server";
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywallV2 } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
@@ -164,6 +167,31 @@ export async function POST(
     );
   }
 
+  // Resolve interview agent based on user's subscription plan
+  const serviceSupabase = createServiceRoleSupabaseClient();
+  const { data: agentRows, error: agentErr } = await serviceSupabase.rpc(
+    "get_interview_agent_for_user",
+    { p_user_id: user.id },
+  );
+
+  if (agentErr) {
+    console.error("Failed to resolve interview agent", agentErr);
+    return NextResponse.json(
+      { ok: false, error: "Unable to resolve interview agent." },
+      { status: 500 },
+    );
+  }
+
+  const agentRow = Array.isArray(agentRows) ? agentRows[0] : agentRows;
+  if (!agentRow || typeof agentRow !== "object" || !(agentRow as Record<string, unknown>).agent_id) {
+    return NextResponse.json(
+      { ok: false, error: "No interview agent configured for your plan." },
+      { status: 500 },
+    );
+  }
+
+  const agentConfig = agentRow as Record<string, unknown>;
+
   const interviewId = randomUUID();
   const now = Math.floor(Date.now() / 1000);
   const ttlSeconds = parseLaunchCodeTtlSeconds();
@@ -182,12 +210,13 @@ export async function POST(
       duration_seconds: durationSeconds,
       interview_types: interviewTypes ?? null,
       language: language ?? null,
-      voice: voice ?? null,
-      model: model ?? null,
+      voice: voice ?? (typeof agentConfig.voice === "string" ? agentConfig.voice : null),
+      model: model ?? (typeof agentConfig.realtime_model === "string" ? agentConfig.realtime_model : null),
       dashboard_return_url: dashboardReturnUrl.toString(),
       expires_at: expiresAtIso,
       used_at: null,
       credit_source: paywallDecision.creditSource,
+      agent_config: agentConfig,
     });
 
   if (launchCodeErr) {

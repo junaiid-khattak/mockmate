@@ -28,10 +28,11 @@ type LaunchCodeRow = {
   model: string | null;
   dashboard_return_url: string | null;
   credit_source: CreditSource;
+  agent_config: Record<string, unknown> | null;
 };
 
 const LAUNCH_SELECT_COLUMNS =
-  "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url, credit_source";
+  "user_id, job_id, interview_id, duration_seconds, interview_types, language, voice, model, dashboard_return_url, credit_source, agent_config";
 
 function isNoRowsError(error: {
   code?: string;
@@ -261,6 +262,7 @@ export async function POST(request: NextRequest) {
     voice: launchRecord.voice ?? undefined,
     model: launchRecord.model ?? undefined,
     dashboard_return_url: launchRecord.dashboard_return_url ?? undefined,
+    agent_config: launchRecord.agent_config ?? undefined,
   };
 
   return NextResponse.json({
