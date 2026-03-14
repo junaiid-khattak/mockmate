@@ -30,7 +30,7 @@ async function handleSubscriptionCheckout(
     return NextResponse.json({ ok: true, skipped: true });
   }
 
-  const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
+  const stripeSub: Stripe.Subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const customerId =
     typeof session.customer === "string"
       ? session.customer
@@ -39,6 +39,11 @@ async function handleSubscriptionCheckout(
   // Cancel any existing free subscription before creating paid one
   await supabase.rpc("cancel_free_subscription", { p_user_id: userId });
 
+  // In Stripe v20, period dates are on subscription items, not the subscription itself
+  const firstItem = stripeSub.items.data[0];
+  const periodStart = firstItem?.current_period_start ?? Math.floor(Date.now() / 1000);
+  const periodEnd = firstItem?.current_period_end ?? Math.floor(Date.now() / 1000 + 30 * 86400);
+
   const { error } = await supabase.from("subscriptions").upsert(
     {
       user_id: userId,
@@ -46,8 +51,8 @@ async function handleSubscriptionCheckout(
       stripe_customer_id: customerId,
       plan: stripeSub.metadata?.plan ?? "pro_monthly",
       status: "active",
-      current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+      current_period_start: new Date(periodStart * 1000).toISOString(),
+      current_period_end: new Date(periodEnd * 1000).toISOString(),
       sessions_limit: Number(stripeSub.metadata?.sessions_limit) || 4,
       sessions_used: 0,
       cancel_at_period_end: stripeSub.cancel_at_period_end,
@@ -253,24 +258,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, skipped: true });
     }
 
+    const invoiceSub = invoice.parent?.subscription_details?.subscription;
     const stripeSubId =
-      typeof invoice.subscription === "string"
-        ? invoice.subscription
-        : invoice.subscription?.id;
+      typeof invoiceSub === "string"
+        ? invoiceSub
+        : invoiceSub?.id;
 
     if (!stripeSubId) {
       return NextResponse.json({ ok: true, skipped: true });
     }
 
-    const stripeSub = await stripe.subscriptions.retrieve(stripeSubId);
+    const stripeSub: Stripe.Subscription = await stripe.subscriptions.retrieve(stripeSubId);
+    const renewedItem = stripeSub.items.data[0];
+    const renewStart = renewedItem?.current_period_start ?? Math.floor(Date.now() / 1000);
+    const renewEnd = renewedItem?.current_period_end ?? Math.floor(Date.now() / 1000 + 30 * 86400);
 
     const { error } = await supabase
       .from("subscriptions")
       .update({
         status: "active",
         sessions_used: 0,
-        current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+        current_period_start: new Date(renewStart * 1000).toISOString(),
+        current_period_end: new Date(renewEnd * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("stripe_subscription_id", stripeSubId);
@@ -286,10 +295,11 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "invoice.payment_failed") {
     const invoice = event.data.object as Stripe.Invoice;
+    const failedSub = invoice.parent?.subscription_details?.subscription;
     const stripeSubId =
-      typeof invoice.subscription === "string"
-        ? invoice.subscription
-        : invoice.subscription?.id;
+      typeof failedSub === "string"
+        ? failedSub
+        : failedSub?.id;
 
     if (stripeSubId) {
       await supabase
@@ -304,14 +314,17 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "customer.subscription.updated") {
     const subscription = event.data.object as Stripe.Subscription;
+    const updatedItem = subscription.items.data[0];
+    const updatedStart = updatedItem?.current_period_start ?? Math.floor(Date.now() / 1000);
+    const updatedEnd = updatedItem?.current_period_end ?? Math.floor(Date.now() / 1000 + 30 * 86400);
 
     await supabase
       .from("subscriptions")
       .update({
         status: subscription.status,
         cancel_at_period_end: subscription.cancel_at_period_end,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_start: new Date(updatedStart * 1000).toISOString(),
+        current_period_end: new Date(updatedEnd * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("stripe_subscription_id", subscription.id);
