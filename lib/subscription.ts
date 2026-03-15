@@ -1,4 +1,4 @@
-export type CreditSource = "subscription" | "legacy_credit" | "free_signup";
+export type CreditSource = "subscription" | "addon_credit" | "legacy_credit" | "free_signup";
 
 export type SubscriptionRow = {
   id: string;
@@ -13,12 +13,6 @@ export type SubscriptionRow = {
   cancel_at_period_end: boolean;
 };
 
-export const PRO_MONTHLY_PLAN = {
-  plan: "pro_monthly",
-  sessionsPerPeriod: 4,
-  priceCents: 2900,
-} as const;
-
 /* ------------------------------------------------------------------ */
 /*  Free plan (assigned on signup)                                    */
 /* ------------------------------------------------------------------ */
@@ -27,10 +21,12 @@ export const FREE_PLAN = {
   plan: "free",
   sessions: 1,
   priceCents: 0,
+  description: "Try nayld.ai with a full mock interview",
   features: [
-    "1 interview session",
-    "Full AI feedback & scoring",
-    "Performance tracking",
+    "1 AI mock interview",
+    "Standard AI Interviewer",
+    "Full 10-metric performance scoring",
+    "Personalized feedback report",
   ],
 } as const;
 
@@ -39,10 +35,10 @@ export function isFreePlan(plan: string | null | undefined): boolean {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Subscription plans shown on the billing page                      */
+/*  Subscription plans shown on the billing/pricing pages             */
 /* ------------------------------------------------------------------ */
 
-export type SubscriptionPlanId = "starter_monthly" | "pro_monthly" | "power_monthly";
+export type SubscriptionPlanId = "essentials_monthly" | "elite_monthly";
 
 export type SubscriptionPlan = {
   id: SubscriptionPlanId;
@@ -50,54 +46,71 @@ export type SubscriptionPlan = {
   sessions: number;
   priceCents: number;
   perSessionCents: number;
+  agentId: string;
+  creditPriceCents: number | null;
+  creditStripePriceEnvKey: string | null;
+  isSubscriberPlan: boolean;
+  description: string;
   features: string[];
+  premiumCallout?: string;
   recommended?: boolean;
 };
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
-    id: "starter_monthly",
-    name: "Starter",
-    sessions: 2,
-    priceCents: 1500,
-    perSessionCents: 750,
+    id: "essentials_monthly",
+    name: "Essentials",
+    sessions: 10,
+    priceCents: 2000,
+    perSessionCents: 200,
+    agentId: "standard",
+    creditPriceCents: 300,
+    creditStripePriceEnvKey: "STRIPE_ESSENTIALS_CREDIT_PRICE_ID",
+    isSubscriberPlan: true,
+    description: "Everything you need for consistent interview practice",
     features: [
-      "2 interview sessions / month",
-      "Full AI feedback & scoring",
-      "Performance tracking",
+      "10 AI mock interviews per month",
+      "Standard AI Interviewer",
+      "Full 10-metric performance scoring",
+      "Personalized feedback report",
+      "Buy extra interviews at $3 each",
+      "Cancel anytime",
     ],
   },
   {
-    id: "pro_monthly",
-    name: "Pro",
-    sessions: 4,
-    priceCents: 2500,
-    perSessionCents: 625,
+    id: "elite_monthly",
+    name: "Elite",
+    sessions: 10,
+    priceCents: 6900,
+    perSessionCents: 690,
+    agentId: "premium",
+    creditPriceCents: 1000,
+    creditStripePriceEnvKey: "STRIPE_ELITE_CREDIT_PRICE_ID",
+    isSubscriberPlan: true,
+    description: "The most realistic AI interview experience available",
     features: [
-      "4 interview sessions / month",
-      "Full AI feedback & scoring",
-      "Performance tracking",
-      "Priority support",
+      "10 AI mock interviews per month",
+      "Premium AI Interviewer",
+      "Faster, more natural responses",
+      "Human-like conversation flow",
+      "Deepest contextual follow-ups",
+      "Full 10-metric performance scoring",
+      "Personalized feedback report",
+      "Buy extra interviews at $10 each",
+      "Cancel anytime",
     ],
+    premiumCallout:
+      "The closest thing to a real interviewer — faster responses, more natural conversation, and deeper contextual follow-ups.",
     recommended: true,
-  },
-  {
-    id: "power_monthly",
-    name: "Power",
-    sessions: 8,
-    priceCents: 4000,
-    perSessionCents: 500,
-    features: [
-      "8 interview sessions / month",
-      "Full AI feedback & scoring",
-      "Performance tracking",
-      "Priority support",
-    ],
   },
 ];
 
 export function getSubscriptionPlan(id: SubscriptionPlanId): SubscriptionPlan | undefined {
   return SUBSCRIPTION_PLANS.find((p) => p.id === id);
+}
+
+export function getSubscriptionPlanByPlanId(planId: string): SubscriptionPlan | undefined {
+  return SUBSCRIPTION_PLANS.find((p) => p.id === planId);
 }
 
 export function isSubscriptionPlanId(value: unknown): value is SubscriptionPlanId {
@@ -114,6 +127,11 @@ export function getSubscriptionPriceId(planId: SubscriptionPlanId): string {
     throw new Error(`Missing environment variable: ${envKey}`);
   }
   return value;
+}
+
+export function getCreditStripePriceId(plan: SubscriptionPlan): string | null {
+  if (!plan.creditStripePriceEnvKey) return null;
+  return process.env[plan.creditStripePriceEnvKey] ?? null;
 }
 
 type SubscriptionSupabaseClient = {
@@ -214,12 +232,4 @@ export async function cancelFreeSubscription(
   }
 
   return { ok: typeof data === "boolean" ? data : false };
-}
-
-export function getProMonthlyPriceId(): string {
-  const value = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
-  if (!value) {
-    throw new Error("Missing environment variable: STRIPE_PRO_MONTHLY_PRICE_ID");
-  }
-  return value;
 }

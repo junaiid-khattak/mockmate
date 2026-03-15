@@ -8,7 +8,7 @@ export function PricingGrid() {
   const router = useRouter();
 
   return (
-    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {pricingPlans.map((plan, idx) => (
         <PricingCard
           key={idx}

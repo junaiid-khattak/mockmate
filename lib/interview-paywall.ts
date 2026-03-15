@@ -1,5 +1,6 @@
 import {
   getActiveSubscription,
+  getSubscriptionPlanByPlanId,
   hasSessionsRemaining,
   type CreditSource,
   type SubscriptionRow,
@@ -18,7 +19,9 @@ type PaywallSupabaseClient = {
       | "get_active_subscription"
       | "increment_subscription_sessions_used"
       | "create_free_subscription"
-      | "cancel_free_subscription",
+      | "cancel_free_subscription"
+      | "get_addon_credit_balance"
+      | "consume_addon_credit",
     args: Record<string, unknown>,
   ) => PromiseLike<RpcResult>;
 };
@@ -123,6 +126,24 @@ export async function getInterviewCreditBalance(
   return { ok: true, balance: Math.max(0, balance) };
 }
 
+export async function getAddonCreditBalance(
+  supabase: PaywallSupabaseClient,
+  userId: string,
+  agentId: string,
+): Promise<number> {
+  const { data, error } = await supabase.rpc("get_addon_credit_balance", {
+    p_user_id: userId,
+    p_agent_id: agentId,
+  });
+
+  if (error) {
+    console.error("Failed to fetch addon credit balance", error);
+    return 0;
+  }
+
+  return parseInteger(data) ?? 0;
+}
+
 export async function verifyInterviewPaywall(
   supabase: PaywallSupabaseClient,
   userId: string,
@@ -216,6 +237,7 @@ export type EnhancedPaywallDecision =
       ok: true;
       creditSource: CreditSource;
       subscriptionId?: string;
+      agentId?: string;
       availableCredits: number;
     }
   | {
@@ -227,6 +249,9 @@ export type EnhancedPaywallDecision =
       sessions_exhausted: boolean;
       renewal_date: string | null;
       legacy_credits: number;
+      addon_credits: number;
+      credit_price_cents: number | null;
+      can_buy_credits: boolean;
     };
 
 export async function verifyInterviewPaywallV2(
@@ -237,17 +262,38 @@ export async function verifyInterviewPaywallV2(
   const sub = await getActiveSubscription(supabase, userId);
 
   if (sub && hasSessionsRemaining(sub)) {
+    const plan = getSubscriptionPlanByPlanId(sub.plan);
     return {
       ok: true,
       creditSource: "subscription",
       subscriptionId: sub.id,
+      agentId: plan?.agentId,
       availableCredits: sub.sessions_limit - sub.sessions_used,
     };
   }
 
-  // Step 2: Check legacy credit balance
+  // Step 2: Check addon credits (scoped to subscriber's agent tier)
+  if (sub) {
+    const plan = getSubscriptionPlanByPlanId(sub.plan);
+    const agentId = plan?.agentId;
+    if (agentId) {
+      const addonBalance = await getAddonCreditBalance(supabase, userId, agentId);
+      if (addonBalance > 0) {
+        return {
+          ok: true,
+          creditSource: "addon_credit",
+          subscriptionId: sub.id,
+          agentId,
+          availableCredits: addonBalance,
+        };
+      }
+    }
+  }
+
+  // Step 3: Check legacy credit balance
   const balanceResult = await getInterviewCreditBalance(supabase, userId);
   if (!balanceResult.ok) {
+    const plan = sub ? getSubscriptionPlanByPlanId(sub.plan) : null;
     return {
       ok: false,
       code: "verification_failed",
@@ -257,6 +303,9 @@ export async function verifyInterviewPaywallV2(
       sessions_exhausted: !!sub,
       renewal_date: sub?.current_period_end ?? null,
       legacy_credits: 0,
+      addon_credits: 0,
+      credit_price_cents: plan?.creditPriceCents ?? null,
+      can_buy_credits: !!sub && sub.plan !== "free",
     };
   }
 
@@ -268,7 +317,13 @@ export async function verifyInterviewPaywallV2(
     };
   }
 
-  // Step 3: Neither available — return 402 with context
+  // Step 4: Neither available — return 402 with context
+  const plan = sub ? getSubscriptionPlanByPlanId(sub.plan) : null;
+  let addonCredits = 0;
+  if (sub && plan?.agentId) {
+    addonCredits = await getAddonCreditBalance(supabase, userId, plan.agentId);
+  }
+
   return {
     ok: false,
     code: "payment_required",
@@ -280,5 +335,8 @@ export async function verifyInterviewPaywallV2(
     sessions_exhausted: !!sub && sub.sessions_used >= sub.sessions_limit,
     renewal_date: sub?.current_period_end ?? null,
     legacy_credits: balanceResult.balance,
+    addon_credits: addonCredits,
+    credit_price_cents: plan?.creditPriceCents ?? null,
+    can_buy_credits: !!sub && sub.plan !== "free",
   };
 }

@@ -1,13 +1,18 @@
 export const faqs = [
   {
-    question: "Do credits expire?",
+    question: "What's included in the free plan?",
     answer:
-      "No! Your interview credits never expire. Buy them once and use them whenever you need to prepare for an interview — whether that's next week or next year. Credits also stack, so you can purchase multiple packs and use them at your own pace.",
+      "You get one full AI mock interview with the Standard AI Interviewer, including 10-metric performance scoring and a personalized feedback report. No credit card required. Plus, resume analysis, fit scoring, gap analysis, and tailored question generation are always free and unlimited.",
   },
   {
-    question: "Can I try a mock interview for free?",
+    question: "What's the difference between Essentials and Elite?",
     answer:
-      "The resume analysis, fit score, gap analysis, and tailored question generation are completely free — no credit card required. This lets you see the quality of our AI and the specific questions you'd be asked before deciding to run a full mock interview. The actual AI mock interview session (where you practice answering questions and receive detailed performance feedback) requires one credit.",
+      "Both plans include 10 AI mock interviews per month with full scoring and feedback. Essentials uses our Standard AI Interviewer, while Elite upgrades you to our Premium AI Interviewer — which delivers faster responses, more natural conversation flow, and deeper contextual follow-ups. It's the closest thing to practicing with a real interviewer.",
+  },
+  {
+    question: "Can I buy extra interviews if I use all 10?",
+    answer:
+      "Yes! Essentials subscribers can purchase additional interviews at $3 each, and Elite subscribers at $10 each. Extra credits never expire and carry over across billing periods — even if you cancel and resubscribe later.",
   },
   {
     question: "What payment methods do you accept?",
@@ -15,8 +20,8 @@ export const faqs = [
       "We accept all major credit cards (Visa, Mastercard, American Express, Discover) and debit cards. Payments are processed securely through Stripe, an industry-leading payment processor trusted by millions of businesses worldwide.",
   },
   {
-    question: "Is there a subscription option?",
+    question: "Can I cancel anytime?",
     answer:
-      "No — and that's by design. We don't believe in charging you monthly whether you use the service or not. Instead, you only pay when you actually need to prepare for an interview. Buy credits once, use them whenever you need them, and never worry about recurring charges or canceling subscriptions. This model is more cost-effective for most job seekers.",
+      "Yes, you can cancel your subscription at any time. You'll keep access to your remaining interviews for the rest of your billing period. Any extra credits you've purchased never expire and will still be available if you resubscribe.",
   },
 ];

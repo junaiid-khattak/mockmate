@@ -49,7 +49,7 @@ async function handleSubscriptionCheckout(
       user_id: userId,
       stripe_subscription_id: subscriptionId,
       stripe_customer_id: customerId,
-      plan: stripeSub.metadata?.plan ?? "pro_monthly",
+      plan: stripeSub.metadata?.plan ?? "essentials_monthly",
       status: "active",
       current_period_start: new Date(periodStart * 1000).toISOString(),
       current_period_end: new Date(periodEnd * 1000).toISOString(),
@@ -181,6 +181,48 @@ async function grantCreditsForCheckoutSession(
   return NextResponse.json({ ok: true });
 }
 
+async function handleAddonCreditPurchase(
+  supabase: SupabaseServiceClient,
+  session: Stripe.Checkout.Session,
+): Promise<NextResponse> {
+  const userId = session.metadata?.supabase_user_id;
+  if (!userId) {
+    console.error("addon_credit checkout missing supabase_user_id", session.id);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const agentId = session.metadata?.agent_id;
+  if (!agentId) {
+    console.error("addon_credit checkout missing agent_id", session.id);
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const quantity = parseInt(session.metadata?.quantity ?? "0", 10);
+  if (quantity < 1) {
+    console.error("addon_credit checkout invalid quantity", { sessionId: session.id, quantity });
+    return NextResponse.json({ ok: true, skipped: true });
+  }
+
+  const grantKey = `addon_credit_stripe_${session.id}`;
+
+  const { error } = await supabase.rpc("grant_addon_credits", {
+    p_user_id: userId,
+    p_agent_id: agentId,
+    p_credits: quantity,
+    p_grant_key: grantKey,
+    p_reason: "stripe_purchase",
+    p_stripe_session_id: session.id,
+  });
+
+  if (error) {
+    console.error("Failed to grant addon credits", session.id, error);
+    return NextResponse.json({ error: "Addon credit grant failed" }, { status: 500 });
+  }
+
+  console.log("Granted addon credits", { sessionId: session.id, userId, agentId, quantity });
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -221,7 +263,12 @@ export async function POST(request: NextRequest) {
       return handleSubscriptionCheckout(supabase, stripe, session);
     }
 
-    // Credit pack payment checkout
+    // Addon credit purchase (one-time payment)
+    if (session.payment_status === "paid" && session.metadata?.type === "addon_credit") {
+      return handleAddonCreditPurchase(supabase, session);
+    }
+
+    // Legacy credit pack payment checkout
     if (session.payment_status === "paid") {
       return grantCreditsForCheckoutSession(supabase, session);
     }

@@ -162,6 +162,9 @@ export async function POST(
         sessions_exhausted: paywallDecision.sessions_exhausted,
         renewal_date: paywallDecision.renewal_date,
         legacy_credits: paywallDecision.legacy_credits,
+        addon_credits: paywallDecision.addon_credits,
+        credit_price_cents: paywallDecision.credit_price_cents,
+        can_buy_credits: paywallDecision.can_buy_credits,
       },
       { status: 402 },
     );

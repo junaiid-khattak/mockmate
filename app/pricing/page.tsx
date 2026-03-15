@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Sparkles, Upload, BarChart3, Mic, Shield } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Upload, BarChart3, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +12,9 @@ import { pricingPlans } from "@/lib/pricing-plans";
 import { PublicHeader } from "@/components/PublicHeader";
 
 export const metadata: Metadata = {
-  title: "Pricing — AI Interview Prep Credits | nayld.ai",
+  title: "Pricing — AI Interview Prep Plans | nayld.ai",
   description:
-    "Free resume analysis and fit scoring. Try your first AI mock interview for $5. Credits never expire — no subscriptions.",
+    "Free mock interview to start. Essentials plan from $20/mo with 10 interviews. Premium AI interviewer with Elite at $69/mo.",
   keywords: [
     "AI mock interview pricing",
     "AI interview prep cost",
@@ -26,18 +26,18 @@ export const metadata: Metadata = {
     canonical: "https://nayld.ai/pricing",
   },
   openGraph: {
-    title: "Pricing — AI Interview Prep Credits | nayld.ai",
+    title: "Pricing — AI Interview Prep Plans | nayld.ai",
     description:
-      "Free resume analysis and fit scoring. AI mock interview credits from $10. No subscriptions — credits never expire.",
+      "Free mock interview to start. Essentials from $20/mo. Elite with Premium AI Interviewer at $69/mo.",
     url: "https://nayld.ai/pricing",
     siteName: "nayld.ai",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pricing — AI Interview Prep Credits | nayld.ai",
+    title: "Pricing — AI Interview Prep Plans | nayld.ai",
     description:
-      "Free resume analysis and fit scoring. AI mock interview credits from $10. No subscriptions — credits never expire.",
+      "Free mock interview to start. Essentials from $20/mo. Elite with Premium AI Interviewer at $69/mo.",
   },
 };
 
@@ -64,7 +64,7 @@ const freeFeatures = [
   },
 ];
 
-const creditFeatures = [
+const interviewFeatures = [
   {
     icon: Mic,
     title: "AI Mock Interview Session",
@@ -75,12 +75,11 @@ const creditFeatures = [
     icon: BarChart3,
     title: "Performance Assessment",
     description:
-      "Receive detailed feedback on your strengths, weaknesses, and specific recommendations for improvement.",
+      "Receive detailed 10-metric scoring with strengths, weaknesses, and specific recommendations for improvement.",
   },
 ];
 
 export default function PricingPage() {
-  // Product structured data for each pricing tier
   const priceValidUntil = new Date(
     new Date().setFullYear(new Date().getFullYear() + 1)
   )
@@ -89,13 +88,11 @@ export default function PricingPage() {
 
   const productStructuredData = pricingPlans.map((plan) => {
     const priceValue = plan.price.replace("$", "");
-    const creditsMatch = plan.features[0].match(/(\d+) interview credit/);
-    const credits = creditsMatch ? creditsMatch[1] : "1";
 
     return {
       "@context": "https://schema.org",
       "@type": "Product",
-      name: `${plan.name} Plan - ${credits} Interview Credit${credits !== "1" ? "s" : ""}`,
+      name: `${plan.name} Plan — nayld.ai AI Interview Prep`,
       description: plan.description,
       image: "https://nayld.ai/pricing/opengraph-image",
       brand: {
@@ -150,7 +147,6 @@ export default function PricingPage() {
     };
   });
 
-  // FAQPage structured data
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -179,7 +175,6 @@ export default function PricingPage() {
       />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
-        {/* Header */}
         <PublicHeader />
 
         {/* Hero Section */}
@@ -190,11 +185,11 @@ export default function PricingPage() {
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl">nayld.ai Pricing</h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
-              Free resume analysis and fit scoring. Pay only for{" "}
+              Start free with a full{" "}
               <Link href="/ai-mock-interviews" className="text-mm-violet hover:underline font-medium">
                 AI mock interview
-              </Link>{" "}
-              sessions when you need them. No subscriptions. Credits never expire.
+              </Link>
+              . Subscribe for consistent practice with 10 interviews per month.
             </p>
           </div>
         </section>
@@ -204,14 +199,14 @@ export default function PricingPage() {
           <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-50 to-white">
             <CardContent className="p-8 sm:p-12">
               <div className="text-center mb-8">
-                <Badge className="mb-4 bg-green-600">Free Forever</Badge>
+                <Badge className="mb-4 bg-green-600">Always Free</Badge>
                 <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Everything You Need to Start</h2>
                 <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
                   Get unlimited access to resume analysis,{" "}
                   <Link href="/resume-fit-score" className="text-mm-violet hover:underline font-medium">
                     fit scoring
                   </Link>
-                  , gap analysis, and tailored interview questions — completely free. No credit card required.
+                  , gap analysis, and tailored interview questions — plus your first AI mock interview. No credit card required.
                 </p>
               </div>
 
@@ -242,33 +237,15 @@ export default function PricingPage() {
           </Card>
         </section>
 
-        {/* Credit Packs */}
+        {/* Subscription Plans */}
         <section className="bg-slate-50/80 py-20">
           <div className="mx-auto max-w-6xl px-6">
             <SectionTitle
-              eyebrow="Credit Packs"
-              title="Pay Only for Mock Interview Sessions"
-              subtitle="Each AI mock interview session costs one credit. Buy credits when you need them — they never expire."
+              eyebrow="Plans"
+              title="Choose Your Interview Practice Plan"
+              subtitle="Every plan includes full 10-metric performance scoring and personalized feedback. Need more? Buy extra interviews anytime."
               align="center"
             />
-
-            {/* Intro offer callout */}
-            <div className="mb-8 mx-auto max-w-2xl rounded-2xl border-2 border-[rgba(124,92,252,0.3)] bg-gradient-to-br from-[rgba(124,92,252,0.06)] to-white p-6 text-center shadow-[0_4px_24px_rgba(124,92,252,0.1)]">
-              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[rgba(124,92,252,0.1)] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#7c5cfc]">
-                Launch offer
-              </div>
-              <h3 className="mt-2 text-xl font-bold text-slate-900">Try your first mock interview for $5</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Not sure yet? Get your first full AI mock interview — including the 10-metric breakdown and personalized feedback — for half price.
-              </p>
-              <Link href="/signup">
-                <Button className="mt-4 gap-2 bg-[#7c5cfc] hover:bg-[#6341e0]">
-                  Get started for $5
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <p className="mt-2 text-xs text-slate-400">One per account · Credits never expire</p>
-            </div>
 
             <PricingGrid />
 
@@ -284,86 +261,27 @@ export default function PricingPage() {
           <div className="mx-auto max-w-6xl px-6">
             <SectionTitle
               eyebrow="What's Included"
-              title="Free vs Credits: What You Get"
+              title="Every Interview Includes"
               align="center"
             />
 
             <div className="mt-12 grid gap-8 lg:grid-cols-2">
-              {/* Free Tier */}
-              <Card className="border-2 border-green-500/20">
-                <CardContent className="p-8">
-                  <Badge className="mb-4 bg-green-600">Free Forever</Badge>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-6">Analysis & Preparation</h3>
-                  <ul className="space-y-4">
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-slate-900">Unlimited Resume Uploads</p>
-                        <p className="text-sm text-slate-600">Parse skills, experience, and qualifications</p>
+              {interviewFeatures.map((feature, idx) => {
+                const Icon = feature.icon;
+                return (
+                  <Card key={idx} className="border-2 border-mm-violet/20">
+                    <CardContent className="flex items-start gap-4 p-8">
+                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-mm-violet to-purple-600">
+                        <Icon className="h-5 w-5 text-white" />
                       </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-green-600 flex-shrink-0" />
                       <div>
-                        <p className="font-medium text-slate-900">Unlimited Fit Score Analysis</p>
-                        <p className="text-sm text-slate-600">See how well you match any job posting</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
+                        <p className="mt-2 text-sm text-slate-600">{feature.description}</p>
                       </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-slate-900">Unlimited Gap Analysis</p>
-                        <p className="text-sm text-slate-600">Identify strengths and weaknesses vs job requirements</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-slate-900">Unlimited Tailored Questions</p>
-                        <p className="text-sm text-slate-600">
-                          AI-generated questions specific to your resume and the job
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-
-              {/* Credit-Based Tier */}
-              <Card className="border-2 border-mm-violet/20">
-                <CardContent className="p-8">
-                  <Badge className="mb-4 bg-gradient-to-r from-mm-violet to-purple-600">Requires Credit</Badge>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-6">Mock Interview Sessions</h3>
-                  <p className="text-sm text-slate-600 mb-6">
-                    Each full mock interview session costs 1 credit. Credits start at $10 and never expire.
-                  </p>
-                  <ul className="space-y-4">
-                    {creditFeatures.map((feature, idx) => {
-                      const Icon = feature.icon;
-                      return (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-mm-violet to-purple-600 flex-shrink-0">
-                            <Icon className="h-3 w-3 text-white" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-slate-900">{feature.title}</p>
-                            <p className="text-sm text-slate-600">{feature.description}</p>
-                          </div>
-                        </li>
-                      );
-                    })}
-                    <li className="flex items-start gap-3">
-                      <Shield className="mt-0.5 h-5 w-5 text-mm-violet flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-slate-900">Credits Never Expire</p>
-                        <p className="text-sm text-slate-600">
-                          Use them whenever you need to prepare — this week, next month, or next year
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -382,11 +300,7 @@ export default function PricingPage() {
           <div className="mx-auto max-w-4xl px-6 text-center">
             <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">Ready to Ace Your Next Interview?</h2>
             <p className="mt-4 text-lg text-slate-600">
-              Start with free resume analysis and fit scoring. Run{" "}
-              <Link href="/ai-mock-interviews" className="text-mm-violet hover:underline font-medium">
-                AI mock interviews
-              </Link>{" "}
-              when you're ready to practice. No subscriptions. Credits never expire.
+              Start with a free mock interview. Subscribe when you&apos;re ready for consistent practice.
             </p>
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link href="/signup">

@@ -154,6 +154,39 @@ export async function POST(request: NextRequest) {
           { status: 402 },
         );
       }
+    } else if (creditSource === "addon_credit") {
+      // Addon credit path: consume agent-scoped credit via RPC
+      const agentId =
+        typeof (data as LaunchCodeRow).agent_config?.agent_slug === "string"
+          ? ((data as LaunchCodeRow).agent_config!.agent_slug as string)
+          : null;
+
+      if (!agentId) {
+        return NextResponse.json(
+          { ok: false, error: "Missing agent_id for addon credit consumption." },
+          { status: 500 },
+        );
+      }
+
+      const { data: consumed, error: consumeAddonErr } = await supabase.rpc(
+        "consume_addon_credit",
+        {
+          p_user_id: data.user_id,
+          p_agent_id: agentId,
+          p_interview_id: data.interview_id,
+        },
+      );
+
+      if (consumeAddonErr || consumed === false) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "payment_required",
+            message: "Unable to consume addon credit.",
+          },
+          { status: 402 },
+        );
+      }
     } else {
       // Legacy credit / free signup path: use existing credit consumption
       const paywallDecision = await verifyInterviewPaywall(

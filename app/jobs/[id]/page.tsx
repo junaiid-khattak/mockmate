@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import { CREDIT_PACKS } from "@/lib/billing";
 import { Header } from "@/components/jobs/Header";
-import { cn } from "@/lib/utils";
 import { RefreshCw, Trash2 } from "lucide-react";
 import { CollapsibleCard } from "@/components/jobs/CollapsibleCard";
 import { InterviewCTACard } from "@/components/jobs/InterviewCTACard";
@@ -117,6 +115,10 @@ export default function JobBriefPage() {
     null,
   );
   const [paywallCheckingOut, setPaywallCheckingOut] = useState<string | null>(null);
+  const [paywallHasSubscription, setPaywallHasSubscription] = useState(false);
+  const [paywallCreditPriceCents, setPaywallCreditPriceCents] = useState<number | null>(null);
+  const [paywallCanBuyCredits, setPaywallCanBuyCredits] = useState(false);
+  const [addonBuyQuantity, setAddonBuyQuantity] = useState(1);
   const [showCreditConfirm, setShowCreditConfirm] = useState(false);
   const [interviewSession, setInterviewSession] = useState<InterviewSession | null>(
     null,
@@ -386,7 +388,14 @@ export default function JobBriefPage() {
 
   const startInterview = async (): Promise<
     | { ok: true; launchUrl: string }
-    | { ok: false; code: "payment_required" | "error"; message: string }
+    | {
+        ok: false;
+        code: "payment_required" | "error";
+        message: string;
+        has_subscription?: boolean;
+        credit_price_cents?: number;
+        can_buy_credits?: boolean;
+      }
   > => {
     try {
       const res = await fetch(`/api/jobs/${jobId}/interview/start`, {
@@ -404,6 +413,9 @@ export default function JobBriefPage() {
             typeof body?.message === "string" && body.message.trim()
               ? body.message
               : "You need at least one interview credit to start this interview.",
+          has_subscription: body?.has_subscription,
+          credit_price_cents: body?.credit_price_cents,
+          can_buy_credits: body?.can_buy_credits,
         };
       }
 
@@ -468,6 +480,10 @@ export default function JobBriefPage() {
 
     if (result.code === "payment_required") {
       setInterviewPaywallMessage(result.message);
+      setPaywallHasSubscription(result.has_subscription ?? false);
+      setPaywallCreditPriceCents(result.credit_price_cents ?? null);
+      setPaywallCanBuyCredits(result.can_buy_credits ?? false);
+      setAddonBuyQuantity(1);
       setShowInterviewPaywall(true);
       setStartingInterview(false);
       return;
@@ -492,6 +508,28 @@ export default function JobBriefPage() {
         return;
       }
       setPaywallPurchaseMessage(body?.error ?? "Unable to start checkout.");
+    } catch {
+      setPaywallPurchaseMessage("Unable to start checkout.");
+    } finally {
+      setPaywallCheckingOut(null);
+    }
+  };
+
+  const handleBuyAddonCredits = async (quantity: number) => {
+    setPaywallCheckingOut("addon");
+    setPaywallPurchaseMessage(null);
+    try {
+      const res = await fetch("/api/billing/credits/buy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (body?.ok && body.checkout_url) {
+        window.location.assign(body.checkout_url);
+        return;
+      }
+      setPaywallPurchaseMessage(body?.message ?? body?.error ?? "Unable to start checkout.");
     } catch {
       setPaywallPurchaseMessage("Unable to start checkout.");
     } finally {
@@ -1188,66 +1226,75 @@ export default function JobBriefPage() {
               </p>
 
               <div className="mt-5 flex flex-col gap-3">
-                {/* Intro offer — shown first, full width */}
-                {CREDIT_PACKS.filter((p) => p.introOffer).map((pack) => (
-                  <button
-                    key={pack.id}
-                    type="button"
-                    disabled={paywallCheckingOut !== null}
-                    onClick={() => handlePaywallBuy(pack.id)}
-                    className="flex items-center justify-between rounded-xl border-2 border-mm-violet bg-[rgba(124,92,252,0.04)] px-5 py-3.5 text-left transition hover:bg-[rgba(124,92,252,0.08)]"
-                  >
-                    <div>
-                      <div className="mb-0.5 text-xs font-bold uppercase tracking-wider text-mm-violet">Launch offer</div>
-                      <p className="text-sm font-semibold text-slate-900">{pack.name} — 1 interview credit</p>
-                      <p className="text-xs text-slate-500">Full session + 10-metric breakdown</p>
+                {/* Subscriber: buy addon credits */}
+                {paywallHasSubscription && paywallCanBuyCredits && paywallCreditPriceCents ? (
+                  <div className="rounded-xl border border-slate-200 p-5">
+                    <p className="text-sm font-semibold text-slate-900">
+                      Buy extra interviews
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      ${(paywallCreditPriceCents / 100).toFixed(0)} per interview credit
+                    </p>
+
+                    <div className="mt-4 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setAddonBuyQuantity(Math.max(1, addonBuyQuantity - 1))}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[2rem] text-center text-lg font-bold text-slate-900">
+                        {addonBuyQuantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAddonBuyQuantity(addonBuyQuantity + 1)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                      >
+                        +
+                      </button>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-extrabold text-slate-900">${(pack.priceCents / 100).toFixed(0)}</p>
-                      {paywallCheckingOut === pack.id && (
-                        <span className="text-xs text-mm-violet">Redirecting...</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-                {/* Regular packs */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {CREDIT_PACKS.filter((p) => !p.introOffer).map((pack) => (
+
                     <button
-                      key={pack.id}
                       type="button"
                       disabled={paywallCheckingOut !== null}
-                      onClick={() => handlePaywallBuy(pack.id)}
-                      className={cn(
-                        "flex flex-col items-center rounded-xl border px-4 py-3 text-center transition",
-                        pack.recommended
-                          ? "border-mm-violet/50 bg-mm-violet/[0.03] hover:bg-mm-violet/[0.06]"
-                          : "border-slate-200 hover:border-mm-violet/50 hover:bg-mm-violet/[0.03]",
-                      )}
+                      onClick={() => handleBuyAddonCredits(addonBuyQuantity)}
+                      className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <p className="text-sm font-semibold text-slate-900">{pack.name}</p>
-                      <p className="text-lg font-bold text-slate-900">
-                        ${(pack.priceCents / 100).toFixed(0)}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {pack.credits} credit{pack.credits !== 1 ? "s" : ""}
-                      </p>
-                      {pack.id === "starter" && (
-                        <p className="mt-1 text-[10px] font-medium text-[#7c5cfc]">
-                          50% off your first — use intro offer above
-                        </p>
-                      )}
-                      {pack.savingsPercent > 0 && (
-                        <p className="text-xs font-medium text-emerald-600">
-                          Save {pack.savingsPercent}%
-                        </p>
-                      )}
-                      {paywallCheckingOut === pack.id && (
-                        <span className="mt-1 text-xs text-mm-violet">Redirecting...</span>
-                      )}
+                      {paywallCheckingOut === "addon"
+                        ? "Redirecting..."
+                        : `Buy ${addonBuyQuantity} credit${addonBuyQuantity !== 1 ? "s" : ""} · $${((paywallCreditPriceCents * addonBuyQuantity) / 100).toFixed(0)}`}
                     </button>
-                  ))}
-                </div>
+                  </div>
+                ) : !paywallHasSubscription ? (
+                  /* Non-subscriber: direct to pricing */
+                  <div className="rounded-xl border border-slate-200 p-5 text-center">
+                    <p className="text-sm font-semibold text-slate-900">
+                      Subscribe to get interviews
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Plans start at $20/month with 10 interviews included.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowInterviewPaywall(false);
+                        router.push("/pricing");
+                      }}
+                      className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0]"
+                    >
+                      View plans
+                    </button>
+                  </div>
+                ) : (
+                  /* Subscriber but can't buy credits (edge case) */
+                  <div className="rounded-xl border border-slate-200 p-5 text-center">
+                    <p className="text-sm text-slate-600">
+                      Your monthly sessions are used up. They&apos;ll reset at the start of your next billing cycle.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {paywallPurchaseMessage && (
@@ -1331,7 +1378,6 @@ export default function JobBriefPage() {
             <CreditsCard
               creditCount={creditBalance ?? 0}
               onBuyClick={() => router.push("/settings/billing")}
-              onPackClick={(packId) => handlePaywallBuy(packId)}
               purchasing={paywallCheckingOut !== null}
             />
           </div>
