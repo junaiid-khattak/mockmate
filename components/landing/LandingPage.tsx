@@ -392,11 +392,11 @@ function tableScoreColor10(s: number) {
   return "text-amber-600 font-semibold";
 }
 
-// For dark-background inline mockup (0–100)
-function darkScoreColor(s: number) {
-  if (s >= 80) return "#34d399";
-  if (s >= 60) return "#fbbf24";
-  return "#f87171";
+// For inline mockup score colors (0–100)
+function mockupScoreColor(s: number) {
+  if (s >= 80) return "#16a34a";
+  if (s >= 60) return "#d97706";
+  return "#dc2626";
 }
 
 // ---------------------------------------------------------------------------
@@ -590,10 +590,10 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             >
               <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-3xl" />
               <div className="relative space-y-3">
-                <div className="overflow-hidden rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.06]">
-                  <InterviewScreenMockup />
+                <div className="overflow-hidden rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06]">
+                  <InterviewScreenMockup variant="hero" />
                 </div>
-                <div className="overflow-hidden rounded-[20px] shadow-[0_24px_64px_rgba(0,0,0,0.38)] ring-1 ring-white/[0.06]">
+                <div className="overflow-hidden rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06]">
                   <ResultsDashboardMockup />
                 </div>
               </div>
@@ -785,7 +785,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               ] as const
             ).map(({ state, caption, sub }) => (
               <motion.div key={state} variants={fadeInUp}>
-                <div className="overflow-hidden rounded-[20px] shadow-[0_20px_56px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.06]">
+                <div className="overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]">
                   <InterviewScreenMockup state={state} />
                 </div>
                 <div className="mt-4 text-center">
@@ -898,13 +898,13 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <div className="mx-auto max-w-xl">
             <div
               style={{
-                background: "#0e1424",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "white",
+                border: "1px solid #e8e8ef",
                 borderRadius: 16,
                 padding: 24,
                 fontFamily: "'Instrument Sans', -apple-system, sans-serif",
                 WebkitFontSmoothing: "antialiased",
-                boxShadow: "0 24px 64px rgba(0,0,0,0.35)",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.08)",
               }}
             >
               {/* Header */}
@@ -916,7 +916,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   marginBottom: 10,
                 }}
               >
-                <span style={{ fontSize: 15, fontWeight: 700, color: "#e8eaf0" }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#111118" }}>
                   Recovery Ability
                 </span>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
@@ -925,7 +925,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                       fontFamily: "monospace",
                       fontSize: 18,
                       fontWeight: 700,
-                      color: "#34d399",
+                      color: "#16a34a",
                     }}
                   >
                     95
@@ -934,7 +934,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     style={{
                       fontFamily: "monospace",
                       fontSize: 11,
-                      color: "rgba(255,255,255,0.3)",
+                      color: "#9d9db0",
                     }}
                   >
                     /100
@@ -946,7 +946,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 style={{
                   height: 4,
                   borderRadius: 2,
-                  background: "rgba(255,255,255,0.05)",
+                  background: "rgba(0,0,0,0.04)",
                   overflow: "hidden",
                   marginBottom: 20,
                 }}
@@ -955,7 +955,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   style={{
                     height: "100%",
                     width: "95%",
-                    background: "#34d399",
+                    background: "#16a34a",
                     borderRadius: 2,
                   }}
                 />
@@ -966,7 +966,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   style={{
                     fontSize: 10,
                     fontWeight: 600,
-                    color: "#34d399",
+                    color: "#16a34a",
                     textTransform: "uppercase",
                     letterSpacing: "0.8px",
                     marginBottom: 6,
@@ -977,7 +977,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <p
                   style={{
                     fontSize: 12,
-                    color: "rgba(255,255,255,0.6)",
+                    color: "#6b6b80",
                     lineHeight: 1.55,
                   }}
                 >
@@ -990,7 +990,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   style={{
                     fontSize: 10,
                     fontWeight: 600,
-                    color: "#22d3ee",
+                    color: "#7c5cfc",
                     textTransform: "uppercase",
                     letterSpacing: "0.8px",
                     marginBottom: 6,
@@ -1001,7 +1001,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <p
                   style={{
                     fontSize: 12,
-                    color: "rgba(255,255,255,0.6)",
+                    color: "#6b6b80",
                     lineHeight: 1.55,
                   }}
                 >
@@ -1014,7 +1014,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   style={{
                     fontSize: 10,
                     fontWeight: 600,
-                    color: "#fbbf24",
+                    color: "#d97706",
                     textTransform: "uppercase",
                     letterSpacing: "0.8px",
                     marginBottom: 6,
@@ -1025,7 +1025,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <p
                   style={{
                     fontSize: 12,
-                    color: "rgba(255,255,255,0.6)",
+                    color: "#6b6b80",
                     lineHeight: 1.55,
                   }}
                 >
@@ -1064,17 +1064,17 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             />
           </motion.div>
 
-          {/* Full 10-metric dark mockup */}
+          {/* Full 10-metric mockup */}
           <motion.div variants={fadeInUp} className="mt-14">
             <div
               style={{
-                background: "#0e1424",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "white",
+                border: "1px solid #e8e8ef",
                 borderRadius: 24,
                 padding: 32,
                 fontFamily: "'Instrument Sans', -apple-system, sans-serif",
                 WebkitFontSmoothing: "antialiased",
-                boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+                boxShadow: "0 32px 80px rgba(0,0,0,0.08)",
               }}
             >
               {/* Header */}
@@ -1089,7 +1089,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                   fontWeight: 600,
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.3)",
+                  color: "#9d9db0",
                 }}
               >
                 <div
@@ -1097,8 +1097,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    background: "#34d399",
-                    boxShadow: "0 0 6px #34d399",
+                    background: "#16a34a",
+                    boxShadow: "0 0 6px rgba(22,163,74,0.4)",
                   }}
                 />
                 Interview Complete
@@ -1111,9 +1111,9 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}
                     viewBox="0 0 160 160"
                   >
-                    <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                    <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(0,0,0,0.04)" strokeWidth="8" />
                     <circle
-                      cx="80" cy="80" r="70" fill="none" stroke="#34d399" strokeWidth="8"
+                      cx="80" cy="80" r="70" fill="none" stroke="#16a34a" strokeWidth="8"
                       strokeLinecap="round" strokeDasharray="440"
                       strokeDashoffset={Math.round(440 * (1 - 8.2 / 10))}
                     />
@@ -1124,19 +1124,19 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                       flexDirection: "column", alignItems: "center", justifyContent: "center",
                     }}
                   >
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#34d399", lineHeight: 1, letterSpacing: "-1px" }}>
+                    <span style={{ fontSize: 20, fontWeight: 700, color: "#16a34a", lineHeight: 1, letterSpacing: "-1px" }}>
                       8.2
                     </span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>/10</span>
+                    <span style={{ fontSize: 9, color: "#9d9db0", fontFamily: "monospace" }}>/10</span>
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "#e8eaf0", marginBottom: 6 }}>Strong Performance</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#111118", marginBottom: 6 }}>Strong Performance</div>
                   <div
                     style={{
                       display: "inline-flex", alignItems: "center",
-                      background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)",
-                      borderRadius: 100, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "#34d399",
+                      background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.15)",
+                      borderRadius: 100, padding: "4px 12px", fontSize: 12, fontWeight: 600, color: "#16a34a",
                     }}
                   >
                     Top 28% of candidates
@@ -1151,20 +1151,20 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                     <p
                       style={{
                         fontSize: 10, fontWeight: 600, textTransform: "uppercase",
-                        letterSpacing: "0.8px", color: "rgba(255,255,255,0.25)", marginBottom: 10,
+                        letterSpacing: "0.8px", color: "#9d9db0", marginBottom: 10,
                       }}
                     >
                       {label}
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       {metrics.map(({ label: mLabel, score }) => {
-                        const c = darkScoreColor(score);
+                        const c = mockupScoreColor(score);
                         return (
                           <div key={mLabel} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{ flex: 1, fontSize: 11, color: "rgba(255,255,255,0.45)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ flex: 1, fontSize: 11, color: "#6b6b80", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {mLabel}
                             </div>
-                            <div style={{ width: 60, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.05)", overflow: "hidden", flexShrink: 0 }}>
+                            <div style={{ width: 60, height: 3, borderRadius: 2, background: "rgba(0,0,0,0.04)", overflow: "hidden", flexShrink: 0 }}>
                               <div style={{ height: "100%", width: `${score}%`, background: c, borderRadius: 2 }} />
                             </div>
                             <div style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: c, width: 24, textAlign: "right", flexShrink: 0 }}>
@@ -1179,12 +1179,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </div>
 
               {/* Divider */}
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }} />
+              <div style={{ borderTop: "1px solid #e8e8ef", marginBottom: 20 }} />
 
               {/* Strengths + Growth Areas */}
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#34d399", marginBottom: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#16a34a", marginBottom: 10 }}>
                     ✦ Strengths
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1193,18 +1193,18 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                         key={s}
                         style={{
                           display: "flex", alignItems: "flex-start", gap: 8,
-                          background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.12)",
+                          background: "rgba(22,163,74,0.05)", border: "1px solid rgba(22,163,74,0.12)",
                           borderRadius: 8, padding: "8px 10px",
                         }}
                       >
-                        <span style={{ color: "#34d399", fontSize: 11, flexShrink: 0 }}>✓</span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>{s}</span>
+                        <span style={{ color: "#16a34a", fontSize: 11, flexShrink: 0 }}>✓</span>
+                        <span style={{ fontSize: 11, color: "#6b6b80", lineHeight: 1.45 }}>{s}</span>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#fbbf24", marginBottom: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.8px", color: "#d97706", marginBottom: 10 }}>
                     ⚡ Growth Areas
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1213,12 +1213,12 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                         key={g}
                         style={{
                           display: "flex", alignItems: "flex-start", gap: 8,
-                          background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.12)",
+                          background: "rgba(217,119,6,0.05)", border: "1px solid rgba(217,119,6,0.12)",
                           borderRadius: 8, padding: "8px 10px",
                         }}
                       >
-                        <span style={{ color: "#fbbf24", fontSize: 11, flexShrink: 0 }}>→</span>
-                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.45 }}>{g}</span>
+                        <span style={{ color: "#d97706", fontSize: 11, flexShrink: 0 }}>→</span>
+                        <span style={{ fontSize: 11, color: "#6b6b80", lineHeight: 1.45 }}>{g}</span>
                       </div>
                     ))}
                   </div>

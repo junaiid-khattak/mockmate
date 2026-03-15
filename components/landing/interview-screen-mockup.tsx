@@ -2,132 +2,227 @@ interface Props {
   className?: string;
   state?: "ai" | "user" | "followup";
   question?: string;
+  variant?: "hero" | "step";
 }
+
+// ─── state-specific config ──────────────────────────────────────────────────
+
+const stateConfig = {
+  ai: {
+    primary: "#8b5cf6",
+    ring: "rgba(139,92,246",
+    waveform: "#6d28d9",
+    label: "AI INTERVIEWER SPEAKING",
+    labelColor: "#7c3aed",
+    timer: "01:24",
+    defaultQuestion:
+      "Tell me about a challenging project you led and what you learned from it.",
+  },
+  user: {
+    primary: "#10b981",
+    ring: "rgba(16,185,129",
+    waveform: "#10b981",
+    label: "YOU'RE SPEAKING",
+    labelColor: "#10b981",
+    timer: "03:47",
+    defaultQuestion:
+      "Describe a time you led a team through a difficult deadline under pressure.",
+  },
+  followup: {
+    primary: "#f59e0b",
+    ring: "rgba(245,158,11",
+    waveform: "#f59e0b",
+    label: "AI INTERVIEWER — FOLLOW-UP",
+    labelColor: "#f59e0b",
+    timer: "06:12",
+    defaultQuestion:
+      "You mentioned reducing response time by 40%. Walk me through the specific decisions that got you there.",
+  },
+} as const;
+
+// Deterministic "random" bar heights for waveform visual interest
+const heroWaveHeights = [
+  8, 14, 6, 20, 10, 24, 8, 18, 12, 22, 6, 16, 10, 20, 14, 8, 22, 12, 18, 6,
+  24, 10, 14, 8, 20,
+];
+const stepWaveHeights = [
+  6, 16, 10, 22, 8, 18, 12, 20, 6, 14, 10, 24, 8, 16, 12, 20, 6, 18, 10, 14,
+];
 
 export function InterviewScreenMockup({
   className = "",
   state = "ai",
   question,
+  variant = "step",
 }: Props) {
+  const cfg = stateConfig[state];
   const isUser = state === "user";
-  const ringColor = isUser ? "#34d399" : "#22d3ee";
-  const ringGlow = isUser
-    ? "0 0 28px rgba(52,211,153,0.5)"
-    : "0 0 28px rgba(34,211,238,0.5)";
+  const isHero = variant === "hero";
+  const avatarSize = isHero ? 90 : 64;
+  const outerRingGap = isHero ? 18 : 12;
+  const middleRingGap = isHero ? 9 : 6;
+  const waveHeights = isHero ? heroWaveHeights : stepWaveHeights;
 
-  const defaultQuestion =
-    state === "followup"
-      ? "You mentioned reducing response time by 40%. Walk me through the specific decisions that got you there."
-      : state === "user"
-      ? "Describe a time you led a team through a difficult deadline under pressure."
-      : "Tell me about a challenging project you led and what you learned from it.";
-
-  const displayQuestion = question ?? defaultQuestion;
-
-  const statusLabel = isUser
-    ? "Take your time — the AI is listening..."
-    : state === "followup"
-    ? "AI Interviewer — Follow-up question"
-    : "AI Interviewer Speaking";
-
-  const waveHeights = isUser
-    ? [10, 18, 14, 22, 16, 12, 20, 14, 18, 10]
-    : [8, 16, 24, 18, 28, 20, 14, 22, 16, 10];
+  const displayQuestion = question ?? cfg.defaultQuestion;
 
   return (
     <div
       className={className}
       style={{
-        background: "#0e1424",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 20,
-        padding: 20,
+        background:
+          "linear-gradient(145deg, #f8f5ff 0%, #eee6ff 35%, #e6deff 65%, #f0eaff 100%)",
+        borderRadius: 16,
+        padding: isHero ? 24 : 20,
         fontFamily: "'Instrument Sans', -apple-system, sans-serif",
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      {/* Top bar */}
+      {/* ─── Top bar ─────────────────────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "space-between",
-          marginBottom: 20,
+          marginBottom: isHero ? 24 : 18,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {/* Left: job info */}
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#f87171",
-              boxShadow: "0 0 6px rgba(248,113,113,0.6)",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#1a1a2e",
+              lineHeight: 1.3,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
-          />
+          >
+            Senior Software Engineer at Deep
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              color: "#8b8b9e",
+              marginTop: 2,
+            }}
+          >
+            Mock Interview · nayld.ai
+          </div>
+        </div>
+
+        {/* Right: LIVE badge + timer */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexShrink: 0,
+            marginLeft: 12,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              background: "rgba(239,68,68,0.06)",
+              border: "1px solid rgba(239,68,68,0.15)",
+              borderRadius: 20,
+              padding: "3px 10px",
+            }}
+          >
+            <div
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                background: "#ef4444",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "monospace",
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "1px",
+                color: "#ef4444",
+              }}
+            >
+              LIVE
+            </span>
+          </div>
           <span
             style={{
               fontFamily: "monospace",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              color: "#f87171",
+              fontSize: 11,
+              color: "#64648c",
+              background: "rgba(255,255,255,0.6)",
+              border: "1px solid rgba(0,0,0,0.06)",
+              borderRadius: 6,
+              padding: "2px 8px",
             }}
           >
-            LIVE
+            {cfg.timer}
           </span>
         </div>
-        <span
-          style={{
-            fontFamily: "monospace",
-            fontSize: 12,
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.35)",
-          }}
-        >
-          01:24
-        </span>
       </div>
 
-      {/* Avatar with ring */}
+      {/* ─── Avatar with concentric rings ────────────────────────────────── */}
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          marginBottom: 14,
+          marginBottom: isHero ? 18 : 14,
         }}
       >
-        <div style={{ position: "relative", width: 72, height: 72 }}>
-          {/* Outer glow ring */}
+        <div
+          style={{
+            position: "relative",
+            width: avatarSize + outerRingGap * 2,
+            height: avatarSize + outerRingGap * 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* Outer ring */}
           <div
             style={{
               position: "absolute",
-              inset: -6,
+              inset: 0,
               borderRadius: "50%",
-              border: `2px solid ${ringColor}`,
-              boxShadow: ringGlow,
-              opacity: 0.7,
+              border: `1px solid ${cfg.ring},0.06)`,
+            }}
+          />
+          {/* Middle ring */}
+          <div
+            style={{
+              position: "absolute",
+              inset: outerRingGap - middleRingGap,
+              borderRadius: "50%",
+              border: `1px solid ${cfg.ring},0.10)`,
             }}
           />
           {/* Inner ring */}
           <div
             style={{
               position: "absolute",
-              inset: -2,
+              inset: outerRingGap,
               borderRadius: "50%",
-              border: `1.5px solid ${ringColor}`,
-              opacity: 0.4,
+              border: `1px solid ${cfg.ring},0.16)`,
             }}
           />
           {/* Avatar circle */}
           <div
             style={{
-              width: 72,
-              height: 72,
+              position: "relative",
+              width: avatarSize - 8,
+              height: avatarSize - 8,
               borderRadius: "50%",
-              background: `linear-gradient(135deg, ${ringColor}22, ${ringColor}08)`,
-              border: `1.5px solid ${ringColor}55`,
+              background: "white",
+              boxShadow: `0 2px 10px ${cfg.ring},0.1)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -135,11 +230,24 @@ export function InterviewScreenMockup({
           >
             {isUser ? (
               /* Mic icon for user state */
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <rect x="9" y="2" width="6" height="12" rx="3" fill={ringColor} opacity="0.9" />
+              <svg
+                width={isHero ? 28 : 22}
+                height={isHero ? 28 : 22}
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <rect
+                  x="9"
+                  y="2"
+                  width="6"
+                  height="12"
+                  rx="3"
+                  fill={cfg.primary}
+                  opacity="0.9"
+                />
                 <path
                   d="M5 10a7 7 0 0 0 14 0"
-                  stroke={ringColor}
+                  stroke={cfg.primary}
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   fill="none"
@@ -150,95 +258,172 @@ export function InterviewScreenMockup({
                   y1="19"
                   x2="12"
                   y2="22"
-                  stroke={ringColor}
+                  stroke={cfg.primary}
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   opacity="0.7"
                 />
               </svg>
             ) : (
-              /* AI avatar waves */
-              <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <rect
-                    key={i}
-                    x={i * 6}
-                    y={[6, 2, 0, 4, 6][i]}
-                    width="3"
-                    height={[8, 16, 20, 12, 8][i]}
-                    rx="1.5"
-                    fill={ringColor}
-                    opacity={0.6 + i * 0.08}
-                  />
-                ))}
+              /* AI brain/network icon */
+              <svg
+                width={isHero ? 30 : 24}
+                height={isHero ? 30 : 24}
+                viewBox="0 0 32 32"
+                fill="none"
+              >
+                <circle cx="16" cy="10" r="3.5" fill={cfg.primary} opacity="0.8" />
+                <circle cx="10" cy="20" r="3" fill={cfg.primary} opacity="0.6" />
+                <circle cx="22" cy="20" r="3" fill={cfg.primary} opacity="0.6" />
+                <line
+                  x1="16"
+                  y1="13.5"
+                  x2="11"
+                  y2="17.5"
+                  stroke={cfg.primary}
+                  strokeWidth="1.2"
+                  opacity="0.4"
+                />
+                <line
+                  x1="16"
+                  y1="13.5"
+                  x2="21"
+                  y2="17.5"
+                  stroke={cfg.primary}
+                  strokeWidth="1.2"
+                  opacity="0.4"
+                />
+                <line
+                  x1="13"
+                  y1="20"
+                  x2="19"
+                  y2="20"
+                  stroke={cfg.primary}
+                  strokeWidth="1.2"
+                  opacity="0.3"
+                />
+                <circle cx="16" cy="16" r="2" fill={cfg.primary} opacity="0.35" />
               </svg>
             )}
           </div>
         </div>
       </div>
 
-      {/* Waveform */}
+      {/* ─── Waveform ────────────────────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 3,
-          height: 32,
-          marginBottom: 12,
+          gap: 2,
+          height: 24,
+          marginBottom: 10,
         }}
       >
         {waveHeights.map((h, i) => (
           <div
             key={i}
             style={{
-              width: 3,
-              height: h,
+              width: 2.5,
+              height: Math.min(h, 24),
               borderRadius: 2,
-              background: ringColor,
-              opacity: isUser ? 0.5 + (i % 3) * 0.15 : 0.3 + (i % 4) * 0.15,
+              background: cfg.waveform,
+              opacity: 0.4 + ((i % 3) * 0.15),
             }}
           />
         ))}
       </div>
 
-      {/* Status label */}
+      {/* ─── State label ─────────────────────────────────────────────────── */}
       <div
         style={{
           textAlign: "center",
           fontFamily: "monospace",
           fontSize: 9,
           fontWeight: 600,
-          letterSpacing: "1px",
+          letterSpacing: "2.5px",
           textTransform: "uppercase",
-          color: ringColor,
+          color: cfg.labelColor,
           marginBottom: 14,
-          opacity: 0.8,
         }}
       >
-        {statusLabel}
+        {cfg.label}
       </div>
 
-      {/* Question text */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 12,
-          padding: "12px 14px",
-        }}
-      >
+      {/* ─── Message text ────────────────────────────────────────────────── */}
+      <div style={{ textAlign: "center" }}>
+        {isUser && (
+          <p
+            style={{
+              fontSize: 13,
+              color: "#64648c",
+              lineHeight: 1.5,
+              margin: "0 auto 8px",
+              maxWidth: 380,
+            }}
+          >
+            Take your time — the AI is listening...
+          </p>
+        )}
         <p
           style={{
-            fontSize: 12,
-            color: "rgba(255,255,255,0.75)",
-            lineHeight: 1.6,
-            margin: 0,
+            fontSize: isHero ? 14 : 13,
+            color: isUser ? "#64648c" : "#1a1a2e",
+            lineHeight: 1.5,
+            margin: "0 auto",
+            maxWidth: 380,
+            fontStyle: "italic",
           }}
         >
           &ldquo;{displayQuestion}&rdquo;
         </p>
       </div>
+
+      {/* ─── Bottom controls (hero only) ─────────────────────────────────── */}
+      {isHero && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            marginTop: 20,
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid #e0e0e0",
+              background: "white",
+              color: "#333",
+              borderRadius: 10,
+              padding: "7px 18px",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: "default",
+            }}
+          >
+            Mute
+          </div>
+          <div
+            style={{
+              border: "1px solid rgba(239,68,68,0.2)",
+              background: "rgba(239,68,68,0.05)",
+              color: "#ef4444",
+              borderRadius: 10,
+              padding: "7px 18px",
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: "default",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            <span style={{ fontSize: 10 }}>&#x2715;</span>
+            End Interview
+          </div>
+        </div>
+      )}
     </div>
   );
 }

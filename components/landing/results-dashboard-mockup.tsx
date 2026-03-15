@@ -13,9 +13,9 @@ const metrics = [
 ];
 
 function scoreColor(s: number) {
-  if (s >= 80) return "#34d399";
-  if (s >= 60) return "#fbbf24";
-  return "#f87171";
+  if (s >= 80) return "#16a34a";
+  if (s >= 60) return "#d97706";
+  return "#dc2626";
 }
 
 export function ResultsDashboardMockup({ className = "", compact = false }: Props) {
@@ -23,7 +23,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
   // circumference ≈ 2π×70 ≈ 440
   const circumference = 440;
   const offset = Math.round(circumference * (1 - overallScore / 10));
-  const accentColor = "#34d399";
+  const accentColor = "#16a34a";
 
   const displayMetrics = compact ? metrics.slice(0, 3) : metrics;
 
@@ -31,8 +31,8 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
     <div
       className={className}
       style={{
-        background: "#0e1424",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "white",
+        border: "1px solid #e8e8ef",
         borderRadius: 20,
         padding: compact ? 20 : 28,
         fontFamily: "'Instrument Sans', -apple-system, sans-serif",
@@ -47,7 +47,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
           fontWeight: 600,
           letterSpacing: "1.5px",
           textTransform: "uppercase",
-          color: "rgba(255,255,255,0.3)",
+          color: "#9d9db0",
           marginBottom: compact ? 14 : 20,
           display: "flex",
           alignItems: "center",
@@ -60,7 +60,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
             height: 6,
             borderRadius: "50%",
             background: accentColor,
-            boxShadow: `0 0 6px ${accentColor}`,
+            boxShadow: "0 0 6px rgba(22,163,74,0.4)",
           }}
         />
         Interview Complete
@@ -92,7 +92,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
               cy="80"
               r="70"
               fill="none"
-              stroke="rgba(255,255,255,0.05)"
+              stroke="rgba(0,0,0,0.04)"
               strokeWidth="8"
             />
             <circle
@@ -131,7 +131,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
             <span
               style={{
                 fontSize: 9,
-                color: "rgba(255,255,255,0.3)",
+                color: "#9d9db0",
                 fontFamily: "monospace",
               }}
             >
@@ -145,7 +145,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
             style={{
               fontSize: compact ? 14 : 16,
               fontWeight: 700,
-              color: "#e8eaf0",
+              color: "#111118",
               letterSpacing: "-0.3px",
               marginBottom: 4,
             }}
@@ -157,8 +157,8 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              background: `${accentColor}18`,
-              border: `1px solid ${accentColor}33`,
+              background: "rgba(22,163,74,0.08)",
+              border: "1px solid rgba(22,163,74,0.15)",
               borderRadius: 100,
               padding: "3px 10px",
               fontSize: 11,
@@ -181,7 +181,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 style={{
                   flex: 1,
                   fontSize: 11,
-                  color: "rgba(255,255,255,0.5)",
+                  color: "#6b6b80",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -194,7 +194,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                   width: 80,
                   height: 4,
                   borderRadius: 2,
-                  background: "rgba(255,255,255,0.05)",
+                  background: "rgba(0,0,0,0.04)",
                   overflow: "hidden",
                   flexShrink: 0,
                 }}
@@ -233,15 +233,15 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
             display: "flex",
             alignItems: "flex-start",
             gap: 8,
-            background: "rgba(251,191,36,0.06)",
-            border: "1px solid rgba(251,191,36,0.15)",
+            background: "rgba(217,119,6,0.05)",
+            border: "1px solid rgba(217,119,6,0.12)",
             borderRadius: 8,
             padding: "8px 10px",
             marginBottom: 12,
           }}
         >
-          <span style={{ color: "#fbbf24", fontSize: 12, flexShrink: 0 }}>⚡</span>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
+          <span style={{ color: "#d97706", fontSize: 12, flexShrink: 0 }}>⚡</span>
+          <span style={{ fontSize: 11, color: "#6b6b80", lineHeight: 1.4 }}>
             Use STAR method to structure behavioral stories with clear Situation, Task, Action, and Result.
           </span>
         </div>
@@ -251,7 +251,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
       {!compact && (
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid #e8e8ef",
             paddingTop: 12,
             display: "flex",
             alignItems: "center",
@@ -265,13 +265,13 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 fontFamily: "monospace",
                 letterSpacing: "1px",
                 textTransform: "uppercase",
-                color: "rgba(255,255,255,0.3)",
+                color: "#9d9db0",
                 marginBottom: 2,
               }}
             >
               Share Results
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.22)" }}>
+            <div style={{ fontSize: 10, color: "#c4c4d0" }}>
               Send to mentors &amp; recruiters
             </div>
           </div>
@@ -299,8 +299,8 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 width: 28,
                 height: 28,
                 borderRadius: 6,
-                background: "#000",
-                border: "1px solid rgba(255,255,255,0.15)",
+                background: "#111118",
+                border: "1px solid #e8e8ef",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -317,8 +317,8 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 width: 28,
                 height: 28,
                 borderRadius: 6,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(0,0,0,0.03)",
+                border: "1px solid #e8e8ef",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -330,7 +330,7 @@ export function ResultsDashboardMockup({ className = "", compact = false }: Prop
                 height="13"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="rgba(255,255,255,0.55)"
+                stroke="#6b6b80"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
