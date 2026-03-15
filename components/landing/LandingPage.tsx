@@ -70,9 +70,9 @@ const howItWorksSteps = [
     number: "03",
     title: "Close the gaps with a live AI mock interview",
     description:
-      "Your AI interviewer targets your weak spots in real-time, challenges you with follow-ups, and scores you across 10 metrics — so you walk in knowing exactly where you stand. The diagnosis without the practice is just anxiety.",
+      "Choose your AI agent — Standard for consistent practice or Premium for the most realistic experience. Your interviewer targets weak spots in real-time, challenges you with follow-ups, and scores you across 10 metrics — so you walk in knowing exactly where you stand.",
     icon: Mic,
-    badge: "From $5",
+    badge: "Free first interview",
     highlight: true,
   },
 ];
@@ -255,61 +255,59 @@ const roles = [
 const stats = [
   { value: "10", label: "Performance Metrics", sub: "Scored every session" },
   { value: "Every Industry", label: "Tech to healthcare" },
-  { value: "From $5", label: "Per Interview", sub: "Credits never expire" },
+  { value: "From $2/interview", label: "Subscription plans" },
   { value: "Free", label: "Fit Score & Questions", sub: "No credit card required" },
 ];
 
 const pricingPlans: Plan[] = [
   {
-    name: "Starter",
-    price: "$10",
-    description: "Try a single mock interview.",
+    name: "Free",
+    price: "$0",
+    description: "Try nayld.ai",
     features: [
-      "1 interview credit",
-      "Full AI mock interview session",
-      "Shareable performance assessment with 10 scored metrics",
-      "Credits never expire",
+      "1 AI mock interview",
+      "Standard AI Interviewer",
+      "Full 10-metric performance scoring",
+      "Personalized feedback report",
+      "Shareable results link",
     ],
-    cta: "Get Started",
-    note: "First interview? Get 50% off — try it for $5 with our intro offer.",
+    cta: "Sign Up Free",
   },
   {
-    name: "Standard",
-    price: "$25",
-    description: "The sweet spot for active job seekers.",
+    name: "Essentials",
+    price: "$20",
+    priceLabel: "/month",
+    description: "Best for active job seekers.",
     features: [
-      "3 interview credits",
-      "Save 17% vs. buying individually",
-      "Full AI mock interview sessions",
-      "Credits never expire and stack",
+      "10 AI mock interviews per month",
+      "Standard AI Interviewer",
+      "Solid practice with adaptive follow-ups",
+      "Full 10-metric scoring & feedback",
+      "Buy extra interviews at $3 each",
+      "Cancel anytime",
     ],
-    cta: "Buy 3 Credits",
+    cta: "Subscribe to Essentials",
     highlighted: true,
-    popular: true,
   },
   {
-    name: "Pro",
-    price: "$39",
-    description: "Serious prep across multiple roles.",
-    features: [
-      "5 interview credits",
-      "Save 22% vs. buying individually",
-      "Full AI mock interview sessions",
-      "Credits never expire and stack",
-    ],
-    cta: "Buy 5 Credits",
-  },
-  {
-    name: "Power",
+    name: "Elite",
     price: "$69",
-    description: "Maximum prep with best value per credit.",
+    priceLabel: "/month",
+    description: "The most realistic AI interview experience.",
     features: [
-      "10 interview credits",
-      "Save 31% vs. buying individually",
-      "Full AI mock interview sessions",
-      "Credits never expire and stack",
+      "10 AI mock interviews per month",
+      "Premium AI Interviewer",
+      "Faster, more natural responses",
+      "Human-like conversation flow",
+      "Deepest contextual follow-ups",
+      "Full 10-metric scoring & feedback",
+      "Buy extra interviews at $10 each",
+      "Cancel anytime",
     ],
-    cta: "Buy 10 Credits",
+    cta: "Subscribe to Elite",
+    popular: true,
+    premiumCallout:
+      "The Premium AI Interviewer uses our most advanced model — faster responses, more natural conversation, and deeper contextual follow-ups. It's the closest thing to sitting across from a real interviewer.",
   },
 ];
 
@@ -348,19 +346,31 @@ const faqs = [
     id: "faq-6",
     title: "Is it really free to get started?",
     content:
-      "Yes. Sign up, upload your resume, add a job, and get your fit score and tailored questions at no cost. No credit card required.",
+      "Yes. Sign up, upload your resume, add a job, and get your fit score and tailored questions at no cost. You also get one free AI mock interview with full scoring \u2014 no credit card required. After that, subscribe to Essentials ($20/mo) or Elite ($69/mo) for 10 interviews per month.",
   },
   {
     id: "faq-7",
+    title: "What\u2019s the difference between Standard and Premium AI?",
+    content:
+      "Both agents conduct full voice-first mock interviews with adaptive follow-ups and score you across 10 metrics. The Premium AI (available on the Elite plan) uses our most advanced model \u2014 it responds faster, sounds more natural, and produces deeper contextual follow-ups. It\u2019s the closest experience to a real human interviewer. The Standard AI (on the Free and Essentials plans) is a strong interviewer that provides excellent practice for consistent improvement.",
+  },
+  {
+    id: "faq-8",
+    title: "Can I buy extra interviews if I use all 10?",
+    content:
+      "Yes. Subscribers can purchase add-on interview credits at any time \u2014 $3 each on Essentials, $10 each on Elite. Credits never expire and carry over across billing periods.",
+  },
+  {
+    id: "faq-9",
     title: "What do I get after a mock interview?",
     content:
       "A detailed assessment across 10 metrics: Answer Correctness, Reasoning Quality, Communication Clarity, Behavioral Story Quality, Role Alignment Coverage, and 5 more. Each metric includes evidence from your answers, a next action, and an explanation of why it matters. Plus overall strengths, growth areas, next steps, and a full transcript.",
   },
   {
-    id: "faq-8",
+    id: "faq-10",
     title: "Can I share my results?",
     content:
-      "Yes. Every completed mock interview generates a shareable public link you can send to anyone — mentors, coaches, or recruiters on LinkedIn. The link shows your full performance assessment: all 10 scored metrics, your strengths, and your growth areas. You control when to share and with whom.",
+      "Yes. Every completed mock interview generates a shareable public link you can send to anyone \u2014 mentors, coaches, or recruiters on LinkedIn. The link shows your full performance assessment: all 10 scored metrics, your strengths, and your growth areas. You control when to share and with whom.",
   },
 ];
 
@@ -785,6 +795,14 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </motion.div>
             ))}
           </div>
+
+          <motion.div variants={fadeInUp} className="mt-8 text-center">
+            <p className="text-sm font-medium text-slate-600">
+              Choose your AI:{" "}
+              <span className="text-slate-800">Standard</span> for solid practice, or{" "}
+              <span className="text-slate-800">Premium</span> for the most realistic experience.
+            </p>
+          </motion.div>
 
           {/* 4 metric cards */}
           <motion.div
@@ -1213,7 +1231,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             <p className="mb-6 text-base text-slate-600">
               This is the feedback a{" "}
               <span className="font-semibold text-slate-800">$200/hr career coach</span> would
-              give — and you&rsquo;re getting it for $10. Share your verified assessment with
+              give — starting at $2 per session with Essentials. Share your verified assessment with
               mentors, coaches, or your LinkedIn network &mdash; show them exactly where you stand.
             </p>
             <Button onClick={onPrimaryCta} className="glow-accent-light group">
@@ -1523,13 +1541,13 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <motion.div variants={fadeInUp}>
             <SectionTitle
               eyebrow="Pricing"
-              title="Buy credit packs — no subscriptions"
-              subtitle="Prep tools are free. Buy interview credits only when you need them. Credits never expire."
+              title="Simple pricing. Start free."
+              subtitle="One free interview to see what you've been missing. Then subscribe for ongoing practice with the AI agent that fits your goals."
               align="center"
             />
           </motion.div>
 
-          <div className="mt-14 grid grid-cols-2 gap-5 lg:grid-cols-4">
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {pricingPlans.map((plan) => (
               <motion.div key={plan.name} variants={fadeInUp}>
                 <PricingCard plan={plan} onCta={onPrimaryCta} />
@@ -1542,26 +1560,24 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
                 <div className="max-w-2xl space-y-3">
                   <Badge className="w-fit border-mm-violet/20 bg-white text-mm-violet">
-                    Free Forever
+                    Free tools — always
                   </Badge>
                   <h3 className="text-2xl font-semibold tracking-tight text-slate-900">
                     Prep tools at no cost
                   </h3>
                   <p className="text-sm leading-relaxed text-slate-600">
-                    See your fit score and get tailored questions for free. When
-                    you&rsquo;re ready to practice for real, each mock interview
-                    is one credit &mdash; and every credit comes with{" "}
-                    <span className="font-semibold text-slate-800">
-                      10 scored metrics, specific evidence and next actions,
-                      strengths and growth areas, and a full transcript.
-                    </span>
+                    Upload your resume and paste any job description for free.
+                    Get your fit score, gap analysis, and tailored interview
+                    questions at no cost. When you&rsquo;re ready to practice
+                    for real, your first mock interview is free &mdash; then
+                    subscribe for ongoing access.
                   </p>
                   <ul className="space-y-2 text-sm text-slate-700">
                     {[
                       "Upload resumes and job postings for free",
                       "Get a 1\u201310 fit score with gap analysis",
                       "Receive tailored interview questions",
-                      "Each mock interview consumes exactly one credit",
+                      "First mock interview is free \u2014 full scoring included",
                     ].map((item) => (
                       <li key={item} className="flex items-start gap-2.5">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
@@ -1636,8 +1652,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             </h2>
             <p className="text-base text-white/80">
               Upload your resume, add the job, and get scored across 10 metrics
-              in your first mock interview. Free fit score included &mdash;
-              interview credits start at $10.
+              in your first mock interview &mdash; completely free. Then subscribe from
+              $20/month for ongoing practice with 10 interviews per month.
             </p>
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Button

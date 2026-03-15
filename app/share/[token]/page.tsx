@@ -8,10 +8,10 @@ type Props = { params: { token: string } };
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function scoreColor(s: number) {
-  if (s >= 8) return "#34d399";
-  if (s >= 6) return "#22d3ee";
-  if (s >= 4) return "#fbbf24";
-  return "#f87171";
+  if (s >= 8) return "#16a34a";
+  if (s >= 6) return "#7c5cfc";
+  if (s >= 4) return "#d97706";
+  return "#dc2626";
 }
 
 function scoreRingOffset(score: number) {
@@ -150,8 +150,8 @@ export default async function SharePage({ params }: Props) {
     <div
       style={{
         fontFamily: "'Instrument Sans', -apple-system, sans-serif",
-        background: "#06080f",
-        color: "#e8eaf0",
+        background: "#f8f8fb",
+        color: "#111118",
         minHeight: "100vh",
         WebkitFontSmoothing: "antialiased",
       }}
@@ -186,7 +186,7 @@ export default async function SharePage({ params }: Props) {
             bottom: -150,
             right: -100,
             borderRadius: "50%",
-            background: "rgba(167,139,250,0.04)",
+            background: "rgba(124,92,252,0.04)",
             filter: "blur(120px)",
           }}
         />
@@ -195,7 +195,7 @@ export default async function SharePage({ params }: Props) {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)",
+              "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)",
             backgroundSize: "60px 60px",
             maskImage: "radial-gradient(ellipse 60% 40% at 50% 30%, black 10%, transparent 100%)",
           }}
@@ -222,9 +222,9 @@ export default async function SharePage({ params }: Props) {
         >
           <Link
             href="/"
-            style={{ fontSize: 18, fontWeight: 700, color: "#e8eaf0", textDecoration: "none" }}
+            style={{ fontSize: 18, fontWeight: 700, color: "#111118", textDecoration: "none" }}
           >
-            nayld<span style={{ color: "#22d3ee" }}>.ai</span>
+            nayld<span style={{ color: "#7c5cfc" }}>.ai</span>
           </Link>
           <div
             style={{
@@ -233,8 +233,8 @@ export default async function SharePage({ params }: Props) {
               fontWeight: 600,
               letterSpacing: "1.5px",
               textTransform: "uppercase",
-              color: "rgba(255,255,255,0.3)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#9d9db0",
+              border: "1px solid #e8e8ef",
               padding: "5px 14px",
               borderRadius: 100,
             }}
@@ -246,7 +246,7 @@ export default async function SharePage({ params }: Props) {
         {/* Hero Score Card */}
         <div
           style={{
-            background: "rgba(14,20,36,0.7)",
+            background: "rgba(255,255,255,0.85)",
             backdropFilter: "blur(24px)",
             border: `1px solid ${accentColor}26`,
             borderRadius: 20,
@@ -290,7 +290,7 @@ export default async function SharePage({ params }: Props) {
               style={{
                 fontSize: 26,
                 fontWeight: 700,
-                color: "#e8eaf0",
+                color: "#111118",
                 letterSpacing: "-0.5px",
                 marginBottom: 6,
               }}
@@ -300,7 +300,7 @@ export default async function SharePage({ params }: Props) {
             <div
               style={{
                 fontSize: 15,
-                color: "rgba(255,255,255,0.3)",
+                color: "#9d9db0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -310,7 +310,7 @@ export default async function SharePage({ params }: Props) {
               {job?.company && (
                 <>
                   <span>{job.company}</span>
-                  <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "inline-block" }} />
+                  <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#e8e8ef", display: "inline-block" }} />
                 </>
               )}
               <span>{formatDate(interview.created_at)}</span>
@@ -338,7 +338,7 @@ export default async function SharePage({ params }: Props) {
                 cy="100"
                 r="88"
                 fill="none"
-                stroke="rgba(255,255,255,0.04)"
+                stroke="rgba(0,0,0,0.04)"
                 strokeWidth="6"
               />
               <circle
@@ -358,9 +358,9 @@ export default async function SharePage({ params }: Props) {
                 position: "absolute",
                 inset: 20,
                 borderRadius: "50%",
-                background: `${accentColor}4d`,
+                background: `${accentColor}1a`,
                 filter: "blur(30px)",
-                opacity: 0.3,
+                opacity: 0.4,
               }}
             />
             <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
@@ -374,7 +374,7 @@ export default async function SharePage({ params }: Props) {
                 }}
               >
                 {overallScore.toFixed(1)}
-                <span style={{ fontSize: 18, fontWeight: 500, color: "rgba(255,255,255,0.3)", marginLeft: 2 }}>
+                <span style={{ fontSize: 18, fontWeight: 500, color: "#9d9db0", marginLeft: 2 }}>
                   /10
                 </span>
               </div>
@@ -401,9 +401,9 @@ export default async function SharePage({ params }: Props) {
                   fontSize: 14,
                   fontWeight: 600,
                   marginTop: 4,
-                  background: `${accentColor}1a`,
+                  background: `${accentColor}0f`,
                   color: accentColor,
-                  border: `1px solid ${accentColor}33`,
+                  border: `1px solid ${accentColor}26`,
                 }}
               >
                 {gradeLabel(overallScore)}
@@ -419,7 +419,7 @@ export default async function SharePage({ params }: Props) {
               gap: 32,
               marginTop: 28,
               paddingTop: 24,
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderTop: "1px solid #e8e8ef",
               flexWrap: "wrap",
             }}
           >
@@ -428,10 +428,10 @@ export default async function SharePage({ params }: Props) {
               { val: `Attempt #${interview.attempt_number}`, lbl: "Session" },
             ].map(({ val, lbl }) => (
               <div key={lbl} style={{ textAlign: "center" }}>
-                <div style={{ fontFamily: "monospace", fontSize: 16, fontWeight: 700, color: "#e8eaf0", letterSpacing: "-0.5px" }}>
+                <div style={{ fontFamily: "monospace", fontSize: 16, fontWeight: 700, color: "#111118", letterSpacing: "-0.5px" }}>
                   {val}
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 3 }}>
+                <div style={{ fontSize: 12, color: "#9d9db0", marginTop: 3 }}>
                   {lbl}
                 </div>
               </div>
@@ -452,10 +452,10 @@ export default async function SharePage({ params }: Props) {
                   alignItems: "center",
                   gap: 16,
                   padding: "12px 0",
-                  borderTop: "1px solid rgba(255,255,255,0.03)",
+                  borderTop: "1px solid rgba(0,0,0,0.04)",
                 }}
               >
-                <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "#e8eaf0" }}>
+                <div style={{ flex: 1, fontSize: 15, fontWeight: 500, color: "#111118" }}>
                   {label}
                 </div>
                 <div
@@ -463,7 +463,7 @@ export default async function SharePage({ params }: Props) {
                     width: 160,
                     height: 6,
                     borderRadius: 3,
-                    background: "rgba(255,255,255,0.04)",
+                    background: "rgba(0,0,0,0.04)",
                     overflow: "hidden",
                     flexShrink: 0,
                   }}
@@ -526,17 +526,17 @@ export default async function SharePage({ params }: Props) {
               <div
                 key={label}
                 style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(0,0,0,0.02)",
+                  border: "1px solid #e8e8ef",
                   borderRadius: 12,
                   padding: "16px 18px",
                 }}
               >
                 <div style={{ fontSize: 18, marginBottom: 8 }}>{icon}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
+                <div style={{ fontSize: 12, color: "#9d9db0", marginBottom: 4 }}>
                   {label}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#e8eaf0", lineHeight: 1.4 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111118", lineHeight: 1.4 }}>
                   {value}
                 </div>
               </div>
@@ -547,9 +547,9 @@ export default async function SharePage({ params }: Props) {
         {/* Performance Breakdown — collapsible */}
         <details
           style={{
-            background: "rgba(14,20,36,0.7)",
+            background: "rgba(255,255,255,0.85)",
             backdropFilter: "blur(24px)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            border: "1px solid #e8e8ef",
             borderRadius: 16,
             marginBottom: 16,
             overflow: "hidden",
@@ -572,8 +572,8 @@ export default async function SharePage({ params }: Props) {
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(0,0,0,0.03)",
+                  border: "1px solid #e8e8ef",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -584,8 +584,8 @@ export default async function SharePage({ params }: Props) {
                 📊
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#e8eaf0" }}>Performance Breakdown</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>10 metrics · tap to expand</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111118" }}>Performance Breakdown</div>
+                <div style={{ fontSize: 12, color: "#9d9db0" }}>10 metrics · tap to expand</div>
               </div>
             </div>
             <div
@@ -596,10 +596,10 @@ export default async function SharePage({ params }: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 8,
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(0,0,0,0.03)",
+                border: "1px solid #e8e8ef",
                 flexShrink: 0,
-                color: "rgba(255,255,255,0.3)",
+                color: "#9d9db0",
                 fontSize: 14,
               }}
             >
@@ -608,7 +608,7 @@ export default async function SharePage({ params }: Props) {
           </summary>
           <div
             style={{
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              borderTop: "1px solid #e8e8ef",
               padding: "20px 28px 28px",
             }}
           >
@@ -633,14 +633,14 @@ export default async function SharePage({ params }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(0,0,0,0.02)",
+                    border: "1px solid #e8e8ef",
                     borderRadius: 10,
                     padding: "10px 14px",
                     gap: 8,
                   }}
                 >
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", lineHeight: 1.3 }}>
+                  <span style={{ fontSize: 13, color: "#6b6b80", lineHeight: 1.3 }}>
                     {label}
                   </span>
                   <span
@@ -668,7 +668,7 @@ export default async function SharePage({ params }: Props) {
                   fontWeight: 600,
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  color: "#34d399",
+                  color: "#16a34a",
                   marginBottom: 10,
                 }}
               >
@@ -676,8 +676,8 @@ export default async function SharePage({ params }: Props) {
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                 {strengths.map((s: string, i: number) => (
-                  <li key={i} style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, display: "flex", gap: 8 }}>
-                    <span style={{ color: "#34d399", flexShrink: 0 }}>✦</span>
+                  <li key={i} style={{ fontSize: 14, color: "#6b6b80", lineHeight: 1.5, display: "flex", gap: 8 }}>
+                    <span style={{ color: "#16a34a", flexShrink: 0 }}>✦</span>
                     {s}
                   </li>
                 ))}
@@ -694,7 +694,7 @@ export default async function SharePage({ params }: Props) {
                   fontWeight: 600,
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  color: "#fbbf24",
+                  color: "#d97706",
                   marginBottom: 10,
                 }}
               >
@@ -702,8 +702,8 @@ export default async function SharePage({ params }: Props) {
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                 {growthAreas.map((g: string, i: number) => (
-                  <li key={i} style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, display: "flex", gap: 8 }}>
-                    <span style={{ color: "#fbbf24", flexShrink: 0 }}>⏳</span>
+                  <li key={i} style={{ fontSize: 14, color: "#6b6b80", lineHeight: 1.5, display: "flex", gap: 8 }}>
+                    <span style={{ color: "#d97706", flexShrink: 0 }}>⏳</span>
                     {g}
                   </li>
                 ))}
@@ -720,7 +720,7 @@ export default async function SharePage({ params }: Props) {
                   fontWeight: 600,
                   letterSpacing: "1.5px",
                   textTransform: "uppercase",
-                  color: "#22d3ee",
+                  color: "#7c5cfc",
                   marginBottom: 10,
                 }}
               >
@@ -728,8 +728,8 @@ export default async function SharePage({ params }: Props) {
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
                 {nextSteps.map((n: string, i: number) => (
-                  <li key={i} style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.5, display: "flex", gap: 8 }}>
-                    <span style={{ color: "#22d3ee", flexShrink: 0 }}>→</span>
+                  <li key={i} style={{ fontSize: 14, color: "#6b6b80", lineHeight: 1.5, display: "flex", gap: 8 }}>
+                    <span style={{ color: "#7c5cfc", flexShrink: 0 }}>→</span>
                     {n}
                   </li>
                 ))}
@@ -742,8 +742,8 @@ export default async function SharePage({ params }: Props) {
         {/* CTA */}
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(34,211,238,0.06), rgba(167,139,250,0.04))",
-            border: "1px solid rgba(34,211,238,0.15)",
+            background: "linear-gradient(135deg, rgba(124,92,252,0.06), rgba(124,92,252,0.03))",
+            border: "1px solid rgba(124,92,252,0.18)",
             borderRadius: 16,
             padding: 32,
             textAlign: "center",
@@ -754,7 +754,7 @@ export default async function SharePage({ params }: Props) {
             style={{
               fontSize: 20,
               fontWeight: 700,
-              color: "#e8eaf0",
+              color: "#111118",
               letterSpacing: "-0.5px",
               marginBottom: 8,
             }}
@@ -764,7 +764,7 @@ export default async function SharePage({ params }: Props) {
           <p
             style={{
               fontSize: 15,
-              color: "rgba(255,255,255,0.5)",
+              color: "#6b6b80",
               maxWidth: 400,
               margin: "0 auto 20px",
               lineHeight: 1.5,
@@ -781,18 +781,18 @@ export default async function SharePage({ params }: Props) {
               gap: 8,
               padding: "14px 32px",
               borderRadius: 12,
-              background: "#22d3ee",
-              color: "#06080f",
+              background: "#7c5cfc",
+              color: "#ffffff",
               fontSize: 15,
               fontWeight: 700,
               textDecoration: "none",
               letterSpacing: "-0.2px",
-              boxShadow: "0 4px 24px rgba(34,211,238,0.3)",
+              boxShadow: "0 4px 24px rgba(124,92,252,0.3)",
             }}
           >
             Try It Free →
           </Link>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 12 }}>
+          <div style={{ fontSize: 12, color: "#9d9db0", marginTop: 12 }}>
             No credit card required · Get your fit score in 60 seconds
           </div>
         </div>
@@ -805,14 +805,14 @@ export default async function SharePage({ params }: Props) {
             justifyContent: "space-between",
             paddingTop: 24,
             marginTop: 8,
-            borderTop: "1px solid rgba(255,255,255,0.06)",
+            borderTop: "1px solid #e8e8ef",
             fontSize: 12,
-            color: "rgba(255,255,255,0.3)",
+            color: "#9d9db0",
           }}
         >
           <span>
             Powered by{" "}
-            <Link href="/" style={{ color: "#22d3ee", textDecoration: "none" }}>
+            <Link href="/" style={{ color: "#7c5cfc", textDecoration: "none" }}>
               nayld.ai
             </Link>
           </span>
@@ -829,9 +829,9 @@ function SectionCard({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        background: "rgba(14,20,36,0.7)",
+        background: "rgba(255,255,255,0.85)",
         backdropFilter: "blur(24px)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid #e8e8ef",
         borderRadius: 16,
         padding: 28,
         marginBottom: 16,
@@ -851,7 +851,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
         fontWeight: 600,
         letterSpacing: "2px",
         textTransform: "uppercase",
-        color: "rgba(255,255,255,0.3)",
+        color: "#9d9db0",
         marginBottom: 20,
         display: "flex",
         alignItems: "center",
@@ -859,8 +859,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+      <div style={{ flex: 1, height: 1, background: "#e8e8ef" }} />
     </div>
   );
 }
-
