@@ -438,6 +438,11 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      {/* Skip navigation link — visible only on keyboard focus */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
+
       {/* ================================================================ */}
       {/* NAVIGATION                                                       */}
       {/* ================================================================ */}
@@ -524,10 +529,11 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         </AnimatePresence>
       </header>
 
+      <main id="main-content">
       {/* ================================================================ */}
       {/* HERO                                                             */}
       {/* ================================================================ */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden" aria-label="Hero">
         <div className="pointer-events-none absolute left-1/4 top-0 -z-10 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-mm-violet/[0.06] blur-[100px]" />
         <div className="pointer-events-none absolute right-1/4 top-20 -z-10 h-[400px] w-[400px] translate-x-1/2 rounded-full bg-mm-blue/[0.06] blur-[100px]" />
 
@@ -554,7 +560,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               </motion.div>
 
               <motion.div variants={fadeInUp} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" onClick={onPrimaryCta} className="glow-accent-light group">
+                <Button size="lg" onClick={onPrimaryCta} className="glow-accent-light group" aria-label="Start practicing free — sign up">
                   Start Practicing Free
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Button>
@@ -589,7 +595,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               className="relative"
             >
               <div className="pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-br from-mm-violet/10 via-mm-blue/5 to-mm-cyan/10 blur-3xl" />
-              <div className="relative space-y-3">
+              <div className="relative space-y-3" aria-hidden="true">
                 <div className="overflow-hidden rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06]">
                   <InterviewScreenMockup variant="hero" />
                 </div>
@@ -611,6 +617,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         viewport={{ once: true, amount: 0.3 }}
         variants={staggerContainer}
         className="border-y border-slate-100 bg-slate-50/60 py-10"
+        aria-label="Key stats"
       >
         <div className="mx-auto max-w-6xl px-6">
           <motion.div
@@ -622,7 +629,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                 <div className="text-3xl font-bold gradient-text">{stat.value}</div>
                 <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
                 {"sub" in stat && stat.sub && (
-                  <div className="mt-0.5 text-xs text-slate-400">{stat.sub}</div>
+                  <div className="mt-0.5 text-xs text-slate-500">{stat.sub}</div>
                 )}
               </div>
             ))}
@@ -639,6 +646,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         viewport={{ once: true, amount: 0.15 }}
         variants={staggerContainer}
         className="mx-auto max-w-6xl px-6 py-20"
+        aria-label="The problem with traditional interview prep"
       >
         <motion.div
           variants={fadeInUp}
@@ -662,7 +670,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <div className="grid lg:grid-cols-2">
             {/* Left: What most people do */}
             <div className="border-b border-slate-200 p-8 lg:border-b-0 lg:border-r">
-              <p className="mb-5 text-sm font-semibold uppercase tracking-wider text-slate-400">
+              <p className="mb-5 text-sm font-semibold uppercase tracking-wider text-slate-500">
                 What most people do
               </p>
               <ul className="space-y-4">
@@ -736,7 +744,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
             </span>{" "}
             — and see where your 10 metrics fall.
           </p>
-          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+          <Button onClick={onPrimaryCta} className="glow-accent-light group" aria-label="Start your first mock interview">
             Start Your First Interview
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
@@ -785,7 +793,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               ] as const
             ).map(({ state, caption, sub }) => (
               <motion.div key={state} variants={fadeInUp}>
-                <div className="overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]">
+                <div className="overflow-hidden rounded-2xl shadow-[0_20px_56px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]" aria-hidden="true">
                   <InterviewScreenMockup state={state} />
                 </div>
                 <div className="mt-4 text-center">
@@ -878,7 +886,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                       <div>
                         <p className="text-sm font-semibold text-slate-800">{label}</p>
                         <p className="mt-0.5 text-xs text-slate-500">{desc}</p>
-                        <p className="mt-2 text-xs italic leading-relaxed text-slate-400">
+                        <p className="mt-2 text-xs italic leading-relaxed text-slate-500">
                           &ldquo;{why}&rdquo;
                         </p>
                       </div>
@@ -895,7 +903,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <p className="mb-4 text-center text-sm font-medium text-slate-500">
             Example metric card from your results:
           </p>
-          <div className="mx-auto max-w-xl">
+          <div className="mx-auto max-w-xl" aria-hidden="true">
             <div
               style={{
                 background: "white",
@@ -1037,7 +1045,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         </motion.div>
 
         <motion.div variants={fadeInUp} className="mt-10 text-center">
-          <Button onClick={onPrimaryCta} className="glow-accent-light group">
+          <Button onClick={onPrimaryCta} className="glow-accent-light group" aria-label="See your 10 performance metrics — start a mock interview">
             See your 10 metrics — Start a mock interview
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
@@ -1065,7 +1073,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           </motion.div>
 
           {/* Full 10-metric mockup */}
-          <motion.div variants={fadeInUp} className="mt-14">
+          <motion.div variants={fadeInUp} className="mt-14" aria-hidden="true">
             <div
               style={{
                 background: "white",
@@ -1234,7 +1242,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               give — starting at $2 per session with Essentials. Share your verified assessment with
               mentors, coaches, or your LinkedIn network &mdash; show them exactly where you stand.
             </p>
-            <Button onClick={onPrimaryCta} className="glow-accent-light group">
+            <Button onClick={onPrimaryCta} className="glow-accent-light group" aria-label="Start your first mock interview — see your performance breakdown">
               Start Your First Mock Interview
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Button>
@@ -1274,7 +1282,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                       {label}
                     </p>
                     <p
@@ -1283,7 +1291,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
                       }`}
                     >
                       {score}
-                      <span className="text-lg font-normal text-slate-400">/10</span>
+                      <span className="text-lg font-normal text-slate-500">/10</span>
                     </p>
                   </div>
                   {delta && (
@@ -1315,16 +1323,16 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500" scope="col">
                   Metric
                 </th>
-                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500" scope="col">
                   Attempt 1
                 </th>
-                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500" scope="col">
                   Attempt 2
                 </th>
-                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-mm-violet">
+                <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wider text-mm-violet" scope="col">
                   Attempt 3
                 </th>
               </tr>
@@ -1454,6 +1462,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
         <motion.div
           variants={fadeInUp}
           className="mt-12 flex flex-wrap justify-center gap-3"
+          aria-label="Supported roles include Marketing Manager, Registered Nurse, Software Engineer, and more"
         >
           {roles.map((role) => (
             <span
@@ -1498,7 +1507,7 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
               <a
                 href="https://theresanaiforthat.com/ai/nayld-ai/?ref=featured&v=9353283"
                 target="_blank"
-                rel="nofollow"
+                rel="nofollow noopener noreferrer"
                 className="opacity-80 transition-opacity hover:opacity-100"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1671,6 +1680,8 @@ export default function LandingPage({ onPrimaryCta }: LandingPageProps) {
           </div>
         </div>
       </motion.section>
+
+      </main>
 
       {/* ================================================================ */}
       {/* FOOTER                                                           */}

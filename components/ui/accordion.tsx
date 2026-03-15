@@ -32,16 +32,20 @@ export function Accordion({ items, type = "single", defaultValue, className }: A
         return (
           <div key={item.id}>
             <button
+              id={`${item.id}-trigger`}
               className="flex w-full items-center justify-between px-6 py-4 text-left text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-slate-800/60"
               onClick={() => toggle(item.id)}
               aria-expanded={isOpen}
               aria-controls={`${item.id}-content`}
             >
               <span>{item.title}</span>
-              <span className="text-xl">{isOpen ? "−" : "+"}</span>
+              <span className="text-xl" aria-hidden="true">{isOpen ? "−" : "+"}</span>
             </button>
             <div
               id={`${item.id}-content`}
+              role="region"
+              aria-labelledby={`${item.id}-trigger`}
+              aria-hidden={!isOpen}
               className={cn(
                 "overflow-hidden px-6 transition-all",
                 isOpen ? "max-h-96 pb-4 pt-0" : "max-h-0"
