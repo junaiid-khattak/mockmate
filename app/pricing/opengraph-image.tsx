@@ -57,7 +57,7 @@ export default function Image() {
               display: "flex",
             }}
           >
-            From $10. No subscriptions. Credits never expire.
+            Start free. Then from $20/month for 10 interviews.
           </div>
         </div>
 
@@ -65,7 +65,7 @@ export default function Image() {
           style={{
             fontSize: 40,
             fontWeight: "bold",
-            background: "linear-gradient(135deg, #ef4460 0%, #f97066 50%, #fb923c 100%)",
+            background: "linear-gradient(135deg, #007BDD 0%, #555AFF 100%)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             color: "transparent",

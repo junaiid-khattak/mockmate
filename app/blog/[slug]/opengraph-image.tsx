@@ -29,7 +29,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             style={{
               fontSize: 60,
               fontWeight: "bold",
-              color: "#ef4460",
+              color: "#555AFF",
             }}
           >
             Post Not Found
@@ -83,7 +83,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             style={{
               fontSize: 40,
               fontWeight: "bold",
-              background: "linear-gradient(135deg, #ef4460 0%, #f97066 50%, #fb923c 100%)",
+              background: "linear-gradient(135deg, #007BDD 0%, #555AFF 100%)",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               color: "transparent",

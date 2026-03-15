@@ -30,7 +30,7 @@ export default function Image() {
             style={{
               fontSize: 22,
               fontWeight: 600,
-              color: "#ef4460",
+              color: "#555AFF",
               textTransform: "uppercase",
               letterSpacing: "0.1em",
               display: "flex",
@@ -65,7 +65,7 @@ export default function Image() {
           style={{
             fontSize: 40,
             fontWeight: "bold",
-            background: "linear-gradient(135deg, #ef4460 0%, #f97066 50%, #fb923c 100%)",
+            background: "linear-gradient(135deg, #007BDD 0%, #555AFF 100%)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             color: "transparent",
