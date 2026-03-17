@@ -177,7 +177,7 @@ export default function JobBriefPage() {
         .then((b) => {
           if (b?.ok && b.summary) setCreditBalance(b.summary.available_credits);
         })
-        .catch(() => {});
+        .catch(() => { });
 
       let jd = await fetchJob();
       if (cancelled) return;
@@ -389,13 +389,13 @@ export default function JobBriefPage() {
   const startInterview = async (): Promise<
     | { ok: true; launchUrl: string }
     | {
-        ok: false;
-        code: "payment_required" | "error";
-        message: string;
-        has_subscription?: boolean;
-        credit_price_cents?: number;
-        can_buy_credits?: boolean;
-      }
+      ok: false;
+      code: "payment_required" | "error";
+      message: string;
+      has_subscription?: boolean;
+      credit_price_cents?: number;
+      can_buy_credits?: boolean;
+    }
   > => {
     try {
       const res = await fetch(`/api/jobs/${jobId}/interview/start`, {
@@ -451,7 +451,12 @@ export default function JobBriefPage() {
       const credits = balanceBody?.summary?.available_credits ?? 0;
       setCreditBalance(credits);
 
-      if (credits < 1) {
+      const subscriptionRes = await fetch("/api/billing/subscription/status");
+      const subscriptionBody = await subscriptionRes.json().catch(() => ({}));
+      const subscriptionCredits = subscriptionBody?.sessions_limit - subscriptionBody?.sessions_used;
+      const addOnCredits = subscriptionBody?.addon_credits - subscriptionBody?.sessions_used;
+
+      if (credits < 1 && subscriptionCredits < 1 && addOnCredits < 1) {
         setInterviewPaywallMessage(
           "You need at least one interview credit to start this interview.",
         );
@@ -459,8 +464,9 @@ export default function JobBriefPage() {
         return;
       }
 
+      handleConfirmStartInterview();
       // Show confirmation dialog
-      setShowCreditConfirm(true);
+      // setShowCreditConfirm(true);
     } catch {
       setInterviewError("Unable to check credit balance.");
     }
@@ -791,541 +797,541 @@ export default function JobBriefPage() {
           {/* Main Column */}
           <div className="flex flex-col gap-4">
 
-        {/* Weak Spots — shown first, expanded by default */}
-        {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
-          <CollapsibleCard
-            title="Weak Spots"
-            icon="△"
-            color="amber"
-            count={`${job.fit_weak_spots.length} gaps`}
-            defaultOpen={true}
-          >
-            <div className="flex flex-col">
-              {job.fit_weak_spots.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
-                >
-                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600">
-                    <span className="text-[10px]">!</span>
-                  </div>
-                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+            {/* Weak Spots — shown first, expanded by default */}
+            {job.fit_weak_spots && job.fit_weak_spots.length > 0 && (
+              <CollapsibleCard
+                title="Weak Spots"
+                icon="△"
+                color="amber"
+                count={`${job.fit_weak_spots.length} gaps`}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col">
+                  {job.fit_weak_spots.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                    >
+                      <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-600">
+                        <span className="text-[10px]">!</span>
+                      </div>
+                      <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CollapsibleCard>
-        )}
+              </CollapsibleCard>
+            )}
 
-        {/* Areas Likely to Be Probed — expanded by default */}
-        {job.fit_areas_to_probe && job.fit_areas_to_probe.length > 0 && (
-          <CollapsibleCard
-            title="Areas Likely to Be Probed"
-            icon="?"
-            color="blue"
-            count={`${job.fit_areas_to_probe.length} areas`}
-            defaultOpen={true}
-          >
-            <div className="flex flex-col">
-              {job.fit_areas_to_probe.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
-                >
-                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
-                    <span className="text-[10px]">?</span>
-                  </div>
-                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+            {/* Areas Likely to Be Probed — expanded by default */}
+            {job.fit_areas_to_probe && job.fit_areas_to_probe.length > 0 && (
+              <CollapsibleCard
+                title="Areas Likely to Be Probed"
+                icon="?"
+                color="blue"
+                count={`${job.fit_areas_to_probe.length} areas`}
+                defaultOpen={true}
+              >
+                <div className="flex flex-col">
+                  {job.fit_areas_to_probe.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                    >
+                      <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+                        <span className="text-[10px]">?</span>
+                      </div>
+                      <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CollapsibleCard>
-        )}
+              </CollapsibleCard>
+            )}
 
-        {/* Strong Alignment — collapsed by default */}
-        {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
-          <CollapsibleCard
-            title="Strong Alignment"
-            icon="✓"
-            color="green"
-            count={`${job.fit_strong_alignment.length} matches`}
-            defaultOpen={false}
-          >
-            <div className="flex flex-col">
-              {job.fit_strong_alignment.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
-                >
-                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600">
-                    <span className="text-[10px]">✓</span>
-                  </div>
-                  <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+            {/* Strong Alignment — collapsed by default */}
+            {job.fit_strong_alignment && job.fit_strong_alignment.length > 0 && (
+              <CollapsibleCard
+                title="Strong Alignment"
+                icon="✓"
+                color="green"
+                count={`${job.fit_strong_alignment.length} matches`}
+                defaultOpen={false}
+              >
+                <div className="flex flex-col">
+                  {job.fit_strong_alignment.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2.5 border-b border-gray-100 py-2.5 last:border-0"
+                    >
+                      <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-600">
+                        <span className="text-[10px]">✓</span>
+                      </div>
+                      <span className="text-sm leading-relaxed text-gray-700">{item}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CollapsibleCard>
-        )}
+              </CollapsibleCard>
+            )}
 
-        {/* Questions */}
-        {job.questions_status === "ready" && job.questions && job.questions.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-2.5">
-                <span className="text-sm text-purple-600">✦</span>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-600">
-                  Tailored Interview Questions
-                </h3>
-                <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                  {job.questions.length} questions
-                </span>
-              </div>
-            </div>
-
-            <div className="divide-y divide-gray-100">
-              {(job.questions as string[])
-                .slice(0, showAllQuestions ? undefined : 3)
-                .map((q, i) => (
-                  <div key={i} className="flex gap-3.5 px-5 py-3.5">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-xs font-bold text-purple-600">
-                      {i + 1}
+            {/* Questions */}
+            {job.questions_status === "ready" && job.questions && job.questions.length > 0 && (
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm text-purple-600">✦</span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-purple-600">
+                      Tailored Interview Questions
+                    </h3>
+                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                      {job.questions.length} questions
                     </span>
-                    <p className="text-sm leading-relaxed text-gray-700">{q}</p>
                   </div>
-                ))}
-            </div>
-
-            {/* Before first interview: gate remaining questions behind an interview CTA */}
-            {job.questions.length > 3 && interviews.length === 0 && (
-              <button
-                type="button"
-                onClick={handleStartInterview}
-                disabled={startingInterview || !job.resume_id}
-                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-[rgba(124,92,252,0.04)] py-3 text-sm font-semibold text-[#7c5cfc] transition-colors hover:bg-[rgba(124,92,252,0.08)] disabled:opacity-50"
-              >
-                + {job.questions.length - 3} more personalized questions — practice answering them with AI feedback →
-              </button>
-            )}
-
-            {/* After first interview: normal show more / fewer toggle */}
-            {job.questions.length > 3 && interviews.length > 0 && !showAllQuestions && (
-              <button
-                type="button"
-                onClick={() => setShowAllQuestions(true)}
-                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
-              >
-                Show {job.questions.length - 3} more questions ↓
-              </button>
-            )}
-
-            {showAllQuestions && job.questions.length > 3 && interviews.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setShowAllQuestions(false)}
-                className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
-              >
-                Show fewer questions ↑
-              </button>
-            )}
-          </div>
-        )}
-
-        {job.questions_status === "pending" && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-2">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-purple-600" />
-              <span className="text-sm text-slate-500">Generating tailored questions...</span>
-            </div>
-          </div>
-        )}
-
-        {job.questions_status === "failed" && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-500">
-              Unable to generate questions.{" "}
-              {job.questions_error && (
-                <span className="text-slate-400">({job.questions_error})</span>
-              )}
-            </p>
-            <button
-              onClick={handleReanalyze}
-              disabled={reanalyzing}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
-              {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
-            </button>
-          </div>
-        )}
-
-        {/* Preview teaser — shown before first interview when fit score is ready */}
-        {interviews.length === 0 && job.fit_score_status === "ready" && (
-          <PreviewResultsTeaser
-            onStartInterview={handleStartInterview}
-            isStarting={startingInterview}
-            disabled={!job.resume_id}
-          />
-        )}
-
-        {/* Post-Interview Results */}
-        {interviews.length > 0 && (() => {
-          const activeInterview = interviews.find(
-            (i) => i.attempt_number === activeAttemptNumber
-          );
-
-          if (!activeInterview) return null;
-
-          const hasMultipleAttempts = interviews.length >= 3;
-          const firstInterview = interviews[interviews.length - 1];
-          const bestInterview = interviews.reduce((best, curr) =>
-            (curr.performance_overall_score ?? 0) > (best.performance_overall_score ?? 0)
-              ? curr
-              : best
-          );
-          const totalImprovement =
-            (bestInterview.performance_overall_score ?? 0) -
-            (firstInterview.performance_overall_score ?? 0);
-
-          return (
-            <>
-              {/* Compare Banner - only for 3+ attempts */}
-              {hasMultipleAttempts && (
-                <CompareBanner
-                  totalImprovement={totalImprovement / 10}
-                  bestScore={(bestInterview.performance_overall_score ?? 0) / 10}
-                  attemptCount={interviews.length}
-                />
-              )}
-
-              {/* Interview Results Hero */}
-              {activeInterview.performance_status === "ready" &&
-                activeInterview.performance_overall_score !== null && (
-                  <div className="relative">
-                    <div className="absolute right-0 top-0 z-10 p-4">
-                      <ShareInterviewButton
-                        interviewId={activeInterview.id}
-                        initialIsShared={activeInterview.is_shared ?? false}
-                        initialShareToken={activeInterview.share_token ?? null}
-                      />
-                    </div>
-                    <InterviewResultsHero
-                      attemptNumber={activeInterview.attempt_number}
-                      overallScore={activeInterview.performance_overall_score / 10}
-                      title={
-                        activeInterview.performance_overall_score >= 80
-                          ? "Excellent Performance"
-                          : activeInterview.performance_overall_score >= 70
-                            ? "Good Progress"
-                            : activeInterview.performance_overall_score >= 60
-                              ? "Solid Foundation"
-                              : "Room for Growth"
-                      }
-                      summary={generatePerformanceSummary(activeInterview, interviews)}
-                      breakdown={[
-                        {
-                          label: "Question understanding",
-                          score: (activeInterview.question_understanding_score ?? 0) / 10,
-                        },
-                        {
-                          label: "Answer correctness",
-                          score: (activeInterview.answer_correctness_score ?? 0) / 10,
-                        },
-                        {
-                          label: "Reasoning quality",
-                          score: (activeInterview.reasoning_quality_score ?? 0) / 10,
-                        },
-                        {
-                          label: "Communication clarity",
-                          score: (activeInterview.communication_clarity_score ?? 0) / 10,
-                        },
-                      ]}
-                      isBestScore={
-                        activeInterview.id === bestInterview.id && hasMultipleAttempts
-                      }
-                    />
-                  </div>
-                )}
-
-              {/* Detailed Performance Breakdown - All Metrics */}
-              {activeInterview.performance_status === "ready" && (
-                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                  <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-500">
-                    Detailed Performance Breakdown
-                  </h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {[
-                      { key: "question_understanding_score", label: "Question understanding" },
-                      { key: "answer_correctness_score", label: "Answer correctness" },
-                      { key: "reasoning_quality_score", label: "Reasoning quality" },
-                      { key: "followup_depth_score", label: "Depth under follow-ups" },
-                      { key: "communication_clarity_score", label: "Communication clarity" },
-                      { key: "behavioral_story_quality_score", label: "Behavioral story quality" },
-                      { key: "role_alignment_coverage_score", label: "Role alignment coverage" },
-                      { key: "confidence_calibration_score", label: "Confidence calibration" },
-                      { key: "time_management_score", label: "Time management" },
-                      { key: "recovery_ability_score", label: "Recovery ability" },
-                    ].map((metric) => {
-                      const value = activeInterview[metric.key as keyof InterviewSession] as number | null;
-                      return (
-                        <div
-                          key={metric.key}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2"
-                        >
-                          <span className="text-xs text-gray-600">{metric.label}</span>
-                          <span className="text-sm font-semibold text-gray-900">
-                            {value !== null ? `${(value / 10).toFixed(1)}` : "--"}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Performance Strengths, Growth Areas, Next Steps */}
-                  {activeInterview.performance_strengths && activeInterview.performance_strengths.length > 0 && (
-                    <div className="mt-6">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Strengths
-                      </h4>
-                      <ul className="mt-2 space-y-1">
-                        {activeInterview.performance_strengths.map((item, idx) => (
-                          <li key={idx} className="text-sm text-gray-700">
-                            • {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {activeInterview.performance_growth_areas && activeInterview.performance_growth_areas.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Growth Areas
-                      </h4>
-                      <ul className="mt-2 space-y-1">
-                        {activeInterview.performance_growth_areas.map((item, idx) => (
-                          <li key={idx} className="text-sm text-gray-700">
-                            • {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {activeInterview.performance_next_steps && activeInterview.performance_next_steps.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Next Steps
-                      </h4>
-                      <ul className="mt-2 space-y-1">
-                        {activeInterview.performance_next_steps.map((item, idx) => (
-                          <li key={idx} className="text-sm text-gray-700">
-                            • {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
                 </div>
-              )}
 
-              {/* Recommendations */}
-              {activeInterview.recommendations &&
-                activeInterview.recommendations.length > 0 && (
-                  <Recommendations
-                    recommendations={activeInterview.recommendations}
-                    defaultOpen={true}
-                  />
+                <div className="divide-y divide-gray-100">
+                  {(job.questions as string[])
+                    .slice(0, showAllQuestions ? undefined : 3)
+                    .map((q, i) => (
+                      <div key={i} className="flex gap-3.5 px-5 py-3.5">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-xs font-bold text-purple-600">
+                          {i + 1}
+                        </span>
+                        <p className="text-sm leading-relaxed text-gray-700">{q}</p>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Before first interview: gate remaining questions behind an interview CTA */}
+                {job.questions.length > 3 && interviews.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={handleStartInterview}
+                    disabled={startingInterview || !job.resume_id}
+                    className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-[rgba(124,92,252,0.04)] py-3 text-sm font-semibold text-[#7c5cfc] transition-colors hover:bg-[rgba(124,92,252,0.08)] disabled:opacity-50"
+                  >
+                    + {job.questions.length - 3} more personalized questions — practice answering them with AI feedback →
+                  </button>
                 )}
 
-              {/* Transcript */}
-              {activeInterview.transcript && activeInterview.transcript.length > 0 && (
-                <InterviewTranscript
-                  exchanges={activeInterview.transcript}
-                  defaultOpen={false}
-                />
-              )}
+                {/* After first interview: normal show more / fewer toggle */}
+                {job.questions.length > 3 && interviews.length > 0 && !showAllQuestions && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllQuestions(true)}
+                    className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
+                  >
+                    Show {job.questions.length - 3} more questions ↓
+                  </button>
+                )}
 
-              {/* Compare Table - only for 3+ attempts */}
-              {hasMultipleAttempts && (
-                <CompareAttemptsTable
-                  attempts={interviews.map((interview) => ({
-                    attemptNumber: interview.attempt_number,
-                    overallScore: (interview.performance_overall_score ?? 0) / 10,
-                    breakdown: {
-                      questionUnderstanding: (interview.question_understanding_score ?? 0) / 10,
-                      answerCorrectness: (interview.answer_correctness_score ?? 0) / 10,
-                      reasoningQuality: (interview.reasoning_quality_score ?? 0) / 10,
-                      followupDepth: (interview.followup_depth_score ?? 0) / 10,
-                      communicationClarity: (interview.communication_clarity_score ?? 0) / 10,
-                      behavioralStoryQuality: (interview.behavioral_story_quality_score ?? 0) / 10,
-                      roleAlignmentCoverage: (interview.role_alignment_coverage_score ?? 0) / 10,
-                      confidenceCalibration: (interview.confidence_calibration_score ?? 0) / 10,
-                      timeManagement: (interview.time_management_score ?? 0) / 10,
-                      recoveryAbility: (interview.recovery_ability_score ?? 0) / 10,
-                    },
-                  }))}
-                  metrics={[
-                    { key: "questionUnderstanding", label: "Question understanding" },
-                    { key: "answerCorrectness", label: "Answer correctness" },
-                    { key: "reasoningQuality", label: "Reasoning quality" },
-                    { key: "followupDepth", label: "Depth under follow-ups" },
-                    { key: "communicationClarity", label: "Communication clarity" },
-                    { key: "behavioralStoryQuality", label: "Behavioral story quality" },
-                    { key: "roleAlignmentCoverage", label: "Role alignment coverage" },
-                    { key: "confidenceCalibration", label: "Confidence calibration" },
-                    { key: "timeManagement", label: "Time management" },
-                    { key: "recoveryAbility", label: "Recovery ability" },
-                  ]}
-                  defaultOpen={true}
-                />
-              )}
-            </>
-          );
-        })()}
+                {showAllQuestions && job.questions.length > 3 && interviews.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllQuestions(false)}
+                    className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 bg-purple-50 py-3 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100"
+                  >
+                    Show fewer questions ↑
+                  </button>
+                )}
+              </div>
+            )}
 
-        {/* Credit confirmation dialog */}
-        {showCreditConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-            <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h3 className="text-lg font-semibold text-slate-900">Start interview?</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                This will use 1 interview credit. You have{" "}
-                <span className="font-semibold">{creditBalance}</span> credit
-                {creditBalance !== 1 ? "s" : ""} remaining.
-              </p>
-              <div className="mt-5 flex gap-3">
+            {job.questions_status === "pending" && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-purple-600" />
+                  <span className="text-sm text-slate-500">Generating tailored questions...</span>
+                </div>
+              </div>
+            )}
+
+            {job.questions_status === "failed" && (
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <p className="text-sm text-slate-500">
+                  Unable to generate questions.{" "}
+                  {job.questions_error && (
+                    <span className="text-slate-400">({job.questions_error})</span>
+                  )}
+                </p>
                 <button
-                  type="button"
-                  onClick={handleConfirmStartInterview}
-                  disabled={startingInterview}
-                  className="flex-1 rounded-lg bg-mm-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-600 disabled:opacity-50"
+                  onClick={handleReanalyze}
+                  disabled={reanalyzing}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 >
-                  {startingInterview ? "Starting..." : "Confirm"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreditConfirm(false)}
-                  className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                >
-                  Cancel
+                  <RefreshCw className={`h-3.5 w-3.5 ${reanalyzing ? "animate-spin" : ""}`} />
+                  {reanalyzing ? "Re-analyzing..." : "Re-analyze"}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Paywall modal — no credits */}
-        {showInterviewPaywall && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-            <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-              <h3 className="text-lg font-semibold text-slate-900">
-                You&apos;re out of interview credits
-              </h3>
-              <p className="mt-2 text-sm text-slate-600">
-                {interviewPaywallMessage ??
-                  "Purchase credits to continue with this interview."}
-              </p>
+            {/* Preview teaser — shown before first interview when fit score is ready */}
+            {interviews.length === 0 && job.fit_score_status === "ready" && (
+              <PreviewResultsTeaser
+                onStartInterview={handleStartInterview}
+                isStarting={startingInterview}
+                disabled={!job.resume_id}
+              />
+            )}
 
-              <div className="mt-5 flex flex-col gap-3">
-                {/* Subscriber: buy addon credits */}
-                {paywallHasSubscription && paywallCanBuyCredits && paywallCreditPriceCents ? (
-                  <div className="rounded-xl border border-slate-200 p-5">
-                    <p className="text-sm font-semibold text-slate-900">
-                      Buy extra interviews
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      ${(paywallCreditPriceCents / 100).toFixed(0)} per interview credit
-                    </p>
+            {/* Post-Interview Results */}
+            {interviews.length > 0 && (() => {
+              const activeInterview = interviews.find(
+                (i) => i.attempt_number === activeAttemptNumber
+              );
 
-                    <div className="mt-4 flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setAddonBuyQuantity(Math.max(1, addonBuyQuantity - 1))}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
-                      >
-                        −
-                      </button>
-                      <span className="min-w-[2rem] text-center text-lg font-bold text-slate-900">
-                        {addonBuyQuantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setAddonBuyQuantity(addonBuyQuantity + 1)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
-                      >
-                        +
-                      </button>
+              if (!activeInterview) return null;
+
+              const hasMultipleAttempts = interviews.length >= 3;
+              const firstInterview = interviews[interviews.length - 1];
+              const bestInterview = interviews.reduce((best, curr) =>
+                (curr.performance_overall_score ?? 0) > (best.performance_overall_score ?? 0)
+                  ? curr
+                  : best
+              );
+              const totalImprovement =
+                (bestInterview.performance_overall_score ?? 0) -
+                (firstInterview.performance_overall_score ?? 0);
+
+              return (
+                <>
+                  {/* Compare Banner - only for 3+ attempts */}
+                  {hasMultipleAttempts && (
+                    <CompareBanner
+                      totalImprovement={totalImprovement / 10}
+                      bestScore={(bestInterview.performance_overall_score ?? 0) / 10}
+                      attemptCount={interviews.length}
+                    />
+                  )}
+
+                  {/* Interview Results Hero */}
+                  {activeInterview.performance_status === "ready" &&
+                    activeInterview.performance_overall_score !== null && (
+                      <div className="relative">
+                        <div className="absolute right-0 top-0 z-10 p-4">
+                          <ShareInterviewButton
+                            interviewId={activeInterview.id}
+                            initialIsShared={activeInterview.is_shared ?? false}
+                            initialShareToken={activeInterview.share_token ?? null}
+                          />
+                        </div>
+                        <InterviewResultsHero
+                          attemptNumber={activeInterview.attempt_number}
+                          overallScore={activeInterview.performance_overall_score / 10}
+                          title={
+                            activeInterview.performance_overall_score >= 80
+                              ? "Excellent Performance"
+                              : activeInterview.performance_overall_score >= 70
+                                ? "Good Progress"
+                                : activeInterview.performance_overall_score >= 60
+                                  ? "Solid Foundation"
+                                  : "Room for Growth"
+                          }
+                          summary={generatePerformanceSummary(activeInterview, interviews)}
+                          breakdown={[
+                            {
+                              label: "Question understanding",
+                              score: (activeInterview.question_understanding_score ?? 0) / 10,
+                            },
+                            {
+                              label: "Answer correctness",
+                              score: (activeInterview.answer_correctness_score ?? 0) / 10,
+                            },
+                            {
+                              label: "Reasoning quality",
+                              score: (activeInterview.reasoning_quality_score ?? 0) / 10,
+                            },
+                            {
+                              label: "Communication clarity",
+                              score: (activeInterview.communication_clarity_score ?? 0) / 10,
+                            },
+                          ]}
+                          isBestScore={
+                            activeInterview.id === bestInterview.id && hasMultipleAttempts
+                          }
+                        />
+                      </div>
+                    )}
+
+                  {/* Detailed Performance Breakdown - All Metrics */}
+                  {activeInterview.performance_status === "ready" && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                      <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                        Detailed Performance Breakdown
+                      </h3>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {[
+                          { key: "question_understanding_score", label: "Question understanding" },
+                          { key: "answer_correctness_score", label: "Answer correctness" },
+                          { key: "reasoning_quality_score", label: "Reasoning quality" },
+                          { key: "followup_depth_score", label: "Depth under follow-ups" },
+                          { key: "communication_clarity_score", label: "Communication clarity" },
+                          { key: "behavioral_story_quality_score", label: "Behavioral story quality" },
+                          { key: "role_alignment_coverage_score", label: "Role alignment coverage" },
+                          { key: "confidence_calibration_score", label: "Confidence calibration" },
+                          { key: "time_management_score", label: "Time management" },
+                          { key: "recovery_ability_score", label: "Recovery ability" },
+                        ].map((metric) => {
+                          const value = activeInterview[metric.key as keyof InterviewSession] as number | null;
+                          return (
+                            <div
+                              key={metric.key}
+                              className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2"
+                            >
+                              <span className="text-xs text-gray-600">{metric.label}</span>
+                              <span className="text-sm font-semibold text-gray-900">
+                                {value !== null ? `${(value / 10).toFixed(1)}` : "--"}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Performance Strengths, Growth Areas, Next Steps */}
+                      {activeInterview.performance_strengths && activeInterview.performance_strengths.length > 0 && (
+                        <div className="mt-6">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Strengths
+                          </h4>
+                          <ul className="mt-2 space-y-1">
+                            {activeInterview.performance_strengths.map((item, idx) => (
+                              <li key={idx} className="text-sm text-gray-700">
+                                • {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {activeInterview.performance_growth_areas && activeInterview.performance_growth_areas.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Growth Areas
+                          </h4>
+                          <ul className="mt-2 space-y-1">
+                            {activeInterview.performance_growth_areas.map((item, idx) => (
+                              <li key={idx} className="text-sm text-gray-700">
+                                • {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {activeInterview.performance_next_steps && activeInterview.performance_next_steps.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            Next Steps
+                          </h4>
+                          <ul className="mt-2 space-y-1">
+                            {activeInterview.performance_next_steps.map((item, idx) => (
+                              <li key={idx} className="text-sm text-gray-700">
+                                • {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
+                  )}
 
+                  {/* Recommendations */}
+                  {activeInterview.recommendations &&
+                    activeInterview.recommendations.length > 0 && (
+                      <Recommendations
+                        recommendations={activeInterview.recommendations}
+                        defaultOpen={true}
+                      />
+                    )}
+
+                  {/* Transcript */}
+                  {activeInterview.transcript && activeInterview.transcript.length > 0 && (
+                    <InterviewTranscript
+                      exchanges={activeInterview.transcript}
+                      defaultOpen={false}
+                    />
+                  )}
+
+                  {/* Compare Table - only for 3+ attempts */}
+                  {hasMultipleAttempts && (
+                    <CompareAttemptsTable
+                      attempts={interviews.map((interview) => ({
+                        attemptNumber: interview.attempt_number,
+                        overallScore: (interview.performance_overall_score ?? 0) / 10,
+                        breakdown: {
+                          questionUnderstanding: (interview.question_understanding_score ?? 0) / 10,
+                          answerCorrectness: (interview.answer_correctness_score ?? 0) / 10,
+                          reasoningQuality: (interview.reasoning_quality_score ?? 0) / 10,
+                          followupDepth: (interview.followup_depth_score ?? 0) / 10,
+                          communicationClarity: (interview.communication_clarity_score ?? 0) / 10,
+                          behavioralStoryQuality: (interview.behavioral_story_quality_score ?? 0) / 10,
+                          roleAlignmentCoverage: (interview.role_alignment_coverage_score ?? 0) / 10,
+                          confidenceCalibration: (interview.confidence_calibration_score ?? 0) / 10,
+                          timeManagement: (interview.time_management_score ?? 0) / 10,
+                          recoveryAbility: (interview.recovery_ability_score ?? 0) / 10,
+                        },
+                      }))}
+                      metrics={[
+                        { key: "questionUnderstanding", label: "Question understanding" },
+                        { key: "answerCorrectness", label: "Answer correctness" },
+                        { key: "reasoningQuality", label: "Reasoning quality" },
+                        { key: "followupDepth", label: "Depth under follow-ups" },
+                        { key: "communicationClarity", label: "Communication clarity" },
+                        { key: "behavioralStoryQuality", label: "Behavioral story quality" },
+                        { key: "roleAlignmentCoverage", label: "Role alignment coverage" },
+                        { key: "confidenceCalibration", label: "Confidence calibration" },
+                        { key: "timeManagement", label: "Time management" },
+                        { key: "recoveryAbility", label: "Recovery ability" },
+                      ]}
+                      defaultOpen={true}
+                    />
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Credit confirmation dialog */}
+            {/* {showCreditConfirm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+                <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+                  <h3 className="text-lg font-semibold text-slate-900">Start interview?</h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    This will use 1 interview credit. You have{" "}
+                    <span className="font-semibold">{creditBalance}</span> credit
+                    {creditBalance !== 1 ? "s" : ""} remaining.
+                  </p>
+                  <div className="mt-5 flex gap-3">
                     <button
                       type="button"
-                      disabled={paywallCheckingOut !== null}
-                      onClick={() => handleBuyAddonCredits(addonBuyQuantity)}
-                      className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0] disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleConfirmStartInterview}
+                      disabled={startingInterview}
+                      className="flex-1 rounded-lg bg-mm-violet px-4 py-2 text-sm font-medium text-white transition hover:bg-violet-600 disabled:opacity-50"
                     >
-                      {paywallCheckingOut === "addon"
-                        ? "Redirecting..."
-                        : `Buy ${addonBuyQuantity} credit${addonBuyQuantity !== 1 ? "s" : ""} · $${((paywallCreditPriceCents * addonBuyQuantity) / 100).toFixed(0)}`}
+                      {startingInterview ? "Starting..." : "Confirm"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreditConfirm(false)}
+                      className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Cancel
                     </button>
                   </div>
-                ) : !paywallHasSubscription ? (
-                  /* Non-subscriber: direct to pricing */
-                  <div className="rounded-xl border border-slate-200 p-5 text-center">
-                    <p className="text-sm font-semibold text-slate-900">
-                      Subscribe to get interviews
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Plans start at $20/month with 10 interviews included.
-                    </p>
+                </div>
+              </div>
+            )} */}
+
+            {/* Paywall modal — no credits */}
+            {showInterviewPaywall && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+                <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    You&apos;re out of interview credits
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {interviewPaywallMessage ??
+                      "Purchase credits to continue with this interview."}
+                  </p>
+
+                  <div className="mt-5 flex flex-col gap-3">
+                    {/* Subscriber: buy addon credits */}
+                    {paywallHasSubscription && paywallCanBuyCredits && paywallCreditPriceCents ? (
+                      <div className="rounded-xl border border-slate-200 p-5">
+                        <p className="text-sm font-semibold text-slate-900">
+                          Buy extra interviews
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          ${(paywallCreditPriceCents / 100).toFixed(0)} per interview credit
+                        </p>
+
+                        <div className="mt-4 flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setAddonBuyQuantity(Math.max(1, addonBuyQuantity - 1))}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                          >
+                            −
+                          </button>
+                          <span className="min-w-[2rem] text-center text-lg font-bold text-slate-900">
+                            {addonBuyQuantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAddonBuyQuantity(addonBuyQuantity + 1)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={paywallCheckingOut !== null}
+                          onClick={() => handleBuyAddonCredits(addonBuyQuantity)}
+                          className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {paywallCheckingOut === "addon"
+                            ? "Redirecting..."
+                            : `Buy ${addonBuyQuantity} credit${addonBuyQuantity !== 1 ? "s" : ""} · $${((paywallCreditPriceCents * addonBuyQuantity) / 100).toFixed(0)}`}
+                        </button>
+                      </div>
+                    ) : !paywallHasSubscription ? (
+                      /* Non-subscriber: direct to pricing */
+                      <div className="rounded-xl border border-slate-200 p-5 text-center">
+                        <p className="text-sm font-semibold text-slate-900">
+                          Subscribe to get interviews
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Plans start at $20/month with 10 interviews included.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowInterviewPaywall(false);
+                            router.push("/pricing");
+                          }}
+                          className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0]"
+                        >
+                          View plans
+                        </button>
+                      </div>
+                    ) : (
+                      /* Subscriber but can't buy credits (edge case) */
+                      <div className="rounded-xl border border-slate-200 p-5 text-center">
+                        <p className="text-sm text-slate-600">
+                          Your monthly sessions are used up. They&apos;ll reset at the start of your next billing cycle.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {paywallPurchaseMessage && (
+                    <p className="mt-3 text-xs text-rose-600">{paywallPurchaseMessage}</p>
+                  )}
+
+                  <div className="mt-5 flex items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setShowInterviewPaywall(false);
-                        router.push("/pricing");
+                        router.push("/settings/billing");
                       }}
-                      className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0]"
+                      className="text-xs font-medium text-mm-violet hover:underline"
                     >
-                      View plans
+                      Open billing page
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowInterviewPaywall(false);
+                        setPaywallPurchaseMessage(null);
+                      }}
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Maybe later
                     </button>
                   </div>
-                ) : (
-                  /* Subscriber but can't buy credits (edge case) */
-                  <div className="rounded-xl border border-slate-200 p-5 text-center">
-                    <p className="text-sm text-slate-600">
-                      Your monthly sessions are used up. They&apos;ll reset at the start of your next billing cycle.
-                    </p>
-                  </div>
-                )}
+                </div>
               </div>
-
-              {paywallPurchaseMessage && (
-                <p className="mt-3 text-xs text-rose-600">{paywallPurchaseMessage}</p>
-              )}
-
-              <div className="mt-5 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInterviewPaywall(false);
-                    router.push("/settings/billing");
-                  }}
-                  className="text-xs font-medium text-mm-violet hover:underline"
-                >
-                  Open billing page
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowInterviewPaywall(false);
-                    setPaywallPurchaseMessage(null);
-                  }}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-                >
-                  Maybe later
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+            )}
 
           </div>
           {/* End Main Column */}
@@ -1397,12 +1403,12 @@ export default function JobBriefPage() {
         text={
           interviews.length === 0
             ? (() => {
-                if (job.interview_date) {
-                  const d = Math.ceil((new Date(job.interview_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                  if (d >= 0 && d <= 14) return `${d} day${d !== 1 ? "s" : ""} until your interview`;
-                }
-                return "Close your gaps before interview day";
-              })()
+              if (job.interview_date) {
+                const d = Math.ceil((new Date(job.interview_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                if (d >= 0 && d <= 14) return `${d} day${d !== 1 ? "s" : ""} until your interview`;
+              }
+              return "Close your gaps before interview day";
+            })()
             : interviews.length === 1
               ? `Score: ${((interviews[0].performance_overall_score ?? 0) / 10).toFixed(1)}/10 —`
               : `Best: ${(Math.max(...interviews.map((i) => i.performance_overall_score ?? 0)) / 10).toFixed(1)}/10 —`
