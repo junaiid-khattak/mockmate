@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { parseInteger } from "@/lib/billing";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { getActiveSubscription } from "@/lib/subscription";
 
 type CreditGrantRow = {
   id: string;
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
+
   const grants = (grantsResult.data ?? []) as CreditGrantRow[];
   const consumptions = (consumptionsResult.data ?? []) as CreditConsumptionRow[];
 
@@ -73,7 +75,16 @@ export async function GET(request: NextRequest) {
     0,
   );
 
-  const availableCredits = Math.max(0, toInteger(balanceResult.data));
+  let availableCredits = Math.max(0, toInteger(balanceResult.data));
+
+  const sub = await getActiveSubscription(supabase, user.id);
+
+  if (sub != null && sub.sessions_limit != null && sub.sessions_used != null) {
+    const net_sessions_left = sub.sessions_limit - sub.sessions_used;
+    if (net_sessions_left > 0) {
+      availableCredits = availableCredits + net_sessions_left;
+    }
+  }
 
   const response = NextResponse.json({
     ok: true,
