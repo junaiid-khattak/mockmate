@@ -5,6 +5,7 @@ import { HubSpotTracking } from "@/components/HubSpotTracking";
 import { GoogleTracking } from "@/components/GoogleTracking";
 import { UmamiTracking } from "@/components/UmamiTracking";
 import { ReferralTracker } from "@/components/ReferralTracker";
+import { ClarityTracking } from "@/components/ClarityTracking";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit", weight: ["700", "800"] });
@@ -85,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GoogleTracking />
         <HubSpotTracking />
         <UmamiTracking />
+        <ClarityTracking />
       </body>
     </html>
   );
