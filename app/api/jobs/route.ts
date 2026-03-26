@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 
 const MIN_CONTENT_LENGTH = 50;
@@ -19,20 +20,17 @@ export async function POST(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs" });
   }
 
   const body = await request.json().catch(() => null);
   if (!body) {
-    return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
+    return apiError({ error: "Invalid payload.", status: 400, route: "/api/jobs", userId: data.user.id });
   }
 
   const content = typeof body.content === "string" ? body.content.trim() : "";
   if (!content || content.length < MIN_CONTENT_LENGTH) {
-    return NextResponse.json(
-      { ok: false, error: `Content is required and must be at least ${MIN_CONTENT_LENGTH} characters.` },
-      { status: 400 },
-    );
+    return apiError({ error: `Content is required and must be at least ${MIN_CONTENT_LENGTH} characters.`, status: 400, route: "/api/jobs", userId: data.user.id });
   }
 
   const title = typeof body.title === "string" ? body.title.trim() || null : null;
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
   let resumeAlreadyExtracted = false;
   if (body.resume_id != null) {
     if (typeof body.resume_id !== "string" || !body.resume_id.trim()) {
-      return NextResponse.json({ ok: false, error: "Invalid resume_id." }, { status: 400 });
+      return apiError({ error: "Invalid resume_id.", status: 400, route: "/api/jobs", userId: data.user.id });
     }
     resumeId = body.resume_id.trim();
 
@@ -59,10 +57,10 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (resumeErr) {
-      return NextResponse.json({ ok: false, error: "Unable to verify resume." }, { status: 500 });
+      return apiError({ error: "Unable to verify resume.", status: 500, route: "/api/jobs", userId: data.user.id, cause: resumeErr });
     }
     if (!resume) {
-      return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
+      return apiError({ error: "Resume not found.", status: 404, route: "/api/jobs", userId: data.user.id });
     }
     resumeAlreadyExtracted = resume.extracted_text_status === "successful";
   }
@@ -85,7 +83,7 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error("Supabase insert error:", JSON.stringify(error));
-    return NextResponse.json({ ok: false, error: "Unable to create job.", details: error.message }, { status: 500 });
+    return apiError({ error: "Unable to create job.", status: 500, route: "/api/jobs", userId: data.user.id, cause: error });
   }
 
   // Trigger job analysis via SQS. The wizard guarantees extraction is complete
@@ -158,7 +156,7 @@ export async function GET(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs" });
   }
 
   const url = new URL(request.url);
@@ -191,7 +189,7 @@ export async function GET(request: NextRequest) {
   const { data: jds, error, count } = await query;
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load jobs." }, { status: 500 });
+    return apiError({ error: "Unable to load jobs.", status: 500, route: "/api/jobs", userId: data.user.id, cause: error });
   }
 
   const response = NextResponse.json({

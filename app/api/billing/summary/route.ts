@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { parseInteger } from "@/lib/billing";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveSubscription } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 type CreditGrantRow = {
   id: string;
@@ -31,10 +32,7 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/summary" });
   }
 
   const [grantsResult, consumptionsResult, balanceResult] = await Promise.all([
@@ -54,10 +52,7 @@ export async function GET(request: NextRequest) {
   ]);
 
   if (grantsResult.error || consumptionsResult.error || balanceResult.error) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to load billing summary." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to load billing summary.", status: 500, route: "/api/billing/summary", userId: user.id, cause: grantsResult.error ?? consumptionsResult.error ?? balanceResult.error });
   }
 
 

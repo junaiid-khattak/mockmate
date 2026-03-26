@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { getActiveSubscription } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -13,25 +14,16 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/subscription/reactivate" });
   }
 
   const sub = await getActiveSubscription(supabase, user.id);
   if (!sub) {
-    return NextResponse.json(
-      { ok: false, error: "No active subscription found." },
-      { status: 404 },
-    );
+    return apiError({ error: "No active subscription found.", status: 404, route: "/api/billing/subscription/reactivate", userId: user.id });
   }
 
   if (!sub.cancel_at_period_end) {
-    return NextResponse.json(
-      { ok: false, error: "Subscription is not in a canceling state." },
-      { status: 400 },
-    );
+    return apiError({ error: "Subscription is not in a canceling state.", status: 400, route: "/api/billing/subscription/reactivate", userId: user.id });
   }
 
   const stripe = getStripe();

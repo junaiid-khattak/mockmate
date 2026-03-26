@@ -1,17 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function GET(request: NextRequest, context: { params: { id: string } }) {
   const { supabase } = createRouteHandlerSupabaseClient(request);
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/files/[id]" });
   }
 
   const resumeId = context.params.id;
   if (!resumeId) {
-    return NextResponse.json({ ok: false, error: "Missing resume id." }, { status: 400 });
+    return apiError({ error: "Missing resume id.", status: 400, route: "/api/files/[id]" });
   }
 
   const { data: resume, error } = await supabase
@@ -22,11 +23,11 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load resume." }, { status: 500 });
+    return apiError({ error: "Unable to load resume.", status: 500, route: "/api/files/[id]", userId: data.user.id, cause: error });
   }
 
   if (!resume) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    return apiError({ error: "Not found", status: 404, route: "/api/files/[id]", userId: data.user.id });
   }
 
   return NextResponse.json({

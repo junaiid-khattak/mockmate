@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { getActiveSubscription, getSubscriptionPlanByPlanId } from "@/lib/subscription";
 import { getInterviewCreditBalance, getAddonCreditBalance } from "@/lib/interview-paywall";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function GET(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -10,10 +11,7 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/subscription/status" });
   }
 
   const sub = await getActiveSubscription(supabase, user.id);

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(
   request: NextRequest,
@@ -11,7 +12,7 @@ export async function POST(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/interviews/[id]/share" });
   }
 
   const interviewId = context.params.id;
@@ -25,10 +26,10 @@ export async function POST(
     .maybeSingle();
 
   if (fetchErr) {
-    return NextResponse.json({ ok: false, error: "Database error" }, { status: 500 });
+    return apiError({ error: "Database error", status: 500, route: "/api/interviews/[id]/share", userId: user.id, cause: fetchErr });
   }
   if (!interview) {
-    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    return apiError({ error: "Not found", status: 404, route: "/api/interviews/[id]/share", userId: user.id });
   }
 
   const newIsShared = !interview.is_shared;
@@ -42,7 +43,7 @@ export async function POST(
     .eq("user_id", user.id);
 
   if (updateErr) {
-    return NextResponse.json({ ok: false, error: "Failed to update sharing" }, { status: 500 });
+    return apiError({ error: "Failed to update sharing", status: 500, route: "/api/interviews/[id]/share", userId: user.id, cause: updateErr });
   }
 
   const response = NextResponse.json({

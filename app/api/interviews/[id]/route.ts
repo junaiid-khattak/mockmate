@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 const INTERVIEW_COLUMNS = `
   id,
@@ -44,15 +45,12 @@ export async function GET(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/interviews/[id]" });
   }
 
   const interviewId = context.params.id;
   if (!interviewId) {
-    return NextResponse.json(
-      { ok: false, error: "Missing interview id." },
-      { status: 400 },
-    );
+    return apiError({ error: "Missing interview id.", status: 400, route: "/api/interviews/[id]" });
   }
 
   const { data: interview, error } = await supabase
@@ -63,14 +61,11 @@ export async function GET(
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to load interview session." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to load interview session.", status: 500, route: "/api/interviews/[id]", userId: user.id, cause: error });
   }
 
   if (!interview) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+    return apiError({ error: "Not found.", status: 404, route: "/api/interviews/[id]", userId: user.id });
   }
 
   const response = NextResponse.json({ ok: true, interview });

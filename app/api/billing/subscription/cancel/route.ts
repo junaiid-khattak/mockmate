@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { getActiveSubscription } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -13,18 +14,12 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/subscription/cancel" });
   }
 
   const sub = await getActiveSubscription(supabase, user.id);
   if (!sub) {
-    return NextResponse.json(
-      { ok: false, error: "No active subscription found." },
-      { status: 404 },
-    );
+    return apiError({ error: "No active subscription found.", status: 404, route: "/api/billing/subscription/cancel", userId: user.id });
   }
 
   const stripe = getStripe();

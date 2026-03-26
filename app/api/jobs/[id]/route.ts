@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 const MIN_CONTENT_LENGTH = 50;
 
@@ -14,12 +15,12 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs/[id]" });
   }
 
   const jobId = context.params.id;
   if (!jobId) {
-    return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
+    return apiError({ error: "Missing id.", status: 400, route: "/api/jobs/[id]" });
   }
 
   const { data: job, error } = await supabase
@@ -30,11 +31,11 @@ export async function GET(request: NextRequest, context: { params: { id: string 
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to load job." }, { status: 500 });
+    return apiError({ error: "Unable to load job.", status: 500, route: "/api/jobs/[id]", cause: error });
   }
 
   if (!job) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+    return apiError({ error: "Not found.", status: 404, route: "/api/jobs/[id]" });
   }
 
   const response = NextResponse.json({ ok: true, job });
@@ -50,17 +51,17 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs/[id]" });
   }
 
   const jobId = context.params.id;
   if (!jobId) {
-    return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
+    return apiError({ error: "Missing id.", status: 400, route: "/api/jobs/[id]" });
   }
 
   const body = await request.json().catch(() => null);
   if (!body) {
-    return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
+    return apiError({ error: "Invalid payload.", status: 400, route: "/api/jobs/[id]" });
   }
 
   // Build update object — only include fields that were explicitly provided
@@ -69,10 +70,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   if ("content" in body) {
     const content = typeof body.content === "string" ? body.content.trim() : "";
     if (!content || content.length < MIN_CONTENT_LENGTH) {
-      return NextResponse.json(
-        { ok: false, error: `Content must be at least ${MIN_CONTENT_LENGTH} characters.` },
-        { status: 400 },
-      );
+      return apiError({ error: `Content must be at least ${MIN_CONTENT_LENGTH} characters.`, status: 400, route: "/api/jobs/[id]" });
     }
     updates.content = content;
   }
@@ -101,7 +99,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
       updates.resume_id = null;
     } else {
       if (typeof body.resume_id !== "string" || !body.resume_id.trim()) {
-        return NextResponse.json({ ok: false, error: "Invalid resume_id." }, { status: 400 });
+        return apiError({ error: "Invalid resume_id.", status: 400, route: "/api/jobs/[id]" });
       }
       const candidateResumeId = body.resume_id.trim();
 
@@ -113,7 +111,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
         .maybeSingle();
 
       if (resumeErr) {
-        return NextResponse.json({ ok: false, error: "Unable to verify resume." }, { status: 500 });
+        return apiError({ error: "Unable to verify resume.", status: 500, route: "/api/jobs/[id]", cause: resumeErr });
       }
       if (!resume) {
         return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
@@ -138,7 +136,7 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ ok: false, error: "No fields to update." }, { status: 400 });
+    return apiError({ error: "No fields to update.", status: 400, route: "/api/jobs/[id]" });
   }
 
   const { data: job, error } = await supabase
@@ -152,9 +150,9 @@ export async function PATCH(request: NextRequest, context: { params: { id: strin
   if (error) {
     // .single() errors when zero rows match (no row found or not owned)
     if (error.code === "PGRST116") {
-      return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+      return apiError({ error: "Not found.", status: 404, route: "/api/jobs/[id]" });
     }
-    return NextResponse.json({ ok: false, error: "Unable to update job." }, { status: 500 });
+    return apiError({ error: "Unable to update job.", status: 500, route: "/api/jobs/[id]", cause: error });
   }
 
   const response = NextResponse.json({ ok: true, job });
@@ -170,12 +168,12 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs/[id]" });
   }
 
   const jobId = context.params.id;
   if (!jobId) {
-    return NextResponse.json({ ok: false, error: "Missing id." }, { status: 400 });
+    return apiError({ error: "Missing id.", status: 400, route: "/api/jobs/[id]" });
   }
 
   const { error, count } = await supabase
@@ -185,11 +183,11 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     .eq("user_id", data.user.id);
 
   if (error) {
-    return NextResponse.json({ ok: false, error: "Unable to delete job." }, { status: 500 });
+    return apiError({ error: "Unable to delete job.", status: 500, route: "/api/jobs/[id]", cause: error });
   }
 
   if (count === 0) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+    return apiError({ error: "Not found.", status: 404, route: "/api/jobs/[id]" });
   }
 
   const response = NextResponse.json({ ok: true });

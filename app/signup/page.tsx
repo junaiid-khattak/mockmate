@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
 import { SignupForm } from "@/components/signup/SignupForm";
 import { CheckEmailNotice } from "@/components/signup/CheckEmailNotice";
 import { GoogleButton } from "@/components/auth/GoogleButton";
@@ -17,6 +18,7 @@ type SignupPayload = {
 };
 
 export default function Page() {
+  const posthog = usePostHog();
   const [step, setStep] = useState<"form" | "check_email">("form");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +46,9 @@ export default function Page() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || !data?.ok) {
-        setServerError(data?.error ?? "Unable to sign up");
+        const msg = data?.error ?? "Unable to sign up";
+        setServerError(msg);
+        posthog.capture("client_error", { error_message: msg, page: "/signup" });
         return;
       }
 
@@ -53,8 +57,9 @@ export default function Page() {
 
       // Track Google Ads signup conversion
       trackSignupConversion();
-    } catch {
+    } catch (err) {
       setServerError("Unable to sign up");
+      posthog.capture("client_error", { error_message: "Unable to sign up", page: "/signup", cause: String(err) });
     } finally {
       setIsSubmitting(false);
     }
@@ -75,10 +80,13 @@ export default function Page() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || !data?.ok) {
-        setResendError(data?.error ?? "Unable to resend confirmation");
+        const msg = data?.error ?? "Unable to resend confirmation";
+        setResendError(msg);
+        posthog.capture("client_error", { error_message: msg, page: "/signup", action: "resend_confirmation" });
       }
-    } catch {
+    } catch (err) {
       setResendError("Unable to resend confirmation");
+      posthog.capture("client_error", { error_message: "Unable to resend confirmation", page: "/signup", cause: String(err) });
     } finally {
       setIsResending(false);
     }

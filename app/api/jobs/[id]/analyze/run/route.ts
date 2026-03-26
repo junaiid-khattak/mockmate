@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
+import { apiError } from "@/lib/posthog/api-error";
 
 
 const MIN_CONTENT_LENGTH = 50;
@@ -17,18 +18,12 @@ export async function POST(
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs/[id]/analyze/run" });
   }
 
   const jobId = context.params.id;
   if (!jobId) {
-    return NextResponse.json(
-      { ok: false, error: "Missing job id." },
-      { status: 400 },
-    );
+    return apiError({ error: "Missing job id.", status: 400, route: "/api/jobs/[id]/analyze/run" });
   }
 
   // Parse optional body
@@ -46,33 +41,18 @@ export async function POST(
     .maybeSingle();
 
   if (fetchErr) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to load job." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to load job.", status: 500, route: "/api/jobs/[id]/analyze/run", userId: data.user.id, cause: fetchErr });
   }
   if (!job) {
-    return NextResponse.json(
-      { ok: false, error: "Not found." },
-      { status: 404 },
-    );
+    return apiError({ error: "Not found.", status: 404, route: "/api/jobs/[id]/analyze/run", userId: data.user.id });
   }
 
   // Validate prerequisites
   if (!job.resume_id) {
-    return NextResponse.json(
-      { ok: false, error: "A resume must be attached before running analysis." },
-      { status: 400 },
-    );
+    return apiError({ error: "A resume must be attached before running analysis.", status: 400, route: "/api/jobs/[id]/analyze/run", userId: data.user.id });
   }
   if (!job.content || job.content.trim().length < MIN_CONTENT_LENGTH) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: `Job description content must be at least ${MIN_CONTENT_LENGTH} characters.`,
-      },
-      { status: 400 },
-    );
+    return apiError({ error: `Job description content must be at least ${MIN_CONTENT_LENGTH} characters.`, status: 400, route: "/api/jobs/[id]/analyze/run", userId: data.user.id });
   }
 
   // If already pending and not forced, return early
@@ -111,10 +91,7 @@ export async function POST(
     .eq("user_id", data.user.id);
 
   if (updateErr) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to start analysis." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to start analysis.", status: 500, route: "/api/jobs/[id]/analyze/run", userId: data.user.id, cause: updateErr });
   }
 
   // Enqueue SQS message
@@ -147,12 +124,7 @@ export async function POST(
   } catch {
     // SQS send failed — row is already marked pending. The DLQ / retry
     // mechanisms or a manual re-trigger can recover.
-    const response = NextResponse.json(
-      { ok: false, error: "Analysis queued locally but SQS send failed." },
-      { status: 502 },
-    );
-    applyCookies(response);
-    return response;
+    return apiError({ error: "Analysis queued locally but SQS send failed.", status: 502, route: "/api/jobs/[id]/analyze/run", userId: data.user.id });
   }
 
   const response = NextResponse.json({ ok: true, analysis_run_id: analysisRunId });

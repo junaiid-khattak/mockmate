@@ -12,6 +12,7 @@ import {
   hasSessionsRemaining,
   type CreditSource,
 } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 const DEFAULT_TOKEN_TTL_SECONDS = 120;
 const MIN_TOKEN_TTL_SECONDS = 30;
@@ -70,22 +71,19 @@ function parseTokenTtlSeconds(): number {
 export async function POST(request: NextRequest) {
   const exchangeSecret = process.env.INTERVIEW_EXCHANGE_SECRET?.trim() || null;
   if (!exchangeSecret) {
-    return NextResponse.json(
-      { ok: false, error: "Interview launch exchange is not configured." },
-      { status: 500 },
-    );
+    return apiError({ error: "Interview launch exchange is not configured.", status: 500, route: "/api/internal/interview/launch/exchange" });
   }
 
   const bearer = readBearerToken(request.headers.get("authorization"));
   if (!bearer || !secureEquals(bearer, exchangeSecret)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized." }, { status: 401 });
+    return apiError({ error: "Unauthorized.", status: 401, route: "/api/internal/interview/launch/exchange" });
   }
 
   const body = await request.json().catch(() => ({}));
   const launchCode =
     typeof body?.launch_code === "string" ? body.launch_code.trim() : "";
   if (!launchCode || launchCode.length < 20 || launchCode.length > 512) {
-    return NextResponse.json({ ok: false, error: "Invalid launch code." }, { status: 400 });
+    return apiError({ error: "Invalid launch code.", status: 400, route: "/api/internal/interview/launch/exchange" });
   }
 
   const codeHash = hashInterviewLaunchCode(launchCode);
@@ -103,15 +101,9 @@ export async function POST(request: NextRequest) {
 
     if (lookupErr) {
       if (isNoRowsError(lookupErr)) {
-        return NextResponse.json(
-          { ok: false, error: "Launch code is invalid or expired." },
-          { status: 401 },
-        );
+        return apiError({ error: "Launch code is invalid or expired.", status: 401, route: "/api/internal/interview/launch/exchange" });
       }
-      return NextResponse.json(
-        { ok: false, error: "Unable to exchange launch code." },
-        { status: 500 },
-      );
+      return apiError({ error: "Unable to exchange launch code.", status: 500, route: "/api/internal/interview/launch/exchange" });
     }
 
     if (!data) {
@@ -128,14 +120,7 @@ export async function POST(request: NextRequest) {
       // Subscription path: re-verify subscription and increment session count
       const sub = await getActiveSubscription(supabase, data.user_id);
       if (!sub || !hasSessionsRemaining(sub)) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "payment_required",
-            message: "Subscription session no longer available.",
-          },
-          { status: 402 },
-        );
+        return apiError({ error: "Subscription session no longer available.", status: 402, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
       }
 
       const incrementResult = await incrementSubscriptionSession(
@@ -145,14 +130,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (!incrementResult.ok) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "payment_required",
-            message: "Unable to consume subscription session.",
-          },
-          { status: 402 },
-        );
+        return apiError({ error: "Unable to consume subscription session.", status: 402, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
       }
     } else if (creditSource === "addon_credit") {
       // Addon credit path: consume agent-scoped credit via RPC
@@ -162,10 +140,7 @@ export async function POST(request: NextRequest) {
           : null;
 
       if (!agentId) {
-        return NextResponse.json(
-          { ok: false, error: "Missing agent_id for addon credit consumption." },
-          { status: 500 },
-        );
+        return apiError({ error: "Missing agent_id for addon credit consumption.", status: 500, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
       }
 
       const { data: consumed, error: consumeAddonErr } = await supabase.rpc(
@@ -178,14 +153,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (consumeAddonErr || consumed === false) {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "payment_required",
-            message: "Unable to consume addon credit.",
-          },
-          { status: 402 },
-        );
+        return apiError({ error: "Unable to consume addon credit.", status: 402, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
       }
     } else {
       // Legacy credit / free signup path: use existing credit consumption
@@ -195,20 +163,10 @@ export async function POST(request: NextRequest) {
       );
       if (!paywallDecision.ok) {
         if (paywallDecision.code === "verification_failed") {
-          return NextResponse.json(
-            { ok: false, error: "Unable to verify interview credit balance." },
-            { status: 500 },
-          );
+          return apiError({ error: "Unable to verify interview credit balance.", status: 500, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
         }
 
-        return NextResponse.json(
-          {
-            ok: false,
-            error: "payment_required",
-            message: paywallDecision.message,
-          },
-          { status: 402 },
-        );
+        return apiError({ error: paywallDecision.message, status: 402, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
       }
 
       const consumeDecision = await consumeInterviewCredit(
@@ -220,21 +178,11 @@ export async function POST(request: NextRequest) {
 
       if (!consumeDecision.ok) {
         if (consumeDecision.code === "payment_required") {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: "payment_required",
-              message: consumeDecision.message,
-            },
-            { status: 402 },
-          );
+          return apiError({ error: consumeDecision.message, status: 402, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
         }
 
         if (consumeDecision.code !== "interview_already_consumed") {
-          return NextResponse.json(
-            { ok: false, error: "Unable to consume interview credit." },
-            { status: 500 },
-          );
+          return apiError({ error: "Unable to consume interview credit.", status: 500, route: "/api/internal/interview/launch/exchange", userId: data.user_id });
         }
       }
     }
@@ -250,30 +198,18 @@ export async function POST(request: NextRequest) {
 
     if (consumeErr) {
       if (isNoRowsError(consumeErr)) {
-        return NextResponse.json(
-          { ok: false, error: "Launch code is invalid or expired." },
-          { status: 401 },
-        );
+        return apiError({ error: "Launch code is invalid or expired.", status: 401, route: "/api/internal/interview/launch/exchange" });
       }
-      return NextResponse.json(
-        { ok: false, error: "Unable to exchange launch code." },
-        { status: 500 },
-      );
+      return apiError({ error: "Unable to exchange launch code.", status: 500, route: "/api/internal/interview/launch/exchange" });
     }
 
     launchRecord = consumedData as LaunchCodeRow | null;
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "Unable to initialize launch exchange." },
-      { status: 500 },
-    );
+  } catch (err) {
+    return apiError({ error: "Unable to initialize launch exchange.", status: 500, route: "/api/internal/interview/launch/exchange", cause: err });
   }
 
   if (!launchRecord) {
-    return NextResponse.json(
-      { ok: false, error: "Launch code is invalid or expired." },
-      { status: 401 },
-    );
+    return apiError({ error: "Launch code is invalid or expired.", status: 401, route: "/api/internal/interview/launch/exchange" });
   }
 
   const now = Math.floor(Date.now() / 1000);

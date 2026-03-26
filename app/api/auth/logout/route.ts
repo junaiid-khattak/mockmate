@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase.auth.signOut();
 
   if (error) {
+    const { getServerPostHog } = await import("@/lib/posthog/server");
+    try { getServerPostHog().capture({ distinctId: "anonymous", event: "api_error", properties: { error_message: error.message, status_code: 400, route: "/api/auth/logout" } }); } catch {}
     const response = NextResponse.json({ ok: false, error: error.message }, { status: 400 });
     applyCookies(response);
     return response;

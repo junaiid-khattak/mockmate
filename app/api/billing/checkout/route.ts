@@ -6,6 +6,7 @@ import {
 import { getStripe } from "@/lib/stripe";
 import { isCreditPackId, getStripePriceId } from "@/lib/billing";
 import { getAppUrl } from "@/lib/supabase/app-url";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -14,20 +15,14 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/checkout" });
   }
 
   const body = await request.json().catch(() => ({}));
   const packId = body?.pack_id;
 
   if (!isCreditPackId(packId)) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid credit pack." },
-      { status: 400 },
-    );
+    return apiError({ error: "Invalid credit pack.", status: 400, route: "/api/billing/checkout", userId: user.id });
   }
 
   const stripe = getStripe();

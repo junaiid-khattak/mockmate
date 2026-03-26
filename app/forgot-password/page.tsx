@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
 import { ForgotPasswordForm } from "@/components/forgot-password/ForgotPasswordForm";
 import { CheckEmailNotice } from "@/components/forgot-password/CheckEmailNotice";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,7 @@ type ForgotPasswordPayload = {
 };
 
 export default function Page() {
+  const posthog = usePostHog();
   const [step, setStep] = useState<"form" | "check_email">("form");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,14 +34,17 @@ export default function Page() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || !data?.ok) {
-        setServerError(data?.error ?? "Unable to send reset email.");
+        const msg = data?.error ?? "Unable to send reset email.";
+        setServerError(msg);
+        posthog.capture("client_error", { error_message: msg, page: "/forgot-password" });
         return;
       }
 
       setEmail(payload.email);
       setStep("check_email");
-    } catch {
+    } catch (err) {
       setServerError("Unable to send reset email.");
+      posthog.capture("client_error", { error_message: "Unable to send reset email.", page: "/forgot-password", cause: String(err) });
     } finally {
       setIsSubmitting(false);
     }

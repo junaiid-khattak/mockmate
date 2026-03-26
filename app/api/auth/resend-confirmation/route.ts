@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import { isValidEmail } from "@/lib/utils";
+import { apiError } from "@/lib/posthog/api-error";
 
 type ResendPayload = {
   email: string;
@@ -13,24 +14,24 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as ResendPayload;
   } catch {
-    return NextResponse.json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    return apiError({ error: "Invalid JSON payload", status: 400, route: "/api/auth/resend-confirmation" });
   }
 
   if (!payload) {
-    return NextResponse.json({ ok: false, error: "Missing payload" }, { status: 400 });
+    return apiError({ error: "Missing payload", status: 400, route: "/api/auth/resend-confirmation" });
   }
 
   const email = String(payload.email ?? "").trim().toLowerCase();
 
   if (!email || !isValidEmail(email)) {
-    return NextResponse.json({ ok: false, error: "Invalid email address" }, { status: 400 });
+    return apiError({ error: "Invalid email address", status: 400, route: "/api/auth/resend-confirmation" });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !anonKey) {
-    return NextResponse.json({ ok: false, error: "Supabase credentials missing" }, { status: 500 });
+    return apiError({ error: "Supabase credentials missing", status: 500, route: "/api/auth/resend-confirmation" });
   }
 
   const appUrl = getAppUrl(request);
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    return apiError({ error: error.message, status: 400, route: "/api/auth/resend-confirmation", cause: error });
   }
 
   return NextResponse.json({ ok: true });

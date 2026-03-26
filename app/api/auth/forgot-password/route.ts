@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import { isValidEmail } from "@/lib/utils";
+import { apiError } from "@/lib/posthog/api-error";
 
 type ForgotPasswordPayload = {
   email: string;
@@ -13,17 +14,17 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as ForgotPasswordPayload;
   } catch {
-    return NextResponse.json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    return apiError({ error: "Invalid JSON payload", status: 400, route: "/api/auth/forgot-password" });
   }
 
   if (!payload) {
-    return NextResponse.json({ ok: false, error: "Missing payload" }, { status: 400 });
+    return apiError({ error: "Missing payload", status: 400, route: "/api/auth/forgot-password" });
   }
 
   const email = String(payload.email ?? "").trim().toLowerCase();
 
   if (!email || !isValidEmail(email)) {
-    return NextResponse.json({ ok: false, error: "Invalid email address" }, { status: 400 });
+    return apiError({ error: "Invalid email address", status: 400, route: "/api/auth/forgot-password" });
   }
 
   const appUrl = getAppUrl(request);
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return apiError({ error: error.message, status: 500, route: "/api/auth/forgot-password", cause: error });
   }
 
   return NextResponse.json({ ok: true });

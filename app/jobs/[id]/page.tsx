@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { usePostHog } from "posthog-js/react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import { Header } from "@/components/jobs/Header";
 import { RefreshCw, Trash2 } from "lucide-react";
@@ -93,6 +94,7 @@ export default function JobBriefPage() {
   const jobId = params.id as string;
   const interviewSessionId = searchParams.get("interview_id");
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const posthog = usePostHog();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -268,9 +270,9 @@ export default function JobBriefPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setInterviewSessionError(
-            err instanceof Error ? err.message : "Unable to load interview feedback.",
-          );
+          const msg = err instanceof Error ? err.message : "Unable to load interview feedback.";
+          setInterviewSessionError(msg);
+          posthog.capture("client_error", { error_message: msg, page: `/jobs/${jobId}`, action: "load_interview_session" });
         }
       } finally {
         if (!cancelled) {
@@ -312,6 +314,7 @@ export default function JobBriefPage() {
         }
       } catch (err) {
         console.error("Failed to fetch interviews:", err);
+        posthog.capture("client_error", { error_message: "Failed to fetch interviews", page: `/jobs/${jobId}`, cause: String(err) });
       } finally {
         if (!cancelled) {
           setInterviewsLoading(false);
@@ -432,6 +435,7 @@ export default function JobBriefPage() {
 
       return { ok: true, launchUrl: body.launch_url };
     } catch (err) {
+      posthog.capture("client_error", { error_message: "Unable to start interview.", page: `/jobs/${jobId}`, action: "start_interview", cause: String(err) });
       return {
         ok: false,
         code: "error",
@@ -467,8 +471,9 @@ export default function JobBriefPage() {
       handleConfirmStartInterview();
       // Show confirmation dialog
       // setShowCreditConfirm(true);
-    } catch {
+    } catch (err) {
       setInterviewError("Unable to check credit balance.");
+      posthog.capture("client_error", { error_message: "Unable to check credit balance.", page: `/jobs/${jobId}`, action: "check_credits", cause: String(err) });
     }
   };
 
@@ -513,9 +518,12 @@ export default function JobBriefPage() {
         window.location.assign(body.checkout_url);
         return;
       }
-      setPaywallPurchaseMessage(body?.error ?? "Unable to start checkout.");
-    } catch {
+      const msg = body?.error ?? "Unable to start checkout.";
+      setPaywallPurchaseMessage(msg);
+      posthog.capture("client_error", { error_message: msg, page: `/jobs/${jobId}`, action: "paywall_buy" });
+    } catch (err) {
       setPaywallPurchaseMessage("Unable to start checkout.");
+      posthog.capture("client_error", { error_message: "Unable to start checkout.", page: `/jobs/${jobId}`, action: "paywall_buy", cause: String(err) });
     } finally {
       setPaywallCheckingOut(null);
     }
@@ -535,9 +543,12 @@ export default function JobBriefPage() {
         window.location.assign(body.checkout_url);
         return;
       }
-      setPaywallPurchaseMessage(body?.message ?? body?.error ?? "Unable to start checkout.");
-    } catch {
+      const msg = body?.message ?? body?.error ?? "Unable to start checkout.";
+      setPaywallPurchaseMessage(msg);
+      posthog.capture("client_error", { error_message: msg, page: `/jobs/${jobId}`, action: "buy_addon_credits" });
+    } catch (err) {
       setPaywallPurchaseMessage("Unable to start checkout.");
+      posthog.capture("client_error", { error_message: "Unable to start checkout.", page: `/jobs/${jobId}`, action: "buy_addon_credits", cause: String(err) });
     } finally {
       setPaywallCheckingOut(null);
     }

@@ -11,6 +11,7 @@ import {
   isSubscriptionPlanId,
   getSubscriptionPlan,
 } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -19,10 +20,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/subscribe" });
   }
 
   // Parse plan_id from request body
@@ -30,10 +28,7 @@ export async function POST(request: NextRequest) {
   const planId = body?.plan_id;
 
   if (!isSubscriptionPlanId(planId)) {
-    return NextResponse.json(
-      { ok: false, error: "Invalid subscription plan." },
-      { status: 400 },
-    );
+    return apiError({ error: "Invalid subscription plan.", status: 400, route: "/api/billing/subscribe", userId: user.id });
   }
 
   const plan = getSubscriptionPlan(planId)!;
@@ -41,10 +36,7 @@ export async function POST(request: NextRequest) {
   // Check for existing active subscription (free plan is allowed to upgrade)
   const existingSub = await getActiveSubscription(supabase, user.id);
   if (existingSub && existingSub.plan !== "free") {
-    return NextResponse.json(
-      { ok: false, error: "You already have an active subscription." },
-      { status: 409 },
-    );
+    return apiError({ error: "You already have an active subscription.", status: 409, route: "/api/billing/subscribe", userId: user.id });
   }
 
   const stripe = getStripe();

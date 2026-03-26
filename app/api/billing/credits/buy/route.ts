@@ -10,6 +10,7 @@ import {
   getSubscriptionPlanByPlanId,
   getCreditStripePriceId,
 } from "@/lib/subscription";
+import { apiError } from "@/lib/posthog/api-error";
 
 export async function POST(request: NextRequest) {
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -18,54 +19,31 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { ok: false, error: "Unauthorized" },
-      { status: 401 },
-    );
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/billing/credits/buy" });
   }
 
   const body = await request.json().catch(() => ({}));
   const quantity = body?.quantity;
 
   if (!quantity || !Number.isInteger(quantity) || quantity < 1) {
-    return NextResponse.json(
-      { ok: false, error: "invalid_quantity", message: "Quantity must be at least 1." },
-      { status: 400 },
-    );
+    return apiError({ error: "Quantity must be at least 1.", status: 400, route: "/api/billing/credits/buy", userId: user.id });
   }
 
   // Must have an active paid subscription
   const sub = await getActiveSubscription(supabase, user.id);
   if (!sub || sub.plan === "free") {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "subscription_required",
-        message: "Subscribe to a plan before purchasing additional credits.",
-      },
-      { status: 403 },
-    );
+    return apiError({ error: "Subscribe to a plan before purchasing additional credits.", status: 403, route: "/api/billing/credits/buy", userId: user.id });
   }
 
   const plan = getSubscriptionPlanByPlanId(sub.plan);
   if (!plan || !plan.creditPriceCents) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "credits_not_available",
-        message: "Add-on credits are not available for your current plan.",
-      },
-      { status: 400 },
-    );
+    return apiError({ error: "Add-on credits are not available for your current plan.", status: 400, route: "/api/billing/credits/buy", userId: user.id });
   }
 
   const creditPriceId = getCreditStripePriceId(plan);
   if (!creditPriceId) {
     console.error("Missing credit Stripe price ID for plan", plan.id, plan.creditStripePriceEnvKey);
-    return NextResponse.json(
-      { ok: false, error: "Credit pricing is not configured." },
-      { status: 500 },
-    );
+    return apiError({ error: "Credit pricing is not configured.", status: 500, route: "/api/billing/credits/buy", userId: user.id });
   }
 
   const stripe = getStripe();

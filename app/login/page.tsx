@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePostHog } from "posthog-js/react";
 import { LoginForm } from "@/components/login/LoginForm";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { NayldLogo } from "@/components/NayldLogo";
 
 export default function Page() {
   const router = useRouter();
+  const posthog = usePostHog();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | undefined>(undefined);
 
@@ -28,13 +30,16 @@ export default function Page() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok || !data?.ok) {
-        setServerError(data?.error ?? "Unable to sign in.");
+        const msg = data?.error ?? "Unable to sign in.";
+        setServerError(msg);
+        posthog.capture("client_error", { error_message: msg, page: "/login" });
         return;
       }
 
       router.push("/jobs");
-    } catch {
+    } catch (err) {
       setServerError("Unable to sign in.");
+      posthog.capture("client_error", { error_message: "Unable to sign in.", page: "/login", cause: String(err) });
     } finally {
       setIsSubmitting(false);
     }

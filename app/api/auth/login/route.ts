@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { isValidEmail } from "@/lib/utils";
+import { apiError } from "@/lib/posthog/api-error";
 
 type LoginPayload = {
   email: string;
@@ -18,26 +19,26 @@ export async function POST(request: NextRequest) {
   try {
     payload = (await request.json()) as LoginPayload;
   } catch {
-    return NextResponse.json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    return apiError({ error: "Invalid JSON payload", status: 400, route: "/api/auth/login" });
   }
 
   if (!payload) {
-    return NextResponse.json({ ok: false, error: "Missing payload" }, { status: 400 });
+    return apiError({ error: "Missing payload", status: 400, route: "/api/auth/login" });
   }
 
   const email = String(payload.email ?? "").trim().toLowerCase();
   const password = String(payload.password ?? "");
 
   if (!email || !password) {
-    return NextResponse.json({ ok: false, error: "Email and password are required" }, { status: 400 });
+    return apiError({ error: "Email and password are required", status: 400, route: "/api/auth/login" });
   }
 
   if (!isValidEmail(email)) {
-    return NextResponse.json({ ok: false, error: "Invalid email address" }, { status: 400 });
+    return apiError({ error: "Invalid email address", status: 400, route: "/api/auth/login" });
   }
 
   if (password.length < 8) {
-    return NextResponse.json({ ok: false, error: "Password must be at least 8 characters" }, { status: 400 });
+    return apiError({ error: "Password must be at least 8 characters", status: 400, route: "/api/auth/login" });
   }
 
   const { supabase, applyCookies } = createRouteHandlerSupabaseClient(request);
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
     const message = isEmailNotConfirmed(error.message, (error as { code?: string }).code ?? null)
       ? "Please confirm your email before signing in."
       : "Invalid email or password.";
+    // Can't use apiError() here because applyCookies needs the response object
+    const { getServerPostHog } = await import("@/lib/posthog/server");
+    try { getServerPostHog().capture({ distinctId: "anonymous", event: "api_error", properties: { error_message: message, status_code: 400, route: "/api/auth/login" } }); } catch {}
     const response = NextResponse.json({ ok: false, error: message }, { status: 400 });
     applyCookies(response);
     return response;

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { getResumeBucket } from "@/lib/s3/client";
+import { apiError } from "@/lib/posthog/api-error";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -12,12 +13,12 @@ export async function POST(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/files/resume/complete" });
   }
 
   const body = await request.json().catch(() => null);
   if (!body) {
-    return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
+    return apiError({ error: "Invalid payload.", status: 400, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   const storageKey = typeof body.storageKey === "string" ? body.storageKey : "";
@@ -27,25 +28,25 @@ export async function POST(request: NextRequest) {
   const sizeBytes = Number(body.sizeBytes);
 
   if (!storageKey || !bucket || !contentType || !originalFilename) {
-    return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
+    return apiError({ error: "Invalid payload.", status: 400, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   if (!Number.isFinite(sizeBytes) || sizeBytes <= 0 || sizeBytes > MAX_SIZE_BYTES) {
-    return NextResponse.json({ ok: false, error: "File too large." }, { status: 400 });
+    return apiError({ error: "File too large.", status: 400, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   if (!ALLOWED_TYPES.has(contentType)) {
-    return NextResponse.json({ ok: false, error: "Unsupported file type." }, { status: 400 });
+    return apiError({ error: "Unsupported file type.", status: 400, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   const expectedPrefix = `resumes/${data.user.id}/`;
   if (!storageKey.startsWith(expectedPrefix)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
+    return apiError({ error: "Unauthorized", status: 403, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   const envBucket = getResumeBucket();
   if (bucket !== envBucket) {
-    return NextResponse.json({ ok: false, error: "Invalid bucket." }, { status: 400 });
+    return apiError({ error: "Invalid bucket.", status: 400, route: "/api/files/resume/complete", userId: data.user.id });
   }
 
   const { data: resumeRow, error: insertError } = await supabase
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (insertError || !resumeRow) {
-    return NextResponse.json({ ok: false, error: "Unable to store resume metadata." }, { status: 500 });
+    return apiError({ error: "Unable to store resume metadata.", status: 500, route: "/api/files/resume/complete", userId: data.user.id, cause: insertError });
   }
 
   return NextResponse.json({

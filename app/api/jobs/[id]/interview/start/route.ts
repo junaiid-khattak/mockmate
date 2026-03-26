@@ -7,6 +7,7 @@ import {
 import { createInterviewLaunchCode } from "@/lib/interview-launch-code";
 import { verifyInterviewPaywallV2 } from "@/lib/interview-paywall";
 import { getAppUrl } from "@/lib/supabase/app-url";
+import { apiError } from "@/lib/posthog/api-error";
 
 const MIN_DURATION_SECONDS = 1800;
 const MAX_DURATION_SECONDS = 2700;
@@ -65,7 +66,7 @@ export async function POST(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/jobs/[id]/interview/start" });
   }
 
   const interviewAppUrl = process.env.INTERVIEW_APP_URL?.trim() || null;
@@ -76,15 +77,12 @@ export async function POST(
     if (!interviewAppUrl) missing.push("INTERVIEW_APP_URL");
     if (!interviewExchangeSecret) missing.push("INTERVIEW_EXCHANGE_SECRET");
     console.error("Interview service is not configured", { missing });
-    return NextResponse.json(
-      { ok: false, error: "Interview service is not configured.", missing },
-      { status: 500 },
-    );
+    return apiError({ error: "Interview service is not configured.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   const jobId = context.params.id;
   if (!jobId) {
-    return NextResponse.json({ ok: false, error: "Missing job id." }, { status: 400 });
+    return apiError({ error: "Missing job id.", status: 400, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -104,18 +102,15 @@ export async function POST(
     .maybeSingle();
 
   if (jobErr) {
-    return NextResponse.json({ ok: false, error: "Unable to load job." }, { status: 500 });
+    return apiError({ error: "Unable to load job.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id, cause: jobErr });
   }
 
   if (!job) {
-    return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+    return apiError({ error: "Not found.", status: 404, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   if (!job.resume_id) {
-    return NextResponse.json(
-      { ok: false, error: "Attach a resume before starting an interview." },
-      { status: 400 },
-    );
+    return apiError({ error: "Attach a resume before starting an interview.", status: 400, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   const { data: resume, error: resumeErr } = await supabase
@@ -126,32 +121,26 @@ export async function POST(
     .maybeSingle();
 
   if (resumeErr) {
-    return NextResponse.json({ ok: false, error: "Unable to verify resume." }, { status: 500 });
+    return apiError({ error: "Unable to verify resume.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id, cause: resumeErr });
   }
 
   if (!resume) {
-    return NextResponse.json({ ok: false, error: "Resume not found." }, { status: 404 });
+    return apiError({ error: "Resume not found.", status: 404, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   if (resume.extracted_text_status !== "successful") {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Resume parsing is not complete yet. Try again in a moment.",
-      },
-      { status: 409 },
-    );
+    return apiError({ error: "Resume parsing is not complete yet. Try again in a moment.", status: 409, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   const paywallDecision = await verifyInterviewPaywallV2(supabase, user.id);
   if (!paywallDecision.ok) {
     if (paywallDecision.code === "verification_failed") {
-      return NextResponse.json(
-        { ok: false, error: "Unable to verify interview credit balance." },
-        { status: 500 },
-      );
+      return apiError({ error: "Unable to verify interview credit balance.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id });
     }
 
+    // Keep full response shape for client paywall UI, but also capture to PostHog
+    const { getServerPostHog } = await import("@/lib/posthog/server");
+    try { getServerPostHog().capture({ distinctId: user.id, event: "api_error", properties: { error_message: "payment_required", status_code: 402, route: "/api/jobs/[id]/interview/start" } }); } catch {}
     return NextResponse.json(
       {
         ok: false,
@@ -179,18 +168,12 @@ export async function POST(
 
   if (agentErr) {
     console.error("Failed to resolve interview agent", agentErr);
-    return NextResponse.json(
-      { ok: false, error: "Unable to resolve interview agent." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to resolve interview agent.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id, cause: agentErr });
   }
 
   const agentRow = Array.isArray(agentRows) ? agentRows[0] : agentRows;
   if (!agentRow || typeof agentRow !== "object" || !(agentRow as Record<string, unknown>).agent_id) {
-    return NextResponse.json(
-      { ok: false, error: "No interview agent configured for your plan." },
-      { status: 500 },
-    );
+    return apiError({ error: "No interview agent configured for your plan.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id });
   }
 
   const agentConfig = agentRow as Record<string, unknown>;
@@ -223,10 +206,7 @@ export async function POST(
     });
 
   if (launchCodeErr) {
-    return NextResponse.json(
-      { ok: false, error: "Unable to create interview launch session." },
-      { status: 500 },
-    );
+    return apiError({ error: "Unable to create interview launch session.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id, cause: launchCodeErr });
   }
 
   let launchUrl: string;
@@ -234,11 +214,8 @@ export async function POST(
     const url = new URL("/", interviewAppUrl);
     url.searchParams.set("launch_code", launchCode);
     launchUrl = url.toString();
-  } catch {
-    return NextResponse.json(
-      { ok: false, error: "Invalid INTERVIEW_APP_URL configuration." },
-      { status: 500 },
-    );
+  } catch (err) {
+    return apiError({ error: "Invalid INTERVIEW_APP_URL configuration.", status: 500, route: "/api/jobs/[id]/interview/start", userId: user.id, cause: err });
   }
 
   const response = NextResponse.json({

@@ -4,6 +4,7 @@ import { createServiceRoleSupabaseClient } from "@/lib/supabase/server";
 import { getAppUrl } from "@/lib/supabase/app-url";
 import { isValidEmail } from "@/lib/utils";
 import { resolveGeo } from "@/lib/geo";
+import { apiError } from "@/lib/posthog/api-error";
 
 type SignupPayload = {
   firstName: string;
@@ -21,11 +22,11 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as SignupPayload;
   } catch {
-    return NextResponse.json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    return apiError({ error: "Invalid JSON payload", status: 400, route: "/api/auth/signup" });
   }
 
   if (!payload) {
-    return NextResponse.json({ ok: false, error: "Missing payload" }, { status: 400 });
+    return apiError({ error: "Missing payload", status: 400, route: "/api/auth/signup" });
   }
 
   const firstName = String(payload.firstName ?? "").trim();
@@ -34,22 +35,22 @@ export async function POST(request: Request) {
   const password = String(payload.password ?? "");
 
   if (!firstName || !lastName || !email || !password) {
-    return NextResponse.json({ ok: false, error: "All fields are required" }, { status: 400 });
+    return apiError({ error: "All fields are required", status: 400, route: "/api/auth/signup" });
   }
 
   if (!isValidEmail(email)) {
-    return NextResponse.json({ ok: false, error: "Invalid email address" }, { status: 400 });
+    return apiError({ error: "Invalid email address", status: 400, route: "/api/auth/signup" });
   }
 
   if (password.length < 8) {
-    return NextResponse.json({ ok: false, error: "Password must be at least 8 characters" }, { status: 400 });
+    return apiError({ error: "Password must be at least 8 characters", status: 400, route: "/api/auth/signup" });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !anonKey) {
-    return NextResponse.json({ ok: false, error: "Supabase credentials missing" }, { status: 500 });
+    return apiError({ error: "Supabase credentials missing", status: 500, route: "/api/auth/signup" });
   }
 
   const appUrl = getAppUrl(request);
@@ -66,11 +67,11 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    return apiError({ error: error.message, status: 400, route: "/api/auth/signup", cause: error });
   }
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Signup failed" }, { status: 400 });
+    return apiError({ error: "Signup failed", status: 400, route: "/api/auth/signup" });
   }
 
   const service = await createServiceRoleSupabaseClient();
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
 
   const { error: profileError } = await service.from("profiles").upsert(
     {
-      id: data.user.id,
+      id: "data.user.id",
       first_name: firstName,
       last_name: lastName,
       avatar_url: null,
@@ -95,7 +96,8 @@ export async function POST(request: Request) {
   );
 
   if (profileError) {
-    return NextResponse.json({ ok: false, error: "Failed to initialize profile" }, { status: 500 });
+    console.log("ProfileError", profileError);
+    return apiError({ error: "Failed to initialize profile", status: 500, route: "/api/auth/signup", userId: data.user.id, cause: profileError });
   }
 
   // Create free subscription for new users (idempotent — RPC checks for existing sub)

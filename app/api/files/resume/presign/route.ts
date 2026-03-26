@@ -3,6 +3,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 import { buildResumeKey, getResumeBucket, getS3Client } from "@/lib/s3/client";
+import { apiError } from "@/lib/posthog/api-error";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_TYPES = new Set([
@@ -15,21 +16,21 @@ export async function POST(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   if (!data.user) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    return apiError({ error: "Unauthorized", status: 401, route: "/api/files/resume/presign" });
   }
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body.filename !== "string" || typeof body.contentType !== "string") {
-    return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
+    return apiError({ error: "Invalid payload.", status: 400, route: "/api/files/resume/presign", userId: data.user.id });
   }
 
   const sizeBytes = Number(body.sizeBytes);
   if (!Number.isFinite(sizeBytes) || sizeBytes <= 0 || sizeBytes > MAX_SIZE_BYTES) {
-    return NextResponse.json({ ok: false, error: "File too large." }, { status: 400 });
+    return apiError({ error: "File too large.", status: 400, route: "/api/files/resume/presign", userId: data.user.id });
   }
 
   if (!ALLOWED_TYPES.has(body.contentType)) {
-    return NextResponse.json({ ok: false, error: "Unsupported file type." }, { status: 400 });
+    return apiError({ error: "Unsupported file type.", status: 400, route: "/api/files/resume/presign", userId: data.user.id });
   }
 
   const bucket = getResumeBucket();
