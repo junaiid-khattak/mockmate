@@ -24,12 +24,12 @@ export function EmptyState() {
         Find Out Now →
       </Link>
 
-      <p className="mt-[14px] text-xs text-[#9d9db0]">
+      <p className="mt-[14px] text text-[#040700d4]">
         Takes under 2 minutes · No credit card required
       </p>
 
-      <p className="mt-5 max-w-xs text-xs italic text-[#9d9db0]">
-        ⭐ &ldquo;The mock interview caught gaps I didn&apos;t even know I had.&rdquo; — Rachel M., landed at Deloitte
+      <p className="mt-5 max-w-xs text-sm italic text-[#040700d4]">
+        ⭐ &ldquo;The mock interview caught gaps I didn&apos;t even know I had.&rdquo; Rachel M., landed at Deloitte
       </p>
     </div>
   );
