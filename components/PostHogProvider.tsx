@@ -12,6 +12,8 @@ if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOK
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
     capture_pageview: false, // we capture manually below for SPA route changes
     capture_pageleave: true,
+    capture_exceptions: true,
+    capture_heatmaps: true
   });
 }
 
