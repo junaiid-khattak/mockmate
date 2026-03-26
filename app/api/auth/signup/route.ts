@@ -80,7 +80,7 @@ export async function POST(request: Request) {
 
   const { error: profileError } = await service.from("profiles").upsert(
     {
-      id: "data.user.id",
+      id: data.user.id,
       first_name: firstName,
       last_name: lastName,
       avatar_url: null,
@@ -96,7 +96,6 @@ export async function POST(request: Request) {
   );
 
   if (profileError) {
-    console.log("ProfileError", profileError);
     return apiError({ error: "Failed to initialize profile", status: 500, route: "/api/auth/signup", userId: data.user.id, cause: profileError });
   }
 
