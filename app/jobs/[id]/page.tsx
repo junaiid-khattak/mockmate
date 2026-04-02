@@ -1297,11 +1297,11 @@ export default function JobBriefPage() {
                           type="button"
                           onClick={() => {
                             setShowInterviewPaywall(false);
-                            router.push("/pricing");
+                            router.push("/settings/billing");
                           }}
                           className="mt-4 w-full rounded-xl bg-[#7c5cfc] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#6b4ee0]"
                         >
-                          View plans
+                          View Plans
                         </button>
                       </div>
                     ) : (
